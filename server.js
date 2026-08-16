@@ -26,7 +26,7 @@ const sekalipayService = new SekaliPayService({
   webhookSecret: SEKALIPAY_WEBHOOK_SECRET
 });
 
-const PORT = process.env.SERVER_PORT || process.env.PORT || 10239;
+const PORT = process.env.SERVER_PORT || process.env.PORT || 3006;
 const HOST = '0.0.0.0';
 
 // ==========================================
