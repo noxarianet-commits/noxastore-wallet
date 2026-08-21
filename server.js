@@ -26,7 +26,7 @@ const sekalipayService = new SekaliPayService({
   webhookSecret: SEKALIPAY_WEBHOOK_SECRET
 });
 
-const PORT = process.env.SERVER_PORT || process.env.PORT || 3006;
+const PORT = process.env.SERVER_PORT || process.env.PORT || 2002;
 const HOST = '0.0.0.0';
 
 // ==========================================
@@ -1963,6 +1963,6 @@ app.listen(PORT, HOST, () => {
   console.log(`================================================================`);
   console.log(`✅ NoxaPay & SekaliPay Top-Up Server ONLINE`);
   console.log(`   Internal  : http://localhost:${PORT}`);
-  console.log(`   External  : http://${HOST}:${PORT}`);
+  console.log(`   External  : http://203.175.125.151:${PORT}`);
   console.log(`================================================================`);
 });
