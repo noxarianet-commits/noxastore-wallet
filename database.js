@@ -1232,7 +1232,7 @@ async function savePushSubscription(username, subscription) {
 async function getPushSubscriptions(username = 'all') {
   const subs = readJSONFile(PUSH_SUBS_FILE, []);
   if (!username || username === 'all') return subs;
-  return subs.filter(s => s.username === username || s.username === 'all');
+  return subs.filter(s => s.username === username || s.username === 'all' || s.username === 'guest');
 }
 
 async function removePushSubscription(endpoint) {
