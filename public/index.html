@@ -47,6 +47,8 @@
 
   <!-- Tailwind CSS & Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <!-- QR Code Scanner Library -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script id="tailwind-config">
     tailwind.config = {
@@ -3374,11 +3376,17 @@
                 </div>
                 <span class="qa-label">Top Up</span>
               </button>
-              <button class="quick-action-btn" onclick="showNotification('Fitur Transfer sedang tahap pengembangan!')">
+              <button class="quick-action-btn" onclick="openTransferScreen()">
                 <div class="qa-icon" style="background: linear-gradient(135deg, #7B2D8E, #a855f7); box-shadow: 0 3px 8px rgba(123,45,142,0.25);">
                   <span class="material-symbols-outlined">send</span>
                 </div>
                 <span class="qa-label">Transfer</span>
+              </button>
+              <button class="quick-action-btn" onclick="openQRScannerScreen()">
+                <div class="qa-icon" style="background: linear-gradient(135deg, #2563eb, #3b82f6); box-shadow: 0 3px 8px rgba(37,99,235,0.25);">
+                  <span class="material-symbols-outlined">qr_code_scanner</span>
+                </div>
+                <span class="qa-label">Pindai</span>
               </button>
             </div>
           </div>
@@ -3723,6 +3731,13 @@
               <p id="profile-qris-balance"
                 style="font-size: 15px; font-weight: 800; color: #0f172a; margin: 0; flex-shrink: 0;">Rp 0</p>
             </div>
+
+            <!-- QR Code My Profile Button -->
+            <button onclick="showMyQRModal()"
+              style="margin-top: 16px; width: 100%; padding: 12px; background: linear-gradient(135deg, #7B2D8E, #a855f7); border: none; border-radius: 14px; color: white; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(123,45,142,0.25); transition: opacity 0.2s;" onmousedown="this.style.opacity='0.85'" onmouseup="this.style.opacity='1'">
+              <span class="material-symbols-outlined" style="font-size: 18px;">qr_code_2</span>
+              QR Code Saya
+            </button>
           </div>
         </section>
 
@@ -3899,6 +3914,124 @@
 
       <div class="progress-bar-container">
         <div id="ocr-progress-fill" class="progress-bar"></div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- QR SCANNER FULL-SCREEN PANEL              -->
+    <!-- ========================================== -->
+    <div id="screen-qr-scanner" class="full-screen-panel" style="background: #0f172a; display: none;">
+      <div style="background: linear-gradient(135deg, #1e1b4b, #312e81); padding: 18px 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; position: sticky; top: 0; z-index: 20;">
+        <button onclick="closeQRScannerScreen()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+          <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
+        </button>
+        <div>
+          <h3 style="color: white; font-size: 17px; font-weight: 700; margin: 0;">Pindai QR Code</h3>
+          <p style="color: rgba(255,255,255,0.65); font-size: 12px; margin: 0;">Arahkan kamera ke QR Code pengguna</p>
+        </div>
+      </div>
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; gap: 24px;">
+        <!-- Camera viewfinder -->
+        <div style="position: relative; width: 100%; max-width: 320px;">
+          <div id="qr-reader" style="width: 100%; border-radius: 20px; overflow: hidden;"></div>
+          <!-- Corner decorations -->
+          <div style="position: absolute; top: 12px; left: 12px; width: 32px; height: 32px; border-top: 3px solid #a855f7; border-left: 3px solid #a855f7; border-radius: 4px 0 0 0; pointer-events: none;"></div>
+          <div style="position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; border-top: 3px solid #a855f7; border-right: 3px solid #a855f7; border-radius: 0 4px 0 0; pointer-events: none;"></div>
+          <div style="position: absolute; bottom: 12px; left: 12px; width: 32px; height: 32px; border-bottom: 3px solid #a855f7; border-left: 3px solid #a855f7; border-radius: 0 0 0 4px; pointer-events: none;"></div>
+          <div style="position: absolute; bottom: 12px; right: 12px; width: 32px; height: 32px; border-bottom: 3px solid #a855f7; border-right: 3px solid #a855f7; border-radius: 0 0 4px 0; pointer-events: none;"></div>
+        </div>
+        <p id="qr-scanner-hint" style="color: rgba(255,255,255,0.6); font-size: 13px; text-align: center; margin: 0;">Posisikan QR Code di dalam bingkai</p>
+        <p id="qr-scanner-status" style="color: #a855f7; font-size: 13px; text-align: center; font-weight: 600; margin: 0; display: none;"></p>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TRANSFER SALDO FULL-SCREEN PANEL          -->
+    <!-- ========================================== -->
+    <div id="screen-transfer" class="full-screen-panel" style="background: #f8fafc; display: none;">
+      <div style="background: linear-gradient(135deg, #7B2D8E, #a855f7); padding: 18px 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; position: sticky; top: 0; z-index: 20;">
+        <button onclick="closeTransferScreen()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+          <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
+        </button>
+        <div>
+          <h3 style="color: white; font-size: 17px; font-weight: 700; margin: 0;">Transfer Saldo</h3>
+          <p style="color: rgba(255,255,255,0.75); font-size: 12px; margin: 0;">Kirim saldo ke sesama pengguna</p>
+        </div>
+      </div>
+      <div style="padding: 24px 20px; display: flex; flex-direction: column; gap: 16px;">
+        <!-- Saldo Info -->
+        <div style="background: white; border-radius: 16px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+          <span style="font-size: 13px; color: #64748b; font-weight: 600;">Saldo Tersedia</span>
+          <span id="transfer-avail-balance" style="font-size: 16px; font-weight: 800; color: #7B2D8E;">Rp 0</span>
+        </div>
+
+        <!-- Recipient field -->
+        <div style="background: white; border-radius: 16px; padding: 16px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+          <label style="font-size: 12px; font-weight: 700; color: #64748b; display: block; margin-bottom: 8px;">Penerima</label>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <input id="transfer-target" type="text" placeholder="Username / No. HP / User ID"
+              style="flex: 1; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; font-size: 14px; font-weight: 500; outline: none; color: #1e293b; background: #f8fafc; transition: border 0.2s;"
+              onfocus="this.style.border='1.5px solid #a855f7'" onblur="this.style.border='1.5px solid #e2e8f0'" />
+            <button onclick="openQRScannerForTransfer()" title="Pindai QR Code"
+              style="background: linear-gradient(135deg, #2563eb, #3b82f6); border: none; border-radius: 10px; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; box-shadow: 0 3px 8px rgba(37,99,235,0.3); transition: opacity 0.2s;" onmousedown="this.style.opacity='0.8'" onmouseup="this.style.opacity='1'">
+              <span class="material-symbols-outlined" style="color: white; font-size: 22px;">qr_code_scanner</span>
+            </button>
+          </div>
+          <p id="transfer-recipient-name" style="font-size: 12px; color: #059669; font-weight: 600; margin: 6px 0 0 2px; display: none;"></p>
+        </div>
+
+        <!-- Amount field -->
+        <div style="background: white; border-radius: 16px; padding: 16px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+          <label style="font-size: 12px; font-weight: 700; color: #64748b; display: block; margin-bottom: 8px;">Nominal Transfer</label>
+          <div style="position: relative;">
+            <span style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 14px; font-weight: 700; color: #94a3b8;">Rp</span>
+            <input id="transfer-amount" type="number" placeholder="0" min="1000"
+              style="width: 100%; box-sizing: border-box; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 12px 14px 12px 36px; font-size: 16px; font-weight: 700; outline: none; color: #1e293b; background: #f8fafc; transition: border 0.2s;"
+              onfocus="this.style.border='1.5px solid #a855f7'" onblur="this.style.border='1.5px solid #e2e8f0'" />
+          </div>
+          <!-- Quick amount chips -->
+          <div style="display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
+            <button onclick="setTransferAmount(10000)" style="padding: 6px 12px; background: #f3e8ff; color: #7B2D8E; border: none; border-radius: 20px; font-size: 11px; font-weight: 700; cursor: pointer;">10K</button>
+            <button onclick="setTransferAmount(25000)" style="padding: 6px 12px; background: #f3e8ff; color: #7B2D8E; border: none; border-radius: 20px; font-size: 11px; font-weight: 700; cursor: pointer;">25K</button>
+            <button onclick="setTransferAmount(50000)" style="padding: 6px 12px; background: #f3e8ff; color: #7B2D8E; border: none; border-radius: 20px; font-size: 11px; font-weight: 700; cursor: pointer;">50K</button>
+            <button onclick="setTransferAmount(100000)" style="padding: 6px 12px; background: #f3e8ff; color: #7B2D8E; border: none; border-radius: 20px; font-size: 11px; font-weight: 700; cursor: pointer;">100K</button>
+          </div>
+        </div>
+
+        <!-- Note field -->
+        <div style="background: white; border-radius: 16px; padding: 16px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+          <label style="font-size: 12px; font-weight: 700; color: #64748b; display: block; margin-bottom: 8px;">Catatan <span style="color: #94a3b8; font-weight: 500;">(opsional)</span></label>
+          <input id="transfer-note" type="text" placeholder="Contoh: Bayar makan siang" maxlength="100"
+            style="width: 100%; box-sizing: border-box; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; font-size: 14px; font-weight: 500; outline: none; color: #1e293b; background: #f8fafc; transition: border 0.2s;"
+            onfocus="this.style.border='1.5px solid #a855f7'" onblur="this.style.border='1.5px solid #e2e8f0'" />
+        </div>
+
+        <!-- Submit button -->
+        <button id="btn-transfer-submit" onclick="submitTransferForm()"
+          style="width: 100%; padding: 16px; background: linear-gradient(135deg, #7B2D8E, #a855f7); border: none; border-radius: 16px; color: white; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 6px 20px rgba(123,45,142,0.35); transition: opacity 0.2s; margin-top: 4px;" onmousedown="this.style.opacity='0.85'" onmouseup="this.style.opacity='1'">
+          Kirim Saldo
+        </button>
+      </div>
+    </div>
+
+    <!-- My QR Code Modal -->
+    <div id="modal-my-qr" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.65); backdrop-filter:blur(6px); align-items:center; justify-content:center;">
+      <div style="background:white; border-radius:28px; padding:32px 24px; width:calc(100% - 48px); max-width:360px; text-align:center; box-shadow: 0 24px 60px rgba(0,0,0,0.3); position: relative;">
+        <button onclick="closeMyQRModal()" style="position:absolute;top:14px;right:14px;background:rgba(0,0,0,0.06);border:none;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+          <span class="material-symbols-outlined" style="font-size:18px;color:#64748b;">close</span>
+        </button>
+        <p style="font-size:12px;color:#94a3b8;font-weight:600;letter-spacing:0.8px;margin:0 0 4px;">QR CODE SAYA</p>
+        <h2 id="my-qr-fullname" style="font-size:18px;font-weight:800;color:#1e293b;margin:0 0 4px;">-</h2>
+        <p id="my-qr-username" style="font-size:12px;color:#7B2D8E;font-weight:700;margin:0 0 20px;"></p>
+        <div style="background:#f8fafc;border-radius:20px;padding:20px;display:inline-block;border:2px solid #f1f5f9;margin-bottom:16px;">
+          <img id="my-qr-img" src="" alt="QR Code" style="width:200px;height:200px;border-radius:8px;display:block;" />
+        </div>
+        <p style="font-size:11px;color:#94a3b8;margin:0 0 16px;">Tunjukkan QR ini ke pengguna lain untuk menerima transfer saldo</p>
+        <button onclick="closeMyQRModal(); openTransferScreen();"
+          style="width:100%;padding:13px;background:linear-gradient(135deg,#7B2D8E,#a855f7);border:none;border-radius:14px;color:white;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(123,45,142,0.3);">
+          <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;margin-right:4px;">send</span>
+          Transfer ke Orang Lain
+        </button>
       </div>
     </div>
 
@@ -7515,7 +7648,224 @@
         setTopUpStatus('pending', 'Menunggu pembayaran...');
       }
 
+      // ================================================
+      // TRANSFER SALDO + QR CODE FEATURE
+      // ================================================
+
+      var _qrHtml5Scanner = null;
+      var _qrScannerMode = 'standalone'; // 'standalone' | 'transfer'
+
+      function openTransferScreen() {
+        const screen = document.getElementById('screen-transfer');
+        if (!screen) return;
+        // Populate current balance
+        const balEl = document.getElementById('home-balance-text');
+        const balSpan = document.getElementById('transfer-avail-balance');
+        if (balEl && balSpan) balSpan.textContent = balEl.textContent;
+        // Reset fields
+        const tgt = document.getElementById('transfer-target');
+        const amt = document.getElementById('transfer-amount');
+        const note = document.getElementById('transfer-note');
+        const recipName = document.getElementById('transfer-recipient-name');
+        if (tgt) tgt.value = '';
+        if (amt) amt.value = '';
+        if (note) note.value = '';
+        if (recipName) { recipName.textContent = ''; recipName.style.display = 'none'; }
+        screen.style.display = 'flex';
+        void screen.offsetWidth;
+        screen.classList.add('active');
+      }
+
+      function closeTransferScreen() {
+        const screen = document.getElementById('screen-transfer');
+        if (!screen) return;
+        screen.classList.remove('active');
+        setTimeout(() => { screen.style.display = 'none'; }, 300);
+      }
+
+      function setTransferAmount(amt) {
+        const input = document.getElementById('transfer-amount');
+        if (input) input.value = amt;
+      }
+
+      async function submitTransferForm() {
+        const target = (document.getElementById('transfer-target')?.value || '').trim();
+        const amount = Number(document.getElementById('transfer-amount')?.value || 0);
+        const note = (document.getElementById('transfer-note')?.value || '').trim();
+        const btn = document.getElementById('btn-transfer-submit');
+
+        if (!target) { showNotification('❌ Harap isi username atau nomor penerima.'); return; }
+        if (amount < 1000) { showNotification('❌ Nominal transfer minimal Rp 1.000.'); return; }
+
+        // Open PIN overlay for verification
+        openPinOverlay(async (pin) => {
+          if (btn) { btn.disabled = true; btn.textContent = 'Memproses...'; }
+          try {
+            const username = localStorage.getItem('noxaUsername') || '';
+            const res = await fetch('/transfer-saldo', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + username },
+              body: JSON.stringify({ target, amount, pin, note })
+            });
+            const data = await res.json();
+            if (data.success) {
+              closeTransferScreen();
+              triggerSystemNotification('💸 Transfer Berhasil', `Rp ${amount.toLocaleString('id-ID')} terkirim ke ${target}`);
+              showNotification(`✅ Transfer Rp ${amount.toLocaleString('id-ID')} ke ${target} berhasil!`);
+              syncServerState();
+            } else {
+              showNotification('❌ ' + (data.error || 'Transfer gagal.'));
+            }
+          } catch (e) {
+            showNotification('❌ Koneksi error: ' + e.message);
+          } finally {
+            if (btn) { btn.disabled = false; btn.textContent = 'Kirim Saldo'; }
+          }
+        });
+      }
+
+      // ---- QR SCANNER ----
+      function openQRScannerScreen() {
+        _qrScannerMode = 'standalone';
+        const screen = document.getElementById('screen-qr-scanner');
+        if (!screen) return;
+        screen.style.display = 'flex';
+        void screen.offsetWidth;
+        screen.classList.add('active');
+        setTimeout(() => _startQRScanner(), 400);
+      }
+
+      function openQRScannerForTransfer() {
+        _qrScannerMode = 'transfer';
+        const screen = document.getElementById('screen-qr-scanner');
+        if (!screen) return;
+        screen.style.display = 'flex';
+        void screen.offsetWidth;
+        screen.classList.add('active');
+        setTimeout(() => _startQRScanner(), 400);
+      }
+
+      function closeQRScannerScreen() {
+        _stopQRScanner();
+        const screen = document.getElementById('screen-qr-scanner');
+        if (!screen) return;
+        screen.classList.remove('active');
+        setTimeout(() => { screen.style.display = 'none'; }, 300);
+      }
+
+      function _startQRScanner() {
+        if (typeof Html5Qrcode === 'undefined') {
+          showNotification('❌ Library scanner belum siap, coba refresh halaman.');
+          return;
+        }
+        const statusEl = document.getElementById('qr-scanner-status');
+        const hintEl = document.getElementById('qr-scanner-hint');
+        if (statusEl) { statusEl.textContent = ''; statusEl.style.display = 'none'; }
+        if (hintEl) hintEl.style.display = 'block';
+
+        if (_qrHtml5Scanner) {
+          try { _qrHtml5Scanner.stop().catch(() => {}); } catch(e) {}
+          _qrHtml5Scanner = null;
+        }
+
+        try {
+          _qrHtml5Scanner = new Html5Qrcode('qr-reader');
+          _qrHtml5Scanner.start(
+            { facingMode: 'environment' },
+            { fps: 10, qrbox: { width: 240, height: 240 } },
+            (decodedText) => {
+              _onQRScanned(decodedText);
+            },
+            () => {}
+          ).catch((err) => {
+            if (statusEl) { statusEl.textContent = '⚠️ Akses kamera ditolak: ' + err; statusEl.style.display = 'block'; }
+          });
+        } catch(e) {
+          if (statusEl) { statusEl.textContent = '⚠️ Gagal memulai scanner: ' + e.message; statusEl.style.display = 'block'; }
+        }
+      }
+
+      function _stopQRScanner() {
+        if (_qrHtml5Scanner) {
+          try { _qrHtml5Scanner.stop().catch(() => {}); } catch(e) {}
+          _qrHtml5Scanner = null;
+        }
+        const readerEl = document.getElementById('qr-reader');
+        if (readerEl) readerEl.innerHTML = '';
+      }
+
+      function _onQRScanned(decodedText) {
+        _stopQRScanner();
+        // Expected format: noxa-transfer:<username>
+        if (decodedText && decodedText.startsWith('noxa-transfer:')) {
+          const targetUser = decodedText.replace('noxa-transfer:', '').trim();
+          closeQRScannerScreen();
+          if (_qrScannerMode === 'transfer') {
+            openTransferScreen();
+            setTimeout(() => {
+              const tgt = document.getElementById('transfer-target');
+              if (tgt) { tgt.value = targetUser; }
+              const recipName = document.getElementById('transfer-recipient-name');
+              if (recipName) {
+                recipName.textContent = `✅ Penerima: @${targetUser}`;
+                recipName.style.display = 'block';
+              }
+              const amtInput = document.getElementById('transfer-amount');
+              if (amtInput) amtInput.focus();
+            }, 350);
+          } else {
+            // Standalone scan: go to transfer with target filled
+            openTransferScreen();
+            setTimeout(() => {
+              const tgt = document.getElementById('transfer-target');
+              if (tgt) tgt.value = targetUser;
+              const recipName = document.getElementById('transfer-recipient-name');
+              if (recipName) {
+                recipName.textContent = `✅ Penerima: @${targetUser}`;
+                recipName.style.display = 'block';
+              }
+            }, 350);
+          }
+        } else {
+          showNotification('⚠️ QR ini bukan kode transfer pengguna yang valid.');
+          // Restart scanner after 2 seconds
+          setTimeout(() => _startQRScanner(), 2000);
+        }
+      }
+
+      // ---- MY QR CODE MODAL ----
+      function showMyQRModal() {
+        const username = localStorage.getItem('noxaUsername') || 'user';
+        const fullname = localStorage.getItem('noxaFullname') || username;
+        const qrData = encodeURIComponent('noxa-transfer:' + username);
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${qrData}&size=200x200&margin=10&color=7B2D8E&bgcolor=ffffff`;
+
+        const modal = document.getElementById('modal-my-qr');
+        const nameEl = document.getElementById('my-qr-fullname');
+        const userEl = document.getElementById('my-qr-username');
+        const imgEl = document.getElementById('my-qr-img');
+        if (!modal) return;
+
+        if (nameEl) nameEl.textContent = fullname;
+        if (userEl) userEl.textContent = '@' + username;
+        if (imgEl) {
+          imgEl.src = '';
+          imgEl.alt = 'Memuat QR...';
+          imgEl.onload = () => { imgEl.alt = 'QR Code ' + fullname; };
+          imgEl.src = qrUrl;
+        }
+
+        modal.style.display = 'flex';
+        void modal.offsetWidth;
+      }
+
+      function closeMyQRModal() {
+        const modal = document.getElementById('modal-my-qr');
+        if (modal) modal.style.display = 'none';
+      }
+
       function openTopUpScreen() {
+
         const screen = document.getElementById('screen-topup');
         if (!screen) return;
 

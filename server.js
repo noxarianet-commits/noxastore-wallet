@@ -2020,9 +2020,10 @@ app.get('/api/merchant-config', async (req, res) => {
 
 // Transfer Saldo
 app.post('/transfer-saldo', requireAuth, async (req, res) => {
-  const { target, amount, pin } = req.body;
+  const { target, amount, pin, note } = req.body;
   const senderUname = req.user.username;
   const numAmt = Math.ceil(Number(amount) || 0);
+  const transferNote = (note || '').toString().trim().substring(0, 100);
 
   if (!target || numAmt < 1000) {
     return res.status(400).json({ success: false, error: 'Target dan nominal minimal Rp 1.000 wajib diisi.' });
@@ -2058,13 +2059,17 @@ app.post('/transfer-saldo', requireAuth, async (req, res) => {
   await db.updateUser(recipientUname, { mainBalance: newRecipBal, saldo: newRecipBal });
 
   const txId = `TF-${Date.now()}`;
+  const senderDesc = transferNote || `Transfer saldo ke ${recipient.fullname || recipientUname}`;
+  const recipDesc = transferNote || `Terima saldo dari ${sender.fullname || senderUname}`;
+
   await db.addHistory(senderUname, {
     id: txId,
     merchant: `Transfer ke ${recipient.fullname || recipientUname}`,
     amount: numAmt,
     status: 'BERHASIL',
     type: 'TRANSFER',
-    description: `Transfer saldo ke ${target}`
+    note: transferNote,
+    description: senderDesc
   });
 
   await db.addHistory(recipientUname, {
@@ -2073,7 +2078,8 @@ app.post('/transfer-saldo', requireAuth, async (req, res) => {
     amount: numAmt,
     status: 'BERHASIL',
     type: 'DEPOSIT',
-    description: `Terima saldo dari ${senderUname}`
+    note: transferNote,
+    description: recipDesc
   });
 
   const updatedSender = await db.getUser(senderUname);
