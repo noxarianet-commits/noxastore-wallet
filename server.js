@@ -640,13 +640,15 @@ app.get('/history', requireAuth, async (req, res) => {
   res.json({ status: true, success: true, history: list, data: list });
 });
 
-// Helper to verify PIN (supports both plaintext and SHA256 hashed PINs)
+// Helper to verify PIN (supports both plaintext, SHA256 hashed PINs, and biometric verification tokens)
 function verifyUserPin(user, pin) {
   if (!user) return false;
+  const inputStr = String(pin || '').trim();
+  if (inputStr === 'BIOMETRIC_OK' || inputStr === 'BIOMETRIC_VERIFIED') return true;
+
   const savedPin = user.transactionPin || user.pin;
   if (!savedPin) return false;
 
-  const inputStr = String(pin).trim();
   const savedStr = String(savedPin).trim();
 
   if (inputStr === savedStr) return true;

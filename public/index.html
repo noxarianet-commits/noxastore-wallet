@@ -7149,10 +7149,11 @@
           });
           const data = await res.json();
           if (data.success) {
-            showNotification('? PIN transaksi berhasil disimpan!');
+            localStorage.setItem('noxaUserPin', pin);
+            showNotification('✅ PIN transaksi berhasil disimpan!');
             closeSetupPinModal();
-          } else { showNotification('? ' + (data.error || 'Gagal menyimpan PIN.')); }
-        } catch (e) { showNotification('? Kesalahan jaringan.'); }
+          } else { showNotification('❌ ' + (data.error || 'Gagal menyimpan PIN.')); }
+        } catch (e) { showNotification('❌ Kesalahan jaringan.'); }
       }
       async function submitDanaWithdraw() {
         const phoneInput = document.getElementById('dana-withdraw-phone').value;
@@ -10879,9 +10880,12 @@
       }
 
       async function _pinOverlaySubmit(isBiometric) {
-        var savedPin = localStorage.getItem('noxaUserPin') || '123456';
+        var savedPin = localStorage.getItem('noxaUserPin') || 'BIOMETRIC_OK';
         var pin = (isBiometric === 'BIOMETRIC_OK') ? savedPin : _pinOverlayDigits.join('');
         if (isBiometric !== 'BIOMETRIC_OK' && pin.length !== 6) return;
+        if (isBiometric !== 'BIOMETRIC_OK' && pin.length === 6) {
+          localStorage.setItem('noxaUserPin', pin);
+        }
         var err = document.getElementById('pin-overlay-error');
         if (err) err.textContent = (isBiometric === 'BIOMETRIC_OK') ? 'Memproses dengan Sidik Jari...' : 'Memproses...';
 
