@@ -2257,7 +2257,7 @@
 
       /* Hero Banner */
       .hero-banner {
-        padding: 16px var(--padding-side) 34px var(--padding-side);
+        padding: max(40px, env(safe-area-inset-top)) var(--padding-side) 34px var(--padding-side);
       }
       .hero-banner h2 {
         font-size: 16px;
@@ -2374,8 +2374,8 @@
 
       /* Bottom Navigation */
       .bottom-nav {
-        height: 64px;
-        padding: 2px 12px env(safe-area-inset-bottom) 12px;
+        height: 76px;
+        padding: 4px 12px max(14px, env(safe-area-inset-bottom)) 12px;
       }
       .nav-item {
         padding: 4px 8px;
@@ -2389,7 +2389,7 @@
 
       /* Main content padding for bottom nav */
       main {
-        padding-bottom: 80px;
+        padding-bottom: 100px;
       }
 
       /* Full Screen Panels */
@@ -3334,7 +3334,7 @@
       <!-- ========================================== -->
       <div id="panel-home" class="tab-panel active">
         <!-- Hero Header Gradient -->
-        <section class="hero-banner" style="padding-top: 16px; padding-bottom: 36px;">
+        <section class="hero-banner" style="padding-top: max(40px, env(safe-area-inset-top)); padding-bottom: 36px;">
           <!-- Top Bar: Greeting (left) + CS Button (right) -->
           <div style="display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 10; width: 100%;">
             <!-- Left: Greeting -->
@@ -3601,7 +3601,7 @@
       <!-- ========================================== -->
       <div id="panel-info" class="tab-panel" style="padding-bottom: 100px;">
         <div
-          style="background: linear-gradient(135deg, var(--primary), var(--secondary)); padding: 24px 20px; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; margin-bottom: 20px;">
+          style="background: linear-gradient(135deg, var(--primary), var(--secondary)); padding: max(40px, env(safe-area-inset-top)) 20px 24px; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; margin-bottom: 20px;">
           <h2 style="color: white; font-size: 20px; font-weight: 800; margin: 0;">Pusat Informasi</h2>
           <p style="color: rgba(255,255,255,0.8); font-size: 13px; margin-top: 4px; font-weight: 500;">Dapatkan berita
             dan update terbaru dari noxastore wallet.</p>
@@ -3656,7 +3656,7 @@
 
         <!-- Profile Header Section -->
         <section
-          style="background: linear-gradient(to bottom, #7B2D8E, #9B4DB8); padding: 64px 20px 140px; color: white; position: relative;">
+          style="background: linear-gradient(to bottom, #7B2D8E, #9B4DB8); padding: max(72px, env(safe-area-inset-top) + 32px) 20px 140px; color: white; position: relative;">
           <div style="display: flex; align-items: center; gap: 16px;">
             <div style="position: relative;">
               <div
