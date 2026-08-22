@@ -63,6 +63,51 @@ app.use(express.urlencoded({ extended: true }));
 const processingCredits = new Set();
 
 // ==========================================
+// REAL-TIME SSE (SERVER-SENT EVENTS) ENGINE
+// ==========================================
+const sseClients = new Set();
+
+app.get('/api/realtime/stream', (req, res) => {
+  const username = req.query.username || 'guest';
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');
+
+  const client = { id: Date.now(), username, res };
+  sseClients.add(client);
+
+  res.write(`event: ping\ndata: ${JSON.stringify({ time: new Date().toISOString() })}\n\n`);
+
+  const heartbeat = setInterval(() => {
+    try {
+      res.write(`: heartbeat\n\n`);
+    } catch (e) {
+      clearInterval(heartbeat);
+      sseClients.delete(client);
+    }
+  }, 15000);
+
+  req.on('close', () => {
+    clearInterval(heartbeat);
+    sseClients.delete(client);
+  });
+});
+
+function broadcastRealtimeEvent(event, data) {
+  const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+  for (const client of sseClients) {
+    try {
+      if (!data.targetUsername || client.username === data.targetUsername || data.targetUsername === 'all' || client.username === 'all') {
+        client.res.write(payload);
+      }
+    } catch (err) {
+      sseClients.delete(client);
+    }
+  }
+}
+
+// ==========================================
 // STANDALONE JSON FILE DB HELPERS (TOPUP)
 // ==========================================
 const USERS_FILE = path.join(__dirname, 'users.json');
@@ -763,6 +808,13 @@ app.post('/webhook/sekalipay', async (req, res) => {
       }
       await db.updatePaymentStatus(targetRefId, 'PAID');
 
+      broadcastRealtimeEvent('balance_update', {
+        targetUsername: uname,
+        amount: Math.ceil(topup.amount),
+        title: '⚡ Saldo QRIS Diterima!',
+        body: 'Pembayaran QRIS Rp ' + Math.ceil(topup.amount).toLocaleString('id-ID') + ' telah terverifikasi.'
+      });
+
       console.log(`[Webhook Success] User ${uname} saldo credited +Rp ${topup.amount} for ref_id: ${targetRefId}`);
       processingCredits.delete(targetRefId);
       return res.json({ success: true, message: 'Top-up status updated to paid and user saldo credited.' });
@@ -1203,11 +1255,15 @@ app.post('/admin/informations', requireAdminAuth, async (req, res) => {
       active: active !== false
     };
     await db.addInformation(newInfo);
+    broadcastRealtimeEvent('announcement', {
+      title: newInfo.title || '📢 Pengumuman Terbaru',
+      body: newInfo.contentTitle || newInfo.content || 'Ada informasi terbaru dari Admin.'
+    });
     res.json({ success: true, information: newInfo });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
-});
+};
 
 const handleAdminUpdateInfo = async (req, res) => {
   try {
@@ -1237,6 +1293,10 @@ const handleAdminAnnouncement = async (req, res) => {
     const { text, active } = req.body;
     const announcement = { text: text || '', active: active !== false };
     await db.setConfig('announcement', announcement);
+    broadcastRealtimeEvent('announcement', {
+      title: '📣 Pengumuman Terbaru',
+      body: text
+    });
     res.json({ success: true, announcement });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });

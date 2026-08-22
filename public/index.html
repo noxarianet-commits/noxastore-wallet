@@ -8036,11 +8036,60 @@
         }
       }
 
+      // Real-time EventSource Stream Client (Instant Push Notifications & Live Sync)
+      function initRealtimeStream() {
+        const username = localStorage.getItem('noxaUsername') || 'guest';
+        if (!window.EventSource) return;
+
+        if (window._sseSource) {
+          try { window._sseSource.close(); } catch(e) {}
+        }
+
+        const evtSource = new EventSource('/api/realtime/stream?username=' + encodeURIComponent(username));
+        window._sseSource = evtSource;
+
+        evtSource.addEventListener('balance_update', (e) => {
+          try {
+            const data = JSON.parse(e.data);
+            const myUname = localStorage.getItem('noxaUsername');
+            if (!data.targetUsername || data.targetUsername === myUname || data.targetUsername === 'all') {
+              triggerSystemNotification(data.title || '⚡ Saldo Diperbarui', data.body || 'Saldo Anda telah diperbarui');
+              syncServerState();
+            }
+          } catch(err) {}
+        });
+
+        evtSource.addEventListener('announcement', (e) => {
+          try {
+            const data = JSON.parse(e.data);
+            triggerSystemNotification(data.title || '📢 Pengumuman Terbaru', data.body || 'Ada pengumuman baru dari Admin');
+            syncServerState();
+          } catch(err) {}
+        });
+
+        evtSource.addEventListener('transaction_update', (e) => {
+          try {
+            const data = JSON.parse(e.data);
+            const myUname = localStorage.getItem('noxaUsername');
+            if (!data.targetUsername || data.targetUsername === myUname || data.targetUsername === 'all') {
+              triggerSystemNotification(data.title || `✅ Transaksi ${data.status}`, data.body || `Status transaksi: ${data.status}`);
+              syncServerState();
+            }
+          } catch(err) {}
+        });
+
+        evtSource.onerror = function() {
+          evtSource.close();
+          setTimeout(initRealtimeStream, 5000);
+        };
+      }
+
       if (document.readyState === 'complete' || document.readyState === 'interactive') {
         initServiceWorker();
+        initRealtimeStream();
       } else {
-        window.addEventListener('DOMContentLoaded', initServiceWorker);
-        window.addEventListener('load', initServiceWorker);
+        window.addEventListener('DOMContentLoaded', () => { initServiceWorker(); initRealtimeStream(); });
+        window.addEventListener('load', () => { initServiceWorker(); initRealtimeStream(); });
       }
 
       function startPolling() {
