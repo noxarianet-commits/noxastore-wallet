@@ -454,6 +454,14 @@ app.post('/register', async (req, res) => {
     { expiresIn: '30d' }
   );
 
+  // Broadcast: Registrasi berhasil
+  broadcastRealtimeEvent('activity', {
+    targetUsername: username,
+    title: '🎉 Selamat Datang!',
+    body: `Akun ${fullname || username} berhasil terdaftar di NoxariaNet Wallet.`,
+    type: 'register'
+  });
+
   res.json({
     success: true,
     status: true,
@@ -493,6 +501,14 @@ app.post('/login', async (req, res) => {
     JWT_SECRET,
     { expiresIn: '30d' }
   );
+
+  // Broadcast: Login berhasil
+  broadcastRealtimeEvent('activity', {
+    targetUsername: user.username,
+    title: '🔐 Login Berhasil',
+    body: `Halo ${userData.fullname}! Kamu berhasil masuk ke NoxariaNet Wallet.`,
+    type: 'login'
+  });
 
   res.json({
     success: true,
@@ -541,6 +557,15 @@ app.post('/deposit-qris', requireAuth, async (req, res) => {
       status: 'PENDING',
       qrUrl: topupRecord.qr_link,
       paymentUrl: topupRecord.qr_link
+    });
+
+    // Broadcast: Top Up QRIS dibuat
+    broadcastRealtimeEvent('transaction', {
+      targetUsername: username,
+      title: '💳 Top Up QRIS Dibuat',
+      body: `Silakan bayar QRIS sebesar Rp ${topupRecord.total_amount.toLocaleString('id-ID')} sebelum expired.`,
+      type: 'topup_created',
+      amount: topupRecord.total_amount
     });
 
     return res.json({
@@ -1212,6 +1237,16 @@ app.post('/admin/users/:username/transaction', requireAdminAuth, async (req, res
     if (!user) return res.status(404).json({ success: false, error: 'User tidak ditemukan' });
 
     await db.addHistory(username, req.body);
+
+    // Broadcast: Admin menambahkan transaksi
+    broadcastRealtimeEvent('transaction', {
+      targetUsername: username,
+      title: '📋 Transaksi Baru',
+      body: `Admin menambahkan transaksi ${req.body.type || ''} senilai Rp ${(req.body.amount || 0).toLocaleString('id-ID')}.`,
+      type: 'admin_transaction',
+      amount: req.body.amount || 0
+    });
+
     res.json({ success: true, message: 'Transaksi berhasil ditambahkan' });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -1625,6 +1660,15 @@ async function handlePpobCheckout(req, res) {
       const updatedUser = await db.getUser(username);
       const userHistory = updatedUser ? (updatedUser.history || []) : [];
 
+      // Broadcast: PPOB berhasil
+      broadcastRealtimeEvent('transaction', {
+        targetUsername: username,
+        title: '✅ Pembelian PPOB Berhasil',
+        body: `${item.name} ke ${target} sebesar Rp ${totalPrice.toLocaleString('id-ID')} berhasil diproses.`,
+        type: 'ppob_success',
+        amount: totalPrice
+      });
+
       return res.json({
         success: true,
         status: true,
@@ -1652,6 +1696,15 @@ async function handlePpobCheckout(req, res) {
 
       const updatedUser = await db.getUser(username);
       const userHistory = updatedUser ? (updatedUser.history || []) : [];
+
+      // Broadcast: PPOB gagal
+      broadcastRealtimeEvent('transaction', {
+        targetUsername: username,
+        title: '❌ Pembelian PPOB Gagal',
+        body: `${item.name} ke ${target} gagal: ${cleanErrMsg}`,
+        type: 'ppob_failed',
+        amount: totalPrice
+      });
 
       return res.status(400).json({
         success: false,
@@ -1862,6 +1915,15 @@ async function handleWithdrawEwallet(req, res) {
       const updatedUser = await db.getUser(username);
       const userHistory = updatedUser ? (updatedUser.history || []) : [];
 
+      // Broadcast: E-Wallet berhasil
+      broadcastRealtimeEvent('transaction', {
+        targetUsername: username,
+        title: '✅ Withdraw E-Wallet Berhasil',
+        body: `${method} Rp ${nominal.toLocaleString('id-ID')} ke ${destination} berhasil dikirim.`,
+        type: 'ewallet_success',
+        amount: totalPrice
+      });
+
       return res.json({
         success: true,
         status: 'BERHASIL',
@@ -1887,6 +1949,15 @@ async function handleWithdrawEwallet(req, res) {
 
       const updatedUser = await db.getUser(username);
       const userHistory = updatedUser ? (updatedUser.history || []) : [];
+
+      // Broadcast: E-Wallet gagal
+      broadcastRealtimeEvent('transaction', {
+        targetUsername: username,
+        title: '❌ Withdraw E-Wallet Gagal',
+        body: `${method} ke ${destination} gagal: ${errMsg}`,
+        type: 'ewallet_failed',
+        amount: totalPrice
+      });
 
       return res.status(400).json({
         success: false,
@@ -1972,6 +2043,24 @@ app.post('/transfer-saldo', requireAuth, async (req, res) => {
 
   const updatedSender = await db.getUser(senderUname);
 
+  // Broadcast: Transfer berhasil ke pengirim
+  broadcastRealtimeEvent('transaction', {
+    targetUsername: senderUname,
+    title: '💸 Transfer Terkirim',
+    body: `Transfer Rp ${numAmt.toLocaleString('id-ID')} ke ${recipient.fullname || recipientUname} berhasil.`,
+    type: 'transfer_sent',
+    amount: numAmt
+  });
+
+  // Broadcast: Transfer masuk ke penerima
+  broadcastRealtimeEvent('transaction', {
+    targetUsername: recipientUname,
+    title: '💰 Saldo Masuk!',
+    body: `Kamu menerima transfer Rp ${numAmt.toLocaleString('id-ID')} dari ${sender.fullname || senderUname}.`,
+    type: 'transfer_received',
+    amount: numAmt
+  });
+
   res.json({
     success: true,
     status: true,
@@ -1998,6 +2087,15 @@ app.post('/update-profile', requireAuth, async (req, res) => {
     }
 
     await db.updateUser(targetUsername, updateData);
+
+    // Broadcast: Profil diperbarui
+    broadcastRealtimeEvent('activity', {
+      targetUsername: targetUsername,
+      title: '👤 Profil Diperbarui',
+      body: 'Data profil kamu berhasil diperbarui.',
+      type: 'profile_update'
+    });
+
     res.json({ success: true, newUsername: targetUsername, message: 'Profil berhasil diperbarui' });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -2018,6 +2116,15 @@ app.post('/change-password', requireAuth, async (req, res) => {
     }
 
     await db.updateUser(username, { password: newPassword });
+
+    // Broadcast: Password diubah
+    broadcastRealtimeEvent('activity', {
+      targetUsername: username,
+      title: '🔒 Password Diubah',
+      body: 'Password akun kamu berhasil diperbarui. Jika bukan kamu yang mengubah, segera hubungi admin.',
+      type: 'password_change'
+    });
+
     res.json({ success: true, message: 'Password berhasil diubah' });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
