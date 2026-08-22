@@ -7862,6 +7862,43 @@
           renderHistoryList();
           renderRecentTransactionsHome();
           updateProfileAnalytics();
+
+          // Check for new Informations & trigger push notifications
+          try {
+            const infoRes = await fetch('/api/informations');
+            const infoData = await infoRes.json();
+            if (infoData.success && Array.isArray(infoData.informations)) {
+              let seenIds = JSON.parse(localStorage.getItem('noxaSeenInfoIds') || '[]');
+              const activeInfos = infoData.informations.filter(i => i.active);
+
+              if (!localStorage.getItem('noxaInfoInitialized')) {
+                seenIds = activeInfos.map(i => i.id);
+                localStorage.setItem('noxaSeenInfoIds', JSON.stringify(seenIds));
+                localStorage.setItem('noxaInfoInitialized', 'true');
+              } else {
+                for (const info of activeInfos) {
+                  if (!seenIds.includes(info.id)) {
+                    seenIds.push(info.id);
+                    localStorage.setItem('noxaSeenInfoIds', JSON.stringify(seenIds));
+                    triggerSystemNotification(`📢 ${info.title}`, info.contentTitle || info.content || info.title);
+                  }
+                }
+              }
+            }
+          } catch (e) {}
+
+          // Check for new Announcement & trigger push notifications
+          try {
+            const annRes = await fetch('/api/announcement');
+            const annData = await annRes.json();
+            if (annData.success && annData.announcement && annData.announcement.active && annData.announcement.text) {
+              const lastAnnText = localStorage.getItem('noxaLastAnnouncementText');
+              if (lastAnnText && lastAnnText !== annData.announcement.text) {
+                triggerSystemNotification('📣 Pengumuman Baru', annData.announcement.text);
+              }
+              localStorage.setItem('noxaLastAnnouncementText', annData.announcement.text);
+            }
+          } catch (e) {}
         } catch (err) {
           console.error('Gagal sinkronisasi data dari server:', err);
           showNotification('❌ Sambungan ke server terputus!');
