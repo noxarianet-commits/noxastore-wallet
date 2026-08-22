@@ -7714,10 +7714,10 @@
               showNotification(`✅ Transfer Rp ${amount.toLocaleString('id-ID')} ke ${target} berhasil!`);
               syncServerState();
             } else {
-              showNotification('❌ ' + (data.error || 'Transfer gagal.'));
+              throw new Error(data.error || 'Transfer gagal.');
             }
           } catch (e) {
-            showNotification('❌ Koneksi error: ' + e.message);
+            throw e;
           } finally {
             if (btn) { btn.disabled = false; btn.textContent = 'Kirim Saldo'; }
           }
@@ -11126,9 +11126,16 @@
       // ============================================================
       var _pinOverlayDigits = [];
       var _pinOverlayType = null;
+      var _pinOverlayCallback = null;
 
-      function openPinOverlay(type) {
-        _pinOverlayType = type;
+      function openPinOverlay(type, callback) {
+        if (typeof type === 'function') {
+          _pinOverlayCallback = type;
+          _pinOverlayType = 'custom';
+        } else {
+          _pinOverlayType = type;
+          _pinOverlayCallback = callback || null;
+        }
         _pinOverlayDigits = [];
         _pinOverlayUpdateDots();
         var err = document.getElementById('pin-overlay-error');
@@ -11146,6 +11153,7 @@
       function closePinOverlay() {
         _pinOverlayDigits = [];
         _pinOverlayType = null;
+        _pinOverlayCallback = null;
         var overlay = document.getElementById('pin-entry-overlay');
         if (overlay) overlay.style.display = 'none';
       }
@@ -11214,6 +11222,13 @@
           await _submitPpobWithPin(pin);
         } else if (_pinOverlayType === 'ewallet') {
           await _submitEwalletWithPin(pin);
+        } else if (typeof _pinOverlayCallback === 'function') {
+          try {
+            await _pinOverlayCallback(pin);
+            closePinOverlay();
+          } catch(e) {
+            _pinOverlayShowError(e.message || 'Proses gagal');
+          }
         }
       }
 
