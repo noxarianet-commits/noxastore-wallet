@@ -30,9 +30,25 @@ self.addEventListener('push', (event) => {
     }
   };
 
-  event.waitUntil(
-    self.registration.showNotification(data.title || 'NoxariaNet Wallet', options)
-  );
+  const promiseChain = self.clients.matchAll({
+    type: 'window',
+    includeUncontrolled: true
+  }).then((windowClients) => {
+    let isForeground = false;
+    for (let i = 0; i < windowClients.length; i++) {
+      const client = windowClients[i];
+      if (client.focused || client.visibilityState === 'visible') {
+        isForeground = true;
+        break;
+      }
+    }
+    // Only trigger system card if user is NOT currently inside the active app
+    if (!isForeground) {
+      return self.registration.showNotification(data.title || 'NoxariaNet Wallet', options);
+    }
+  });
+
+  event.waitUntil(promiseChain);
 });
 
 // Notification Click Event Listener

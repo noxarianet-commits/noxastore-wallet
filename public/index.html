@@ -8244,6 +8244,9 @@
 
       // Register Service Worker for Mobile System Notifications
       function initServiceWorker() {
+        if (window._serviceWorkerInitialized) return;
+        window._serviceWorkerInitialized = true;
+
         if ('serviceWorker' in navigator) {
           navigator.serviceWorker.register('/sw.js')
             .then(reg => {
@@ -8254,7 +8257,10 @@
                 setTimeout(requestNotificationPermission, 1200);
               }
             })
-            .catch(err => console.warn('[SW] Service Worker registration failed:', err));
+            .catch(err => {
+              window._serviceWorkerInitialized = false;
+              console.warn('[SW] Service Worker registration failed:', err);
+            });
         } else if ('Notification' in window && Notification.permission === 'default') {
           setTimeout(requestNotificationPermission, 1200);
         }
@@ -8263,6 +8269,10 @@
       // Real-time EventSource Stream Client (Instant Push Notifications & Live Sync)
       function initRealtimeStream() {
         const username = localStorage.getItem('noxaUsername') || 'guest';
+        if (window._sseUsername === username && window._sseSource && window._sseSource.readyState !== 2) {
+          return; // Connection is already active for this username
+        }
+        window._sseUsername = username;
         if (!window.EventSource) return;
 
         if (window._sseSource) {
