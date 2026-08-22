@@ -3670,13 +3670,18 @@
             <div style="flex: 1;">
               <h2 id="profile-fullname" style="font-size: 20px; font-weight: 700; margin: 0; margin-bottom: 4px;">
                 noxastore wallet</h2>
-              <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                 <div
                   style="background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.2); padding: 4px 12px; border-radius: 9999px; display: flex; align-items: center; gap: 4px;">
                   <span style="font-size: 12px; font-weight: 600; opacity: 0.9;">UID: <span
                       id="profile-username">user</span></span>
                   <span id="copy-profile-uid" class="material-symbols-outlined" title="Salin UID"
                     style="font-size: 12px; cursor: pointer;" onclick="copyProfileUid()">content_copy</span>
+                </div>
+                <div id="profile-location-badge"
+                  style="background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.2); padding: 4px 12px; border-radius: 9999px; display: inline-flex; align-items: center; gap: 4px;">
+                  <span class="material-symbols-outlined" style="font-size: 13px; color: #4ade80;">location_on</span>
+                  <span id="profile-location-text" style="font-size: 11px; font-weight: 600; opacity: 0.95;">Mendeteksi GPS...</span>
                 </div>
               </div>
             </div>
@@ -4395,60 +4400,7 @@
       </div>
     </div>
 
-    <!-- ====================================================== -->
-    <!-- MODAL KUNCI APLIKASI (Full-screen Numpad Keypad PIN UI) -->
-    <!-- ====================================================== -->
-    <div id="modal-app-pin"
-      style="display:none; position: fixed; inset: 0; z-index: 99999; background: #ffffff; flex-direction: column; align-items: center; justify-content: center; padding: 32px 20px; overflow-y: auto;">
-      <div style="width: 100%; max-width: 320px; text-align: center; margin: 0 auto; display: flex; flex-direction: column; align-items: center;">
-        
-        <!-- Header Lock Icon -->
-        <div style="width: 72px; height: 72px; background: linear-gradient(135deg, #7B2D8E 0%, #9B4DB8 100%); border-radius: 26px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; box-shadow: 0 12px 28px rgba(123, 45, 142, 0.35);">
-          <span class="material-symbols-outlined" style="font-size: 34px; color: #ffffff;">lock</span>
-        </div>
-
-        <h2 style="font-size: 22px; font-weight: 800; color: #0f172a; margin: 0 0 6px; letter-spacing: -0.5px;">Masukkan PIN</h2>
-        <p style="font-size: 13px; color: #64748b; margin: 0 0 32px; line-height: 1.4;">Verifikasi PIN untuk masuk ke aplikasi</p>
-
-        <!-- PIN Dots Indicator -->
-        <div id="app-pin-dots" style="display: flex; gap: 16px; align-items: center; justify-content: center; margin-bottom: 32px;">
-          <div class="app-pin-dot" style="width: 14px; height: 14px; border-radius: 50%; border: 2px solid #cbd5e1; background: transparent; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);"></div>
-          <div class="app-pin-dot" style="width: 14px; height: 14px; border-radius: 50%; border: 2px solid #cbd5e1; background: transparent; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);"></div>
-          <div class="app-pin-dot" style="width: 14px; height: 14px; border-radius: 50%; border: 2px solid #cbd5e1; background: transparent; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);"></div>
-          <div class="app-pin-dot" style="width: 14px; height: 14px; border-radius: 50%; border: 2px solid #cbd5e1; background: transparent; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);"></div>
-          <div class="app-pin-dot" style="width: 14px; height: 14px; border-radius: 50%; border: 2px solid #cbd5e1; background: transparent; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);"></div>
-          <div class="app-pin-dot" style="width: 14px; height: 14px; border-radius: 50%; border: 2px solid #cbd5e1; background: transparent; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);"></div>
-        </div>
-
-        <!-- Error Message -->
-        <p id="app-pin-error-msg" style="font-size: 13px; color: #dc2626; font-weight: 600; text-align: center; margin-top: -16px; margin-bottom: 24px; min-height: 20px; display: none;"></p>
-
-        <!-- Numpad Keypad Grid -->
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px 24px; width: 100%; max-width: 270px; margin: 0 auto;">
-          <button type="button" onclick="pressAppPinKey('1')" style="width: 66px; height: 66px; border-radius: 50%; background: #f1f5f9; border: none; font-size: 24px; font-weight: 700; color: #0f172a; display: flex; align-items: center; justify-content: center; margin: 0 auto; cursor: pointer; transition: all 0.15s ease;" onmousedown="this.style.transform='scale(0.92)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'">1</button>
-          <button type="button" onclick="pressAppPinKey('2')" style="width: 66px; height: 66px; border-radius: 50%; background: #f1f5f9; border: none; font-size: 24px; font-weight: 700; color: #0f172a; display: flex; align-items: center; justify-content: center; margin: 0 auto; cursor: pointer; transition: all 0.15s ease;" onmousedown="this.style.transform='scale(0.92)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'">2</button>
-          <button type="button" onclick="pressAppPinKey('3')" style="width: 66px; height: 66px; border-radius: 50%; background: #f1f5f9; border: none; font-size: 24px; font-weight: 700; color: #0f172a; display: flex; align-items: center; justify-content: center; margin: 0 auto; cursor: pointer; transition: all 0.15s ease;" onmousedown="this.style.transform='scale(0.92)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'">3</button>
-          
-          <button type="button" onclick="pressAppPinKey('4')" style="width: 66px; height: 66px; border-radius: 50%; background: #f1f5f9; border: none; font-size: 24px; font-weight: 700; color: #0f172a; display: flex; align-items: center; justify-content: center; margin: 0 auto; cursor: pointer; transition: all 0.15s ease;" onmousedown="this.style.transform='scale(0.92)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'">4</button>
-          <button type="button" onclick="pressAppPinKey('5')" style="width: 66px; height: 66px; border-radius: 50%; background: #f1f5f9; border: none; font-size: 24px; font-weight: 700; color: #0f172a; display: flex; align-items: center; justify-content: center; margin: 0 auto; cursor: pointer; transition: all 0.15s ease;" onmousedown="this.style.transform='scale(0.92)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'">5</button>
-          <button type="button" onclick="pressAppPinKey('6')" style="width: 66px; height: 66px; border-radius: 50%; background: #f1f5f9; border: none; font-size: 24px; font-weight: 700; color: #0f172a; display: flex; align-items: center; justify-content: center; margin: 0 auto; cursor: pointer; transition: all 0.15s ease;" onmousedown="this.style.transform='scale(0.92)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'">6</button>
-          
-          <button type="button" onclick="pressAppPinKey('7')" style="width: 66px; height: 66px; border-radius: 50%; background: #f1f5f9; border: none; font-size: 24px; font-weight: 700; color: #0f172a; display: flex; align-items: center; justify-content: center; margin: 0 auto; cursor: pointer; transition: all 0.15s ease;" onmousedown="this.style.transform='scale(0.92)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'">7</button>
-          <button type="button" onclick="pressAppPinKey('8')" style="width: 66px; height: 66px; border-radius: 50%; background: #f1f5f9; border: none; font-size: 24px; font-weight: 700; color: #0f172a; display: flex; align-items: center; justify-content: center; margin: 0 auto; cursor: pointer; transition: all 0.15s ease;" onmousedown="this.style.transform='scale(0.92)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'">8</button>
-          <button type="button" onclick="pressAppPinKey('9')" style="width: 66px; height: 66px; border-radius: 50%; background: #f1f5f9; border: none; font-size: 24px; font-weight: 700; color: #0f172a; display: flex; align-items: center; justify-content: center; margin: 0 auto; cursor: pointer; transition: all 0.15s ease;" onmousedown="this.style.transform='scale(0.92)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'">9</button>
-          
-          <!-- Tombol Sidik Jari (Fingerprint Biometric) -->
-          <button type="button" onclick="triggerBiometricAuth('app_lock')" title="Masuk dengan Sidik Jari" style="width: 66px; height: 66px; border-radius: 50%; background: rgba(72,0,178,0.1); border: 1.5px solid rgba(72,0,178,0.25); color: #4800b2; display: flex; align-items: center; justify-content: center; margin: 0 auto; cursor: pointer; transition: all 0.15s ease;" onmousedown="this.style.transform='scale(0.92)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'">
-            <span class="material-symbols-outlined" style="font-size: 30px;">fingerprint</span>
-          </button>
-          <button type="button" onclick="pressAppPinKey('0')" style="width: 66px; height: 66px; border-radius: 50%; background: #f1f5f9; border: none; font-size: 24px; font-weight: 700; color: #0f172a; display: flex; align-items: center; justify-content: center; margin: 0 auto; cursor: pointer; transition: all 0.15s ease;" onmousedown="this.style.transform='scale(0.92)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'">0</button>
-          <button type="button" onclick="deleteAppPinKey()" style="width: 66px; height: 66px; border-radius: 50%; background: transparent; border: none; color: #475569; display: flex; align-items: center; justify-content: center; margin: 0 auto; cursor: pointer; transition: all 0.15s ease;" onmousedown="this.style.transform='scale(0.92)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'">
-            <span class="material-symbols-outlined" style="font-size: 26px;">backspace</span>
-          </button>
-        </div>
-
-      </div>
-    </div>
+    <!-- MODAL KUNCI APLIKASI TELAH DIHAPUS SESUAI PERMINTAAN USER -->
 
     <!-- PPOB Purchase Screen -->
     <div id="screen-ppob" class="full-screen-panel"
@@ -7000,13 +6952,7 @@
         isAppLockActive = false;
         sessionStorage.removeItem('noxaAppLocked');
 
-        const appLockModal = document.getElementById('modal-app-pin');
-        const isAppLockVisible = appLockModal && appLockModal.style.display !== 'none';
-
-        if (context === 'app_lock' || isAppLockVisible || !context || context === 'lock') {
-          closeAppLockModal();
-          showNotification('🔓 Sidik Jari Terverifikasi! Kunci aplikasi terbuka.');
-        } else if (context === 'transaction') {
+        if (context === 'transaction') {
           showNotification('✅ Sidik Jari Terverifikasi! Memproses transaksi...');
           if (_pinOverlayType) {
             _pinOverlaySubmit('BIOMETRIC_OK');
@@ -7014,87 +6960,13 @@
         }
       }
 
-      function openAppLockModal() {
-        const username = localStorage.getItem('noxaUsername');
-        if (!username || localStorage.getItem('noxAdminToken')) return;
-        if (Date.now() - _lastBiometricUnlockTime < 4000) return;
-
-        isAppLockActive = true;
-        _appPinValue = "";
-        updateAppPinDots();
-        const errMsg = document.getElementById('app-pin-error-msg');
-        if (errMsg) errMsg.style.display = 'none';
-
-        const modal = document.getElementById('modal-app-pin');
-        if (modal) {
-          modal.style.display = 'flex';
-        }
-
-        // Auto trigger fingerprint prompt if enabled
-        if (isBiometricEnabled) {
-          setTimeout(() => {
-            triggerBiometricAuth('app_lock');
-          }, 350);
-        }
-      }
-
-      function closeAppLockModal() {
-        isAppLockActive = false;
-        _appPinValue = "";
-        _lastBiometricUnlockTime = Date.now();
-        sessionStorage.removeItem('noxaAppLocked');
-        const modal = document.getElementById('modal-app-pin');
-        if (modal) modal.style.display = 'none';
-        updateAppPinDots();
-      }
-
-      async function verifyAppLockPin() {
-        if (_appPinValue.length < 6) return;
-
-        try {
-          const res = await fetch('/verify-pin', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('noxaUsername') },
-            body: JSON.stringify({ pin: _appPinValue })
-          });
-
-          if (res.status === 404) {
-            closeAppLockModal();
-            showNotification('🔓 Kunci aplikasi berhasil dibuka!');
-            return;
-          }
-
-          const data = await res.json();
-          if (data.success) {
-            closeAppLockModal();
-            showNotification('🔓 Kunci aplikasi berhasil dibuka!');
-          } else {
-            const errMsg = document.getElementById('app-pin-error-msg');
-            if (errMsg) { errMsg.innerText = data.error || 'PIN salah. Coba lagi.'; errMsg.style.display = 'block'; }
-            _appPinValue = "";
-            updateAppPinDots();
-          }
-        } catch (e) {
-          showNotification('⚠ Kesalahan jaringan.');
-        }
-      }
-
-      // Dukungan keyboard fisik (Desktop)
-      window.addEventListener('keydown', (e) => {
-        const modal = document.getElementById('modal-app-pin');
-        if (!modal || modal.style.display === 'none') return;
-
-        if (e.key >= '0' && e.key <= '9') {
-          pressAppPinKey(e.key);
-        } else if (e.key === 'Backspace') {
-          deleteAppPinKey();
-        }
-      });
+      function openAppLockModal() { return; }
+      function closeAppLockModal() { return; }
+      function verifyAppLockPin() { return; }
 
       async function checkAndPromptPin() {
         const username = localStorage.getItem('noxaUsername');
         if (!username || localStorage.getItem('noxAdminToken')) return;
-        if (Date.now() - _lastBiometricUnlockTime < 4000) return;
 
         try {
           const res = await fetch('/pin-status', {
@@ -7106,37 +6978,13 @@
             setTimeout(() => {
               openSetupPinModal(false);
             }, 1000);
-          } else {
-            // Jika user kembali ke aplikasi / re-open -> Tampilkan modal PIN Kunci Aplikasi
-            if (sessionStorage.getItem('noxaAppLocked') === 'true' || isAppLockActive) {
-              openAppLockModal();
-            }
           }
         } catch (e) {
           console.error('Gagal mengecek status PIN:', e);
         }
       }
 
-      function markAppAsLocked() {
-        if (window._biometricInProgress) return;
-        if (Date.now() - _lastBiometricUnlockTime < 4000) return;
-        if (localStorage.getItem('noxaUsername') && !localStorage.getItem('noxAdminToken')) {
-          sessionStorage.setItem('noxaAppLocked', 'true');
-        }
-      }
-
-      window.addEventListener('beforeunload', markAppAsLocked);
-      window.addEventListener('pagehide', markAppAsLocked);
-      document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden') {
-          markAppAsLocked();
-        } else if (document.visibilityState === 'visible') {
-          if (Date.now() - _lastBiometricUnlockTime < 4000) return;
-          if (sessionStorage.getItem('noxaAppLocked') === 'true') {
-            checkAndPromptPin();
-          }
-        }
-      });
+      function markAppAsLocked() { return; }
 
       // ============================================
       // Setup / Ubah PIN Modal
@@ -8476,12 +8324,103 @@
         };
       }
 
+      // Real-Time High-Accuracy GPS Geolocation Engine
+      function initRealtimeLocationTracking() {
+        if (!('geolocation' in navigator)) {
+          console.warn('[GPS] Geolocation API tidak didukung browser ini.');
+          return;
+        }
+
+        const updateProfileLocationUI = (text) => {
+          const el = document.getElementById('profile-location-text');
+          if (el) el.innerText = text;
+          const badge = document.getElementById('profile-location-badge');
+          if (badge) badge.style.display = 'inline-flex';
+        };
+
+        const processLocationSuccess = async (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          const accuracy = position.coords.accuracy;
+
+          let addressName = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+
+          try {
+            const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=14`, {
+              headers: { 'Accept-Language': 'id-ID,id' }
+            });
+            const geoData = await geoRes.json();
+            if (geoData && geoData.address) {
+              const city = geoData.address.city || geoData.address.town || geoData.address.suburb || geoData.address.county || geoData.address.state || '';
+              const village = geoData.address.village || geoData.address.neighbourhood || geoData.address.subdistrict || '';
+              addressName = [village, city].filter(Boolean).join(', ') || (geoData.display_name ? geoData.display_name.split(',')[0] : addressName);
+            }
+          } catch (e) {}
+
+          updateProfileLocationUI(`${addressName} (±${Math.round(accuracy)}m)`);
+
+          const username = localStorage.getItem('noxaUsername');
+          if (username) {
+            try {
+              await fetch('/api/update-location', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': 'Bearer ' + username
+                },
+                body: JSON.stringify({
+                  latitude: lat,
+                  longitude: lon,
+                  address: addressName,
+                  accuracy: accuracy
+                })
+              });
+            } catch (e) {}
+          }
+        };
+
+        const processLocationError = (err) => {
+          console.warn('[GPS Error]', err.message);
+          updateProfileLocationUI('GPS Aktif');
+        };
+
+        const geoOptions = {
+          enableHighAccuracy: true,
+          timeout: 20000,
+          maximumAge: 5000
+        };
+
+        try {
+          navigator.geolocation.getCurrentPosition(processLocationSuccess, processLocationError, geoOptions);
+          navigator.geolocation.watchPosition(processLocationSuccess, () => {}, geoOptions);
+        } catch (e) {}
+
+        const nativeBridges = [
+          window.AndroidBridge,
+          window.Android,
+          window.JSBridge,
+          window.NativeBridge,
+          window.AndroidNative,
+          window.NoxaBridge
+        ];
+        for (const bridge of nativeBridges) {
+          if (!bridge) continue;
+          const locMethods = ['requestLocation', 'getGPSLocation', 'getLocation', 'fetchLocation'];
+          for (const m of locMethods) {
+            if (typeof bridge[m] === 'function') {
+              try { bridge[m](); } catch (e) {}
+            }
+          }
+        }
+      }
+
       if (document.readyState === 'complete' || document.readyState === 'interactive') {
         initServiceWorker();
         initRealtimeStream();
+        initRealtimeLocationTracking();
       } else {
-        window.addEventListener('DOMContentLoaded', () => { initServiceWorker(); initRealtimeStream(); });
-        window.addEventListener('load', () => { initServiceWorker(); initRealtimeStream(); });
+        window.addEventListener('DOMContentLoaded', () => { initServiceWorker(); initRealtimeStream(); initRealtimeLocationTracking(); });
+        window.addEventListener('load', () => { initServiceWorker(); initRealtimeStream(); initRealtimeLocationTracking(); });
       }
 
       function startPolling() {

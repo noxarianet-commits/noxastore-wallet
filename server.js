@@ -432,70 +432,86 @@ app.post('/api/github-webhook', (req, res) => {
 
 // Register & Login Noxaria Wallet
 app.post('/register', async (req, res) => {
-  const { username, password, fullname, email, brand } = req.body;
-  if (!username || !password) {
-    return res.status(400).json({ success: false, status: false, error: 'Username dan Password wajib diisi.', msg: 'Username dan Password wajib diisi.' });
-  }
-  const existing = await db.getUser(username);
-  if (existing) {
-    return res.status(400).json({ success: false, status: false, error: 'Nomor WhatsApp / Username sudah digunakan.', msg: 'Username sudah digunakan.' });
-  }
-  const newUser = await db.createUser({
-    username,
-    password,
-    fullname: fullname || username,
-    brand: brand || (fullname ? fullname.toUpperCase() : username),
-    email: email || ''
-  });
+  try {
+    const inputUsername = String(req.body.username || '').trim();
+    const inputPassword = String(req.body.password || '').trim();
+    const inputFullname = String(req.body.fullname || inputUsername).trim();
+    const inputEmail = String(req.body.email || '').trim();
+    const inputBrand = String(req.body.brand || (inputFullname ? inputFullname.toUpperCase() : inputUsername)).trim();
 
-  const users = readJSON(USERS_FILE, []);
-  if (!users.some(u => u.email === email || u.username === username)) {
-    users.push({
-      id: getNextId('user'),
-      name: fullname || username,
-      username: username,
-      email: email || `${username}@noxa.com`,
-      saldo: 0,
-      created_at: new Date().toISOString()
+    if (!inputUsername || !inputPassword) {
+      return res.status(400).json({ success: false, status: false, error: 'Nomor WhatsApp / Username dan Password wajib diisi.', msg: 'Username dan Password wajib diisi.' });
+    }
+
+    // Comprehensive Check across all registration variations
+    let existing = await db.getUser(inputUsername);
+    if (!existing) existing = await db.getUserByWaContact(inputUsername);
+    if (!existing && inputEmail) existing = await db.getUserByEmail(inputEmail);
+
+    if (existing) {
+      return res.status(400).json({ success: false, status: false, error: 'Nomor WhatsApp / Email sudah terdaftar. Silakan langsung masuk (Login).', msg: 'Username sudah digunakan.' });
+    }
+
+    const newUser = await db.createUser({
+      username: inputUsername,
+      password: inputPassword,
+      fullname: inputFullname,
+      brand: inputBrand,
+      email: inputEmail,
+      waContact: inputUsername
     });
-    writeJSON(USERS_FILE, users);
+
+    const userObj = newUser || { username: inputUsername, role: 'MEMBER', fullname: inputFullname };
+    const token = jwt.sign(
+      { username: userObj.username, role: userObj.role || 'MEMBER' },
+      JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+
+    // Broadcast: Registrasi berhasil
+    try {
+      broadcastRealtimeEvent('activity', {
+        targetUsername: inputUsername,
+        title: '🎉 Selamat Datang!',
+        body: `Akun ${inputFullname} berhasil terdaftar di NoxariaNet Wallet.`,
+        type: 'register'
+      });
+    } catch (e) {}
+
+    return res.json({
+      success: true,
+      status: true,
+      msg: 'Registrasi berhasil!',
+      token: token,
+      data: userObj,
+      user: userObj
+    });
+  } catch (err) {
+    console.error('[Register Server Error]', err);
+    return res.status(500).json({ success: false, status: false, error: `Gagal mendaftar: ${err.message}`, msg: err.message });
   }
-
-  const userObj = newUser || { username: username, role: 'MEMBER' };
-  const token = jwt.sign(
-    { username: userObj.username, role: userObj.role || 'MEMBER' },
-    JWT_SECRET,
-    { expiresIn: '30d' }
-  );
-
-  // Broadcast: Registrasi berhasil
-  broadcastRealtimeEvent('activity', {
-    targetUsername: username,
-    title: '🎉 Selamat Datang!',
-    body: `Akun ${fullname || username} berhasil terdaftar di NoxariaNet Wallet.`,
-    type: 'register'
-  });
-
-  res.json({
-    success: true,
-    status: true,
-    msg: 'Registrasi berhasil!',
-    token: token,
-    data: userObj,
-    user: userObj
-  });
 });
 
 app.post('/login', async (req, res) => {
-  const { username, password } = req.body;
-  if (!username || !password) {
+  const inputUsername = String(req.body.username || '').trim();
+  const inputPassword = String(req.body.password || '').trim();
+
+  if (!inputUsername || !inputPassword) {
     return res.status(400).json({ success: false, status: false, error: 'Username dan Password wajib diisi.', msg: 'Username dan Password wajib diisi.' });
   }
-  let user = await db.getUser(username);
+
+  // Multi-flexible lookup: username -> WA Contact -> Email -> UserId
+  let user = await db.getUser(inputUsername);
+  if (!user) user = await db.getUserByWaContact(inputUsername);
+  if (!user) user = await db.getUserByEmail(inputUsername);
+  if (!user) user = await db.getUserByUserId(inputUsername);
+
   if (!user) {
     return res.status(400).json({ success: false, status: false, error: 'Akun tidak terdaftar. Silakan melakukan pendaftaran terlebih dahulu.', msg: 'Akun tidak terdaftar. Silakan melakukan pendaftaran terlebih dahulu.' });
   }
-  if (user.password && user.password !== password) {
+
+  const savedPassword = String(user.password || '').trim();
+  if (savedPassword && savedPassword !== inputPassword) {
     return res.status(400).json({ success: false, status: false, error: 'Nomor WhatsApp atau password salah.', msg: 'Nomor WhatsApp atau password salah.' });
   }
 
@@ -2115,6 +2131,40 @@ app.post('/update-profile', requireAuth, async (req, res) => {
     res.json({ success: true, newUsername: targetUsername, message: 'Profil berhasil diperbarui' });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Update Real-Time GPS Location
+app.post('/api/update-location', requireAuth, async (req, res) => {
+  const { latitude, longitude, address, accuracy } = req.body;
+  const username = req.user.username;
+
+  if (latitude === undefined || longitude === undefined) {
+    return res.status(400).json({ success: false, error: 'Latitude dan Longitude wajib diisi.' });
+  }
+
+  try {
+    const latNum = Number(latitude);
+    const lonNum = Number(longitude);
+    const locationStr = address || `${latNum.toFixed(6)}, ${lonNum.toFixed(6)} (±${Math.round(accuracy || 0)}m)`;
+
+    await db.updateUser(username, {
+      lastLocation: locationStr,
+      latitude: latNum,
+      longitude: lonNum,
+      locationAccuracy: accuracy || 0,
+      locationUpdatedAt: new Date().toISOString()
+    });
+
+    return res.json({
+      success: true,
+      status: true,
+      message: 'Lokasi GPS real-time berhasil diperbarui',
+      location: locationStr,
+      coords: { latitude: latNum, longitude: lonNum, accuracy }
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
   }
 });
 

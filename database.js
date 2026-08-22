@@ -368,17 +368,43 @@ async function getUserByEmail(email) {
 
 async function getUserByWaContact(waContact) {
   if (!waContact) return null;
-  const clean = String(waContact).replace(/\D/g, '');
+  const rawStr = String(waContact).trim();
+  const clean = rawStr.replace(/\D/g, '');
+
   if (!sqlite3) {
     const users = readJSONUsers();
     const u = users.find(x => {
-      const uClean = String(x.username || x.waContact || x.name || '').replace(/\D/g, '');
-      return uClean === clean;
+      if (!x) return false;
+      const xUname = String(x.username || x.name || '').trim();
+      const xWa = String(x.waContact || '').trim();
+      const xEmail = String(x.email || '').trim().toLowerCase();
+      if (xUname.toLowerCase() === rawStr.toLowerCase()) return true;
+      if (xEmail && xEmail === rawStr.toLowerCase()) return true;
+      if (xWa && xWa === rawStr) return true;
+
+      const uClean = xUname.replace(/\D/g, '');
+      const waClean = xWa.replace(/\D/g, '');
+      if (clean && (uClean === clean || waClean === clean)) return true;
+
+      if (clean && clean.length >= 8) {
+        const norm1 = clean.startsWith('62') ? '0' + clean.slice(2) : clean;
+        const norm2 = clean.startsWith('0') ? '62' + clean.slice(1) : clean;
+        const target1 = uClean.startsWith('62') ? '0' + uClean.slice(2) : uClean;
+        const target2 = waClean.startsWith('62') ? '0' + waClean.slice(2) : waClean;
+        if (norm1 === target1 || norm1 === target2 || norm2 === target1 || norm2 === target2) return true;
+      }
+      return false;
     });
     if (!u) return null;
     return await getUser(u.username || u.name);
   }
-  const userRow = await get('SELECT username FROM users WHERE username = ? OR REPLACE(waContact, "+", "") = ?', [clean, clean]);
+
+  const clean08 = clean.startsWith('62') ? '0' + clean.slice(2) : clean;
+  const clean62 = clean.startsWith('0') ? '62' + clean.slice(1) : clean;
+  const userRow = await get(
+    'SELECT username FROM users WHERE username = ? OR username = ? OR username = ? OR waContact = ? OR waContact = ? OR REPLACE(waContact, "+", "") = ? OR LOWER(email) = ?',
+    [rawStr, clean08, clean62, clean08, clean62, clean, rawStr.toLowerCase()]
+  );
   if (!userRow) return null;
   return await getUser(userRow.username);
 }
@@ -405,11 +431,13 @@ async function getAllUsersMap() {
 
 async function createUser(userData) {
   const { username, fullname, brand, password, userId, email, waContact, mainBalance, role, lastIp, lastDevice, lastLocation } = userData;
-  const uName = username;
+  const uName = String(username || '').trim();
+  const cleanEmail = String(email || '').trim();
+  const cleanWa = String(waContact || uName).trim();
 
   if (!sqlite3) {
     const users = readJSONUsers();
-    let userIdx = users.findIndex(x => (x.username && x.username === uName) || (x.name && x.name === uName));
+    let userIdx = users.findIndex(x => (x.username && x.username === uName) || (x.name && x.name === uName) || (cleanEmail && x.email && x.email.toLowerCase() === cleanEmail.toLowerCase()));
     const formattedObj = {
       id: userIdx >= 0 ? users[userIdx].id : users.length + 1,
       username: uName,
@@ -417,8 +445,8 @@ async function createUser(userData) {
       fullname: fullname || uName,
       brand: brand || (fullname ? fullname.toUpperCase() : uName),
       password: password || '',
-      email: email || `${uName}@noxa.com`,
-      waContact: waContact || uName,
+      email: cleanEmail || `${uName}@noxa.com`,
+      waContact: cleanWa,
       saldo: mainBalance || 0,
       mainBalance: mainBalance || 0,
       qrisBalance: 0,
@@ -435,36 +463,6 @@ async function createUser(userData) {
     return await getUser(uName);
   }
 
-  await run(`
-    INSERT INTO users (
-      username, password, fullname, brand, userId, email, waContact,
-      mainBalance, qrisBalance, role, transactionPin, lastIp, lastDevice, lastLocation
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, NULL, ?, ?, ?)
-    ON CONFLICT(username) DO UPDATE SET
-      fullname = excluded.fullname,
-      password = excluded.password,
-      mainBalance = excluded.mainBalance;
-  `, [
-    uName,
-    password || '',
-    fullname || uName,
-    brand || (fullname ? fullname.toUpperCase() : uName),
-    userId || uName,
-    email || '',
-    waContact || uName,
-    mainBalance || 0,
-    role || 'MEMBER',
-    lastIp || '',
-    lastDevice || '',
-    lastLocation || 'Mencari lokasi...'
-  ]);
-
-  const createdUser = await getUser(uName);
-  if (createdUser) return createdUser;
-
-  // Fallback if sqlite getUser returns null
-  return {
-    username: uName,
     name: fullname || uName,
     fullname: fullname || uName,
     brand: brand || (fullname ? fullname.toUpperCase() : uName),
