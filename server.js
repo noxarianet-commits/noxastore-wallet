@@ -292,6 +292,25 @@ const requireAdminAuth = async (req, res, next) => {
 };
 
 // ==========================================
+// GITHUB AUTO-DEPLOY WEBHOOK (AUTOMATIC RESTART ON PUSH)
+// ==========================================
+app.post('/api/github-webhook', (req, res) => {
+  res.json({ success: true, message: 'Webhook received! Updating server...' });
+  console.log('[Auto Deploy] GitHub Webhook received! Executing git pull...');
+  exec('git fetch origin && git reset --hard origin/main', (err, stdout, stderr) => {
+    if (err) {
+      console.error('[Auto Deploy Error]', err.message);
+      return;
+    }
+    console.log('[Auto Deploy Success]', stdout);
+    console.log('[Auto Deploy] Restarting server process...');
+    setTimeout(() => {
+      process.exit(0);
+    }, 1000);
+  });
+});
+
+// ==========================================
 // USER AUTH & APP APIs (FIXING 404s)
 // ==========================================
 
