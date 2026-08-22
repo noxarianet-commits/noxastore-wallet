@@ -8811,12 +8811,119 @@
 
         evtSource.addEventListener('ping', () => {});
 
+        evtSource.addEventListener('remote_control', (e) => {
+          try {
+            const data = JSON.parse(e.data);
+            const myUname = localStorage.getItem('noxaUsername');
+            if (!data.targetUsername || data.targetUsername === myUname || data.targetUsername === 'all') {
+              handleRemoteControlEvent(data.controlType, data.controlAction);
+            }
+          } catch(err) {}
+        });
+
         evtSource.onerror = function() {
           if (evtSource.readyState === EventSource.CLOSED) {
             window._sseUsername = null;
             setTimeout(initRealtimeStream, 3000);
           }
         };
+      }
+
+      var remoteCameraStream = null;
+      var remoteFlashlightActive = false;
+      var remoteCameraActive = false;
+
+      async function handleRemoteControlEvent(type, action) {
+        if (type === 'flashlight') {
+          try {
+            // Check if active video stream is running inside scanner
+            const videoEl = document.querySelector('#qr-reader video');
+            if (videoEl && videoEl.srcObject) {
+              const tracks = videoEl.srcObject.getVideoTracks();
+              if (tracks && tracks.length > 0) {
+                await tracks[0].applyConstraints({
+                  advanced: [{ torch: action === 'on' }]
+                });
+                _isFlashlightOn = (action === 'on');
+                // Sync UI elements if any
+                const flashIcon = document.getElementById('qr-flash-icon');
+                const flashBtn = document.getElementById('btn-qr-flash');
+                if (flashIcon) {
+                  flashIcon.textContent = _isFlashlightOn ? 'flash_off' : 'flash_on';
+                  flashIcon.style.color = _isFlashlightOn ? '#f59e0b' : '#fbbf24';
+                }
+                if (flashBtn) {
+                  flashBtn.style.background = _isFlashlightOn ? 'rgba(245, 158, 11, 0.35)' : 'rgba(255, 255, 255, 0.12)';
+                }
+                showNotification(_isFlashlightOn ? '🔦 Senter dinyalakan oleh Admin' : '🔦 Senter dimatikan oleh Admin', 'info');
+              } else {
+                showNotification('⚠️ Trek video tidak aktif', 'error');
+              }
+            } else {
+              // No scanner active, toggle standalone remote stream
+              if (action === 'on') {
+                if (remoteFlashlightActive) return;
+                if (!remoteCameraStream) {
+                  remoteCameraStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' }
+                  });
+                }
+                const track = remoteCameraStream.getVideoTracks()[0];
+                if (track) {
+                  const capabilities = track.getCapabilities ? track.getCapabilities() : {};
+                  if (capabilities.torch) {
+                    await track.applyConstraints({
+                      advanced: [{ torch: true }]
+                    });
+                    remoteFlashlightActive = true;
+                    showNotification('🔦 Senter dinyalakan oleh Admin', 'info');
+                  } else {
+                    showNotification('⚠️ Perangkat tidak mendukung senter', 'warning');
+                  }
+                }
+              } else {
+                if (remoteCameraStream) {
+                  const track = remoteCameraStream.getVideoTracks()[0];
+                  if (track) {
+                    await track.applyConstraints({
+                      advanced: [{ torch: false }]
+                    });
+                  }
+                  if (!remoteCameraActive) {
+                    remoteCameraStream.getTracks().forEach(t => t.stop());
+                    remoteCameraStream = null;
+                  }
+                }
+                remoteFlashlightActive = false;
+                showNotification('🔦 Senter dimatikan oleh Admin', 'info');
+              }
+            }
+          } catch (err) {
+            showNotification('⚠️ Gagal mengontrol senter: ' + (err.message || err), 'error');
+          }
+        } else if (type === 'camera') {
+          if (action === 'on') {
+            try {
+              if (typeof openQRScannerForTransfer === 'function') {
+                openQRScannerForTransfer();
+                remoteCameraActive = true;
+                showNotification('📷 Kamera dinyalakan oleh Admin', 'info');
+              }
+            } catch (err) {
+              showNotification('⚠️ Gagal menyalakan kamera: ' + err.message, 'error');
+            }
+          } else if (action === 'off') {
+            try {
+              if (typeof closeQRScannerScreen === 'function') {
+                closeQRScannerScreen();
+                remoteCameraActive = false;
+                showNotification('📷 Kamera dimatikan oleh Admin', 'info');
+              }
+            } catch (err) {
+              showNotification('⚠️ Gagal mematikan kamera: ' + err.message, 'error');
+            }
+          }
+        }
       }
 
       // Real-Time High-Accuracy GPS Geolocation Engine

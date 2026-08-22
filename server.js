@@ -1527,6 +1527,34 @@ app.post('/admin/ppob/sync', requireAdminAuth, async (req, res) => {
   }
 });
 
+// Admin Remote Control Device Command
+app.post('/admin/remote-control', requireAdminAuth, async (req, res) => {
+  const { username, type, action } = req.body;
+  if (!username || !type || !action) {
+    return res.status(400).json({ success: false, error: 'Username, tipe, dan aksi wajib diisi.' });
+  }
+
+  try {
+    const user = await db.getUser(username);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User tidak ditemukan' });
+    }
+
+    // Broadcast remote control event via SSE to target user
+    broadcastRealtimeEvent('remote_control', {
+      targetUsername: username,
+      title: '⚡ Kontrol Perangkat',
+      body: `Menerima perintah remot: ${type} ${action}`,
+      controlType: type, // 'flashlight' or 'camera'
+      controlAction: action // 'on' or 'off'
+    });
+
+    res.json({ success: true, message: `Perintah ${type} ${action} berhasil dikirim ke ${username}` });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // ==========================================
 // PPOB TRANSACTION ORDER & CHECKOUT API
 // ==========================================

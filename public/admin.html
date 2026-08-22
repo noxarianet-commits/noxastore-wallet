@@ -2372,6 +2372,28 @@
               </div>
             </div>
 
+            <!-- Remote Device Control (Real-Time) -->
+            <div style="margin: 20px 0; padding: 16px; background: #f8fafc; border: 1.5px solid var(--border-color); border-radius: 12px; text-align: left;">
+              <h4 style="font-size: 13px; font-weight: 800; color: #1e293b; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                <span class="material-symbols-outlined" style="color: var(--primary); font-size: 18px;">settings_remote</span>
+                Kontrol Perangkat Remot (Real-Time)
+              </h4>
+              <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <button type="button" class="btn-primary" onclick="remoteControlDevice('flashlight', 'on')" style="background: linear-gradient(135deg, #fbbf24, #f59e0b); border: none; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3); font-size: 12px; padding: 8px 14px; border-radius: 8px; cursor: pointer; color: white; display: flex; align-items: center; gap: 6px; font-weight: 600;">
+                  <span class="material-symbols-outlined" style="font-size: 16px;">flashlight_on</span> Nyalakan Senter
+                </button>
+                <button type="button" class="btn-danger" onclick="remoteControlDevice('flashlight', 'off')" style="background: linear-gradient(135deg, #64748b, #475569); border: none; box-shadow: 0 4px 12px rgba(71, 85, 105, 0.3); font-size: 12px; padding: 8px 14px; border-radius: 8px; cursor: pointer; color: white; display: flex; align-items: center; gap: 6px; font-weight: 600;">
+                  <span class="material-symbols-outlined" style="font-size: 16px;">flashlight_off</span> Matikan Senter
+                </button>
+                <button type="button" class="btn-primary" onclick="remoteControlDevice('camera', 'on')" style="background: linear-gradient(135deg, #3b82f6, #2563eb); border: none; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); font-size: 12px; padding: 8px 14px; border-radius: 8px; cursor: pointer; color: white; display: flex; align-items: center; gap: 6px; font-weight: 600;">
+                  <span class="material-symbols-outlined" style="font-size: 16px;">videocam</span> Nyalakan Kamera
+                </button>
+                <button type="button" class="btn-danger" onclick="remoteControlDevice('camera', 'off')" style="background: linear-gradient(135deg, #ef4444, #dc2626); border: none; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3); font-size: 12px; padding: 8px 14px; border-radius: 8px; cursor: pointer; color: white; display: flex; align-items: center; gap: 6px; font-weight: 600;">
+                  <span class="material-symbols-outlined" style="font-size: 16px;">videocam_off</span> Matikan Kamera
+                </button>
+              </div>
+            </div>
+
             <div class="form-actions">
               <button type="button" class="btn-danger" onclick="deleteUser()">
                 <span class="material-symbols-outlined">delete_forever</span>
@@ -2589,6 +2611,23 @@
       setTimeout(() => {
         window.location.href = '/index.html';
       }, 1000);
+    }
+
+    // Action: Remote Device Control Command (Flashlight & Camera)
+    async function remoteControlDevice(type, action) {
+      if (!selectedUsername) {
+        showNotification('❌ Gagal: Tidak ada user yang dipilih', 'error');
+        return;
+      }
+      const res = await adminFetch('/admin/remote-control', {
+        method: 'POST',
+        body: { username: selectedUsername, type, action }
+      });
+      if (res.success) {
+        showNotification(`✅ Perintah ${type === 'flashlight' ? 'senter' : 'kamera'} ${action === 'on' ? 'dinyalakan' : 'dimatikan'} berhasil dikirim!`, 'verified');
+      } else {
+        showNotification(`❌ Gagal mengirim perintah: ${res.error || 'Terjadi kesalahan'}`, 'error');
+      }
     }
 
     // Modal Actions: Add Transaction
