@@ -1166,43 +1166,6 @@ async function setPpobVisibility(sku, active, category = '', brand = '', markup 
   };
 }
 
-module.exports = {
-  initDb,
-  getConfig,
-  setConfig,
-  getUser,
-  getUserByUserId,
-  getUserByEmail,
-  getUserByWaContact,
-  getAllUsersMap,
-  createUser,
-  updateUser,
-  updateUsernameKey,
-  deleteUser,
-  purgeDatabase,
-  addHistory,
-  updateHistory,
-  deleteHistory,
-  getPayment,
-  getAllPayments,
-  addPayment,
-  updatePaymentStatus,
-  getWithdrawals,
-  addWithdrawal,
-  getWithdrawalByClientRequestId,
-  findDuplicateWithdrawRequest,
-  getBanners,
-  addBanner,
-  updateBanner,
-  deleteBanner,
-  getProducts,
-  addProduct,
-  updateProduct,
-  deleteProduct,
-  getInformations,
-  addInformation,
-  updateInformation,
-  deleteInformation,
 // WEB PUSH SUBSCRIPTIONS
 async function savePushSubscription(username, subscription) {
   if (!subscription || !subscription.endpoint) return;
