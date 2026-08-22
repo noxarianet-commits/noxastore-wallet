@@ -3942,6 +3942,23 @@
         </div>
         <p id="qr-scanner-hint" style="color: rgba(255,255,255,0.6); font-size: 13px; text-align: center; margin: 0;">Posisikan QR Code di dalam bingkai</p>
         <p id="qr-scanner-status" style="color: #a855f7; font-size: 13px; text-align: center; font-weight: 600; margin: 0; display: none;"></p>
+
+        <!-- Scanner Control Actions (Senter & Galeri) -->
+        <div style="display: flex; gap: 16px; align-items: center; justify-content: center; margin-top: 4px;">
+          <button id="btn-qr-flash" onclick="toggleQRFlashlight()"
+            style="background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 16px; padding: 12px 22px; color: white; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; cursor: pointer; backdrop-filter: blur(10px); transition: all 0.2s;">
+            <span id="qr-flash-icon" class="material-symbols-outlined" style="font-size: 20px; color: #fbbf24;">flash_on</span>
+            <span id="qr-flash-label">Senter</span>
+          </button>
+
+          <button onclick="openQRFromGallery()"
+            style="background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 16px; padding: 12px 22px; color: white; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; cursor: pointer; backdrop-filter: blur(10px); transition: all 0.2s;">
+            <span class="material-symbols-outlined" style="font-size: 20px; color: #38bdf8;">image</span>
+            <span>Galeri</span>
+          </button>
+        </div>
+        <input type="file" id="qr-gallery-input" accept="image/*" style="display: none;" onchange="handleQRGalleryFile(event)" />
+        <div id="qr-file-temp" style="display: none;"></div>
       </div>
     </div>
 
@@ -7831,7 +7848,87 @@
         }
       }
 
+      var _isFlashlightOn = false;
+
+      async function toggleQRFlashlight() {
+        try {
+          const videoEl = document.querySelector('#qr-reader video');
+          if (!videoEl || !videoEl.srcObject) {
+            showNotification('⚠️ Kamera belum aktif.');
+            return;
+          }
+          const tracks = videoEl.srcObject.getVideoTracks();
+          if (!tracks || tracks.length === 0) {
+            showNotification('⚠️ Kamera tidak terdeteksi.');
+            return;
+          }
+          const track = tracks[0];
+          const capabilities = track.getCapabilities ? track.getCapabilities() : {};
+
+          if (!capabilities.torch) {
+            showNotification('⚠️ Perangkat/kamera ini tidak mendukung fitur senter.');
+            return;
+          }
+
+          _isFlashlightOn = !_isFlashlightOn;
+          await track.applyConstraints({
+            advanced: [{ torch: _isFlashlightOn }]
+          });
+
+          const flashIcon = document.getElementById('qr-flash-icon');
+          const flashBtn = document.getElementById('btn-qr-flash');
+          if (flashIcon) {
+            flashIcon.textContent = _isFlashlightOn ? 'flash_off' : 'flash_on';
+            flashIcon.style.color = _isFlashlightOn ? '#f59e0b' : '#fbbf24';
+          }
+          if (flashBtn) {
+            flashBtn.style.background = _isFlashlightOn ? 'rgba(245, 158, 11, 0.35)' : 'rgba(255, 255, 255, 0.12)';
+          }
+          showNotification(_isFlashlightOn ? '🔦 Senter dinyalakan' : '🔦 Senter dimatikan');
+        } catch(e) {
+          showNotification('⚠️ Gagal me-nyalakan/matikan senter: ' + (e.message || e));
+        }
+      }
+
+      function openQRFromGallery() {
+        const input = document.getElementById('qr-gallery-input');
+        if (input) input.click();
+      }
+
+      async function handleQRGalleryFile(event) {
+        const file = event.target.files ? event.target.files[0] : null;
+        if (!file) return;
+
+        showNotification('🔍 Memindai gambar QR dari galeri...', 'info');
+
+        try {
+          if (typeof Html5Qrcode === 'undefined') {
+            showNotification('❌ Library QR scanner belum siap.');
+            return;
+          }
+          let tempScanner = new Html5Qrcode('qr-file-temp', false);
+          const decodedText = await tempScanner.scanFile(file, true);
+          try { await tempScanner.clear(); } catch(e) {}
+
+          if (decodedText) {
+            _onQRScanned(decodedText);
+          } else {
+            showNotification('❌ QR Code tidak terdeteksi pada gambar ini.');
+          }
+        } catch(err) {
+          showNotification('❌ Tidak dapat membaca QR Code dari gambar tersebut.');
+        } finally {
+          event.target.value = '';
+        }
+      }
+
       function _stopQRScanner() {
+        _isFlashlightOn = false;
+        const flashIcon = document.getElementById('qr-flash-icon');
+        const flashBtn = document.getElementById('btn-qr-flash');
+        if (flashIcon) { flashIcon.textContent = 'flash_on'; flashIcon.style.color = '#fbbf24'; }
+        if (flashBtn) { flashBtn.style.background = 'rgba(255, 255, 255, 0.12)'; }
+
         // Kill camera tracks immediately for instant response
         try {
           const videoEl = document.querySelector('#qr-reader video');
