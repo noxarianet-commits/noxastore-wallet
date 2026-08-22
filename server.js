@@ -141,9 +141,9 @@ async function sendBackgroundWebPush(targetUsername, payload) {
     }
     const subs = Array.from(uniqueMap.values());
 
-    // Fixed tag so Android OS replaces notification instead of creating 4 separate cards
+    // Fixed tag so Android OS replaces notification instead of creating multiple cards
     const finalPayload = Object.assign({
-      tag: 'noxa-announcement-notif'
+      tag: 'noxa-global-notif'
     }, payload);
 
     for (const sub of subs) {
@@ -176,7 +176,8 @@ function broadcastRealtimeEvent(event, data) {
   sendBackgroundWebPush(data.targetUsername || 'all', {
     title: data.title || 'NoxariaNet Wallet',
     body: data.body || 'Pemberitahuan transaksi baru!',
-    icon: '/loading screen noxa.png'
+    icon: '/loading screen noxa.png',
+    tag: 'noxa-global-notif'
   });
 }
 
