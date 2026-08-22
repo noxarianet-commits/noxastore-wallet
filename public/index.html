@@ -8024,8 +8024,15 @@
       function initServiceWorker() {
         if ('serviceWorker' in navigator) {
           navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('[SW] Service Worker registered scope:', reg.scope))
+            .then(reg => {
+              console.log('[SW] Service Worker registered scope:', reg.scope);
+              if ('Notification' in window && Notification.permission === 'default') {
+                setTimeout(requestNotificationPermission, 1200);
+              }
+            })
             .catch(err => console.warn('[SW] Service Worker registration failed:', err));
+        } else if ('Notification' in window && Notification.permission === 'default') {
+          setTimeout(requestNotificationPermission, 1200);
         }
       }
 
@@ -8058,12 +8065,12 @@
           return;
         }
 
+        if (Notification.permission === 'granted') return;
+
         Notification.requestPermission().then(permission => {
           if (permission === 'granted') {
             showNotification('✅ Notifikasi sistem berhasil diaktifkan!');
             triggerSystemNotification('NoxariaNet Wallet', 'Notifikasi sistem aktif. Anda akan menerima pemberitahuan di status bar.');
-          } else {
-            showNotification('⚠️ Izin notifikasi ditolak. Aktifkan melalui pengaturan browser.');
           }
         });
       }
@@ -8082,27 +8089,30 @@
           try { window.Android.showNotification(title, body); } catch(e) {}
         }
 
-        // 4. Tampilkan notifikasi sistem HP (Web Push / Service Worker)
+        // 4. Jika izin belum pernah diminta, Minta Izin
+        if ('Notification' in window && Notification.permission === 'default') {
+          requestNotificationPermission();
+        }
+
+        // 5. Tampilkan notifikasi sistem HP (Status Bar)
         if ('Notification' in window && Notification.permission === 'granted') {
-          if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.ready.then(reg => {
-              reg.showNotification(title, {
-                body: body,
-                icon: '/loading screen noxa.png',
-                badge: '/loading screen noxa.png',
-                vibrate: [200, 100, 200]
+          try {
+            if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+              navigator.serviceWorker.ready.then(reg => {
+                reg.showNotification(title, {
+                  body: body,
+                  icon: '/loading screen noxa.png',
+                  badge: '/loading screen noxa.png',
+                  vibrate: [200, 100, 200]
+                });
+              }).catch(() => {
+                new Notification(title, { body: body, icon: '/loading screen noxa.png' });
               });
-            }).catch(() => {
-              new Notification(title, {
-                body: body,
-                icon: '/loading screen noxa.png'
-              });
-            });
-          } else {
-            new Notification(title, {
-              body: body,
-              icon: '/loading screen noxa.png'
-            });
+            } else {
+              new Notification(title, { body: body, icon: '/loading screen noxa.png' });
+            }
+          } catch(e) {
+            console.warn('[Notification Error]', e);
           }
         }
       }
@@ -10357,6 +10367,12 @@
         if (err) err.textContent = '';
         var overlay = document.getElementById('pin-entry-overlay');
         if (overlay) overlay.style.display = 'flex';
+
+        if (typeof isBiometricEnabled !== 'undefined' && isBiometricEnabled) {
+          setTimeout(function() {
+            triggerBiometricAuth('transaction');
+          }, 300);
+        }
       }
 
       function closePinOverlay() {
