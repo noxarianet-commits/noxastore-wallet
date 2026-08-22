@@ -3971,6 +3971,7 @@
           <div style="display: flex; gap: 10px; align-items: center;">
             <input id="transfer-target" type="text" placeholder="Username / No. HP / User ID"
               style="flex: 1; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; font-size: 14px; font-weight: 500; outline: none; color: #1e293b; background: #f8fafc; transition: border 0.2s;"
+              oninput="onTransferTargetInput(this.value)"
               onfocus="this.style.border='1.5px solid #a855f7'" onblur="this.style.border='1.5px solid #e2e8f0'" />
             <button onclick="openQRScannerForTransfer()" title="Pindai QR Code"
               style="background: linear-gradient(135deg, #2563eb, #3b82f6); border: none; border-radius: 10px; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; box-shadow: 0 3px 8px rgba(37,99,235,0.3); transition: opacity 0.2s;" onmousedown="this.style.opacity='0.8'" onmouseup="this.style.opacity='1'">
@@ -7688,6 +7689,36 @@
         if (input) input.value = amt;
       }
 
+      var _verifyRecipientTimer = null;
+      async function checkTransferTargetUser(target) {
+        const recipName = document.getElementById('transfer-recipient-name');
+        if (!target) {
+          if (recipName) { recipName.textContent = ''; recipName.style.display = 'none'; }
+          return;
+        }
+        try {
+          const username = localStorage.getItem('noxaUsername') || '';
+          const res = await fetch('/api/transfer/check-user/' + encodeURIComponent(target), {
+            headers: { 'Authorization': 'Bearer ' + username }
+          });
+          const data = await res.json();
+          if (data.success && recipName) {
+            recipName.textContent = `✅ Penerima: ${data.fullname} (@${data.username})`;
+            recipName.style.display = 'block';
+            recipName.style.color = '#059669';
+          } else if (recipName) {
+            recipName.textContent = `❌ ${data.error || 'Pengguna tidak ditemukan'}`;
+            recipName.style.display = 'block';
+            recipName.style.color = '#dc2626';
+          }
+        } catch(e) {}
+      }
+
+      function onTransferTargetInput(val) {
+        if (_verifyRecipientTimer) clearTimeout(_verifyRecipientTimer);
+        _verifyRecipientTimer = setTimeout(() => checkTransferTargetUser(val.trim()), 350);
+      }
+
       async function submitTransferForm() {
         const target = (document.getElementById('transfer-target')?.value || '').trim();
         const amount = Number(document.getElementById('transfer-amount')?.value || 0);
@@ -7699,7 +7730,8 @@
 
         // Open PIN overlay for verification
         openPinOverlay(async (pin) => {
-          if (btn) { btn.disabled = true; btn.textContent = 'Memproses...'; }
+          showNotification('⚡ Sedang memproses transfer saldo...', 'info');
+          if (btn) { btn.disabled = true; btn.textContent = 'Mengirim...'; }
           try {
             const username = localStorage.getItem('noxaUsername') || '';
             const res = await fetch('/transfer-saldo', {
@@ -7710,14 +7742,15 @@
             const data = await res.json();
             if (data.success) {
               closeTransferScreen();
-              triggerSystemNotification('💸 Transfer Berhasil', `Rp ${amount.toLocaleString('id-ID')} terkirim ke ${target}`);
-              showNotification(`✅ Transfer Rp ${amount.toLocaleString('id-ID')} ke ${target} berhasil!`);
+              const displayName = data.recipientName ? `${data.recipientName} (@${data.recipientUsername || target})` : target;
+              triggerSystemNotification('💸 Transfer Berhasil', `Rp ${amount.toLocaleString('id-ID')} terkirim ke ${displayName}`);
+              showNotification(`✅ Transfer Rp ${amount.toLocaleString('id-ID')} ke ${displayName} berhasil!`);
               syncServerState();
             } else {
-              throw new Error(data.error || 'Transfer gagal.');
+              showNotification('❌ ' + (data.error || 'Transfer gagal.'));
             }
           } catch (e) {
-            throw e;
+            showNotification('❌ Koneksi error: ' + e.message);
           } finally {
             if (btn) { btn.disabled = false; btn.textContent = 'Kirim Saldo'; }
           }
@@ -7800,32 +7833,14 @@
         if (decodedText && decodedText.startsWith('noxa-transfer:')) {
           const targetUser = decodedText.replace('noxa-transfer:', '').trim();
           closeQRScannerScreen();
-          if (_qrScannerMode === 'transfer') {
-            openTransferScreen();
-            setTimeout(() => {
-              const tgt = document.getElementById('transfer-target');
-              if (tgt) { tgt.value = targetUser; }
-              const recipName = document.getElementById('transfer-recipient-name');
-              if (recipName) {
-                recipName.textContent = `✅ Penerima: @${targetUser}`;
-                recipName.style.display = 'block';
-              }
-              const amtInput = document.getElementById('transfer-amount');
-              if (amtInput) amtInput.focus();
-            }, 350);
-          } else {
-            // Standalone scan: go to transfer with target filled
-            openTransferScreen();
-            setTimeout(() => {
-              const tgt = document.getElementById('transfer-target');
-              if (tgt) tgt.value = targetUser;
-              const recipName = document.getElementById('transfer-recipient-name');
-              if (recipName) {
-                recipName.textContent = `✅ Penerima: @${targetUser}`;
-                recipName.style.display = 'block';
-              }
-            }, 350);
-          }
+          openTransferScreen();
+          setTimeout(() => {
+            const tgt = document.getElementById('transfer-target');
+            if (tgt) { tgt.value = targetUser; }
+            checkTransferTargetUser(targetUser);
+            const amtInput = document.getElementById('transfer-amount');
+            if (amtInput) amtInput.focus();
+          }, 350);
         } else {
           showNotification('⚠️ QR ini bukan kode transfer pengguna yang valid.');
           // Restart scanner after 2 seconds
@@ -11223,12 +11238,9 @@
         } else if (_pinOverlayType === 'ewallet') {
           await _submitEwalletWithPin(pin);
         } else if (typeof _pinOverlayCallback === 'function') {
-          try {
-            await _pinOverlayCallback(pin);
-            closePinOverlay();
-          } catch(e) {
-            _pinOverlayShowError(e.message || 'Proses gagal');
-          }
+          const cb = _pinOverlayCallback;
+          closePinOverlay();
+          cb(pin);
         }
       }
 

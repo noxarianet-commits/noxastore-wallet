@@ -2106,9 +2106,33 @@ app.post('/transfer-saldo', requireAuth, async (req, res) => {
     success: true,
     status: true,
     message: 'Transfer saldo berhasil',
+    recipientName: recipient.fullname || recipient.username,
+    recipientUsername: recipient.username,
     mainBalance: newSenderBal,
     history: updatedSender ? updatedSender.history : []
   });
+});
+
+// Check Transfer Target Recipient Details
+app.get('/api/transfer/check-user/:target', requireAuth, async (req, res) => {
+  try {
+    const target = req.params.target;
+    if (!target) return res.json({ success: false, error: 'Target kosong' });
+    const user = (await db.getUserByWaContact(target)) || (await db.getUser(target)) || (await db.getUserByUserId(target));
+    if (user) {
+      if (user.username === req.user.username) {
+        return res.json({ success: false, error: 'Tidak dapat mentransfer ke akun sendiri' });
+      }
+      return res.json({
+        success: true,
+        username: user.username,
+        fullname: user.fullname || user.name || user.username
+      });
+    }
+    return res.json({ success: false, error: 'Pengguna tidak ditemukan' });
+  } catch (e) {
+    return res.json({ success: false, error: e.message });
+  }
 });
 
 // Update Profile
