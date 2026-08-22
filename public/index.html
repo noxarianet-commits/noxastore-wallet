@@ -7693,7 +7693,7 @@
       async function checkTransferTargetUser(target) {
         const recipName = document.getElementById('transfer-recipient-name');
         if (!target) {
-          if (recipName) { recipName.textContent = ''; recipName.style.display = 'none'; }
+          if (recipName) { recipName.innerHTML = ''; recipName.style.display = 'none'; }
           return;
         }
         try {
@@ -7703,13 +7703,31 @@
           });
           const data = await res.json();
           if (data.success && recipName) {
-            recipName.textContent = `✅ Penerima: ${data.fullname} (@${data.username})`;
+            const initial = (data.fullname || data.username || 'U').charAt(0).toUpperCase();
+            recipName.innerHTML = `
+              <div style="margin-top: 10px; padding: 12px 14px; background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 14px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 8px rgba(5,150,105,0.08);">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #059669, #10b981); color: white; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight: 800; font-size: 18px; box-shadow: 0 2px 6px rgba(5,150,105,0.2);">
+                  ${initial}
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                  <p style="font-size: 10px; color: #166534; margin: 0; font-weight: 700; letter-spacing: 0.5px;">NAMA PENERIMA / PEMILIK AKUN:</p>
+                  <p style="font-size: 16px; color: #065f46; margin: 2px 0 0; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    ${data.fullname}
+                  </p>
+                  <p style="font-size: 11px; color: #047857; margin: 1px 0 0; font-weight: 600;">@${data.username}</p>
+                </div>
+                <span class="material-symbols-outlined" style="color: #059669; font-size: 24px; flex-shrink: 0;">verified</span>
+              </div>
+            `;
             recipName.style.display = 'block';
-            recipName.style.color = '#059669';
           } else if (recipName) {
-            recipName.textContent = `❌ ${data.error || 'Pengguna tidak ditemukan'}`;
+            recipName.innerHTML = `
+              <div style="margin-top: 10px; padding: 10px 14px; background: #fef2f2; border: 1.5px solid #fca5a5; border-radius: 12px; display: flex; align-items: center; gap: 8px;">
+                <span class="material-symbols-outlined" style="color: #dc2626; font-size: 20px;">error</span>
+                <span style="font-size: 12px; color: #991b1b; font-weight: 700;">${data.error || 'Akun penerima tidak ditemukan'}</span>
+              </div>
+            `;
             recipName.style.display = 'block';
-            recipName.style.color = '#dc2626';
           }
         } catch(e) {}
       }
@@ -7763,9 +7781,8 @@
         const screen = document.getElementById('screen-qr-scanner');
         if (!screen) return;
         screen.style.display = 'flex';
-        void screen.offsetWidth;
         screen.classList.add('active');
-        setTimeout(() => _startQRScanner(), 400);
+        _startQRScanner();
       }
 
       function openQRScannerForTransfer() {
@@ -7773,9 +7790,8 @@
         const screen = document.getElementById('screen-qr-scanner');
         if (!screen) return;
         screen.style.display = 'flex';
-        void screen.offsetWidth;
         screen.classList.add('active');
-        setTimeout(() => _startQRScanner(), 400);
+        _startQRScanner();
       }
 
       function closeQRScannerScreen() {
@@ -7783,7 +7799,7 @@
         const screen = document.getElementById('screen-qr-scanner');
         if (!screen) return;
         screen.classList.remove('active');
-        setTimeout(() => { screen.style.display = 'none'; }, 300);
+        screen.style.display = 'none';
       }
 
       function _startQRScanner() {
@@ -7796,16 +7812,13 @@
         if (statusEl) { statusEl.textContent = ''; statusEl.style.display = 'none'; }
         if (hintEl) hintEl.style.display = 'block';
 
-        if (_qrHtml5Scanner) {
-          try { _qrHtml5Scanner.stop().catch(() => {}); } catch(e) {}
-          _qrHtml5Scanner = null;
-        }
+        _stopQRScanner();
 
         try {
           _qrHtml5Scanner = new Html5Qrcode('qr-reader');
           _qrHtml5Scanner.start(
             { facingMode: 'environment' },
-            { fps: 10, qrbox: { width: 240, height: 240 } },
+            { fps: 15, qrbox: { width: 240, height: 240 } },
             (decodedText) => {
               _onQRScanned(decodedText);
             },
@@ -7819,8 +7832,19 @@
       }
 
       function _stopQRScanner() {
+        // Kill camera tracks immediately for instant response
+        try {
+          const videoEl = document.querySelector('#qr-reader video');
+          if (videoEl && videoEl.srcObject) {
+            const tracks = videoEl.srcObject.getTracks();
+            tracks.forEach(track => track.stop());
+            videoEl.srcObject = null;
+          }
+        } catch(e) {}
+
         if (_qrHtml5Scanner) {
           try { _qrHtml5Scanner.stop().catch(() => {}); } catch(e) {}
+          try { _qrHtml5Scanner.clear().catch(() => {}); } catch(e) {}
           _qrHtml5Scanner = null;
         }
         const readerEl = document.getElementById('qr-reader');

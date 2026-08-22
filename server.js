@@ -162,9 +162,12 @@ async function sendBackgroundWebPush(targetUsername, payload) {
 
 function broadcastRealtimeEvent(event, data) {
   const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+  const targetLower = data.targetUsername ? String(data.targetUsername).toLowerCase() : 'all';
+
   for (const client of sseClients) {
     try {
-      if (!data.targetUsername || client.username === data.targetUsername || data.targetUsername === 'all' || client.username === 'all') {
+      const clientLower = String(client.username || '').toLowerCase();
+      if (!data.targetUsername || targetLower === 'all' || clientLower === targetLower || clientLower === 'all') {
         client.res.write(payload);
       }
     } catch (err) {
