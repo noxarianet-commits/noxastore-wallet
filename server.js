@@ -1263,7 +1263,7 @@ app.post('/admin/informations', requireAdminAuth, async (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
-};
+});
 
 const handleAdminUpdateInfo = async (req, res) => {
   try {
