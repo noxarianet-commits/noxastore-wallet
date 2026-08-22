@@ -6931,9 +6931,8 @@
 
         try {
           await syncServerState();
-          showNotification('🔄 Data berhasil diperbarui!');
         } catch (err) {
-          showNotification('❌ Gagal memperbarui data.');
+          console.warn('Gagal memperbarui data:', err);
         }
 
         if (icon) icon.classList.remove('spin-icon');
