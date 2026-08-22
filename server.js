@@ -132,7 +132,7 @@ async function sendBackgroundWebPush(targetUsername, payload) {
     const rawSubs = await db.getPushSubscriptions(targetUsername);
     if (!rawSubs || !Array.isArray(rawSubs) || rawSubs.length === 0) return;
 
-    // Deduplicate push subscriptions by endpoint to prevent sending duplicate notifications to the same device
+    // Deduplicate push subscriptions strictly by endpoint
     const uniqueMap = new Map();
     for (const sub of rawSubs) {
       if (sub && sub.endpoint && !uniqueMap.has(sub.endpoint)) {
@@ -141,8 +141,10 @@ async function sendBackgroundWebPush(targetUsername, payload) {
     }
     const subs = Array.from(uniqueMap.values());
 
-    // Ensure payload has fixed tag for notification deduplication on Android OS
-    const finalPayload = Object.assign({ tag: 'noxa-status-notif' }, payload);
+    // Fixed tag so Android OS replaces notification instead of creating 4 separate cards
+    const finalPayload = Object.assign({
+      tag: 'noxa-announcement-notif'
+    }, payload);
 
     for (const sub of subs) {
       try {

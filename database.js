@@ -1213,19 +1213,19 @@ async function setPpobVisibility(sku, active, category = '', brand = '', markup 
 // WEB PUSH SUBSCRIPTIONS
 async function savePushSubscription(username, subscription) {
   if (!subscription || !subscription.endpoint) return;
-  const subs = readJSONFile(PUSH_SUBS_FILE, []);
-  const idx = subs.findIndex(s => s.endpoint === subscription.endpoint);
-  const newItem = {
-    username: username || 'guest',
+  let subs = readJSONFile(PUSH_SUBS_FILE, []);
+  const uName = username || 'guest';
+
+  // Keep only 1 active subscription per user / endpoint to eliminate duplicate notifications
+  subs = subs.filter(s => s.endpoint !== subscription.endpoint && s.username !== uName);
+
+  subs.push({
+    username: uName,
     endpoint: subscription.endpoint,
     keys: subscription.keys || {},
     updatedAt: new Date().toISOString()
-  };
-  if (idx !== -1) {
-    subs[idx] = newItem;
-  } else {
-    subs.push(newItem);
-  }
+  });
+
   writeJSONFile(PUSH_SUBS_FILE, subs);
 }
 

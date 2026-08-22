@@ -8462,10 +8462,10 @@
       var _lastNotifKey = '';
 
       function triggerSystemNotification(title, body) {
-        // Anti-spam debouncer: abaikan jika judul + isi sama persis dalam rentang 3 detik
+        // Anti-spam debouncer: abaikan jika judul + isi sama persis dalam rentang 6 detik
         const notifKey = title + '::' + body;
         const now = Date.now();
-        if (_lastNotifKey === notifKey && (now - _lastNotifTime) < 3000) {
+        if (_lastNotifKey === notifKey && (now - _lastNotifTime) < 6000) {
           return;
         }
         _lastNotifTime = now;
@@ -8477,7 +8477,8 @@
         // 2. Putar suara sukses
         playSuccessSound();
 
-        // 3. Tampilkan notifikasi via Android Native Bridge (Android APK WebView)
+        // 3. Tampilkan notifikasi via Android Native Bridge (Android APK WebView) jika ada
+        let nativeNotified = false;
         const nativeBridges = [
           window.AndroidBridge,
           window.Android,
@@ -8491,9 +8492,10 @@
           const notifMethods = ['showNotification', 'pushNotification', 'sendNotification', 'notify'];
           for (const m of notifMethods) {
             if (typeof bridge[m] === 'function') {
-              try { bridge[m](title, body); } catch(e) {}
+              try { bridge[m](title, body); nativeNotified = true; break; } catch(e) {}
             }
           }
+          if (nativeNotified) break;
         }
 
         // 4. Jika izin belum pernah diminta, Minta Izin
@@ -8502,13 +8504,13 @@
         }
 
         // 5. Tampilkan notifikasi sistem HP (Status Bar) via ServiceWorkerRegistration (Wajib untuk Android Chrome)
-        if ('Notification' in window && Notification.permission === 'granted') {
+        if (!nativeNotified && 'Notification' in window && Notification.permission === 'granted') {
           const options = {
             body: body,
             icon: window.location.origin + '/loading screen noxa.png',
             badge: window.location.origin + '/loading screen noxa.png',
             vibrate: [200, 100, 200],
-            tag: 'noxa-status-notif',
+            tag: 'noxa-announcement-notif',
             renotify: false
           };
 
@@ -8519,15 +8521,9 @@
               } else {
                 navigator.serviceWorker.ready.then(readyReg => {
                   readyReg.showNotification(title, options);
-                }).catch(() => {
-                  try { new Notification(title, options); } catch(e) {}
-                });
+                }).catch(() => {});
               }
-            }).catch(() => {
-              try { new Notification(title, options); } catch(e) {}
-            });
-          } else {
-            try { new Notification(title, options); } catch(e) {}
+            }).catch(() => {});
           }
         }
       }
