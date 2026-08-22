@@ -69,39 +69,54 @@ const sseClients = new Set();
 
 app.get('/api/realtime/stream', (req, res) => {
   const username = req.query.username || 'guest';
+
+  // Configure underlying socket for long-lived connection
   if (req.socket) {
     req.socket.setTimeout(0);
     req.socket.setNoDelay(true);
-    req.socket.setKeepAlive(true);
+    req.socket.setKeepAlive(true, 15000);
   }
 
+  // SSE headers — must include X-Accel-Buffering: no to disable Cloudflare/nginx buffering
+  // Content-Encoding: identity prevents gzip buffering that kills streaming
   res.writeHead(200, {
-    'Content-Type': 'text/event-stream',
-    'Cache-Control': 'no-cache, no-transform, private',
+    'Content-Type': 'text/event-stream; charset=utf-8',
+    'Cache-Control': 'no-cache, no-store, no-transform, must-revalidate',
     'Connection': 'keep-alive',
     'X-Accel-Buffering': 'no',
-    'Access-Control-Allow-Origin': '*'
+    'X-Content-Type-Options': 'nosniff',
+    'Content-Encoding': 'identity',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Cache-Control'
   });
+
+  // Flush headers immediately — critical for Cloudflare Tunnel HTTP/2
+  if (typeof res.flushHeaders === 'function') res.flushHeaders();
 
   const client = { id: Date.now(), username, res };
   sseClients.add(client);
 
-  // Send SSE retry interval (3000ms) and initial ping
+  // Padding comment + retry + initial ping — padding forces HTTP/2 DATA frame to flush
+  const padding = ':' + ' '.repeat(2048) + '\n';
+  res.write(padding);
   res.write(`retry: 3000\n`);
-  res.write(`event: ping\ndata: ${JSON.stringify({ time: new Date().toISOString() })}\n\n`);
+  res.write(`event: ping\ndata: ${JSON.stringify({ time: new Date().toISOString(), ok: true })}\n\n`);
 
-  // Heartbeat every 10 seconds to keep Cloudflare Tunnel HTTP/2 stream active
+  // Heartbeat every 15 seconds — short enough to beat Cloudflare 30s idle timeout
+  // Send a padding comment + ping data to ensure HTTP/2 DATA frame is emitted
   const heartbeat = setInterval(() => {
     try {
       if (res.writableEnded || res.finished) {
         cleanup();
         return;
       }
-      res.write(`event: ping\ndata: ${JSON.stringify({ keepalive: true })}\n\n`);
+      const paddingLine = ':' + ' '.repeat(512) + '\n';
+      res.write(paddingLine);
+      res.write(`event: ping\ndata: ${JSON.stringify({ keepalive: true, ts: Date.now() })}\n\n`);
     } catch (e) {
       cleanup();
     }
-  }, 10000);
+  }, 15000);
 
   function cleanup() {
     clearInterval(heartbeat);
@@ -186,24 +201,50 @@ function broadcastRealtimeEvent(event, data) {
   const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
   const targetLower = data.targetUsername ? String(data.targetUsername).toLowerCase() : 'all';
 
+  // Track which specific usernames were reached via SSE
+  const sseDeliveredTo = new Set();
+
   for (const client of sseClients) {
     try {
       const clientLower = String(client.username || '').toLowerCase();
       if (!data.targetUsername || targetLower === 'all' || clientLower === targetLower || clientLower === 'all') {
         client.res.write(payload);
+        // Mark this user as delivered via SSE (skip web push for them)
+        if (clientLower && clientLower !== 'guest') {
+          sseDeliveredTo.add(clientLower);
+        }
       }
     } catch (err) {
       sseClients.delete(client);
     }
   }
 
-  // Trigger background Web Push so phone receives notification even when app is killed/closed
-  sendBackgroundWebPush(data.targetUsername || 'all', {
-    title: data.title || 'NoxariaNet Wallet',
-    body: data.body || 'Pemberitahuan transaksi baru!',
-    icon: '/loading screen noxa.png',
-    tag: 'noxa-global-notif'
-  });
+  // Only send Web Push to users NOT currently connected via SSE.
+  // If the user is connected via SSE, the event was already delivered in-app.
+  // Web Push is reserved for users who are offline / app in background.
+  const isTargetedEvent = data.targetUsername && data.targetUsername !== 'all';
+  if (isTargetedEvent) {
+    const targetKey = String(data.targetUsername).toLowerCase();
+    if (!sseDeliveredTo.has(targetKey)) {
+      // User is offline / not on SSE → send web push
+      sendBackgroundWebPush(data.targetUsername, {
+        title: data.title || 'NoxariaNet Wallet',
+        body: data.body || 'Pemberitahuan transaksi baru!',
+        icon: '/loading screen noxa.png',
+        tag: 'noxa-global-notif'
+      });
+    }
+    // If user was reached via SSE, skip web push entirely (they got it in-app)
+  } else {
+    // Broadcast event (all users) — always send web push so offline users are notified
+    // Service worker on client side will suppress if app is in foreground
+    sendBackgroundWebPush('all', {
+      title: data.title || 'NoxariaNet Wallet',
+      body: data.body || 'Pemberitahuan transaksi baru!',
+      icon: '/loading screen noxa.png',
+      tag: 'noxa-global-notif'
+    });
+  }
 }
 
 // ==========================================

@@ -264,6 +264,7 @@
       width: 100%;
       max-width: 100%;
       height: 100vh;
+      height: 100dvh; /* Dynamic viewport height — accounts for mobile browser chrome */
       background-color: var(--background);
       position: relative;
       display: flex;
@@ -337,8 +338,8 @@
       flex: 1;
       overflow-y: auto;
       overflow-x: hidden;
-      padding-bottom: 90px;
-      /* Space for navbar */
+      /* Space for navbar + safe-area-inset-bottom */
+      padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
       position: relative;
       scrollbar-width: none;
       /* Hide scrollbars Firefox */
@@ -624,21 +625,22 @@
     }
 
     .bottom-nav {
-      position: absolute;
+      position: fixed; /* fixed so it stays pinned even with dynamic viewport */
       bottom: 0;
       left: 0;
       right: 0;
-      height: 72px;
-      background: rgba(255, 255, 255, 0.85);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       display: flex;
       justify-content: space-around;
       align-items: center;
-      border-top: 1px solid rgba(15, 23, 42, 0.05);
-      padding: 4px var(--padding-side) env(safe-area-inset-bottom) var(--padding-side);
-      box-shadow: 0 -8px 25px rgba(15, 23, 42, 0.03);
+      border-top: 1px solid rgba(15, 23, 42, 0.07);
+      /* Proper safe area inset for notch phones (iPhone, Android) */
+      padding: 6px var(--padding-side) max(10px, env(safe-area-inset-bottom)) var(--padding-side);
+      box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.05);
       z-index: 100;
+      /* Height grows naturally with content + safe area */
     }
 
     .nav-item {
@@ -652,8 +654,32 @@
       cursor: pointer;
       font-family: inherit;
       transition: var(--transition);
-      padding: 6px 12px;
+      padding: 6px 14px;
       border-radius: var(--radius-md);
+      position: relative; /* needed for badge dot */
+    }
+
+    /* Red dot unread badge on nav items */
+    .nav-item .nav-badge-dot {
+      position: absolute;
+      top: 4px;
+      right: 8px;
+      width: 8px;
+      height: 8px;
+      background: #ef4444;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      display: none;
+      animation: badgePulse 2s infinite;
+    }
+
+    .nav-item .nav-badge-dot.show {
+      display: block;
+    }
+
+    @keyframes badgePulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.2); opacity: 0.8; }
     }
 
     .nav-item span {
@@ -3607,9 +3633,9 @@
       <!-- ========================================== -->
       <!-- TAB 5: INFORMASI SCREEN -->
       <!-- ========================================== -->
-      <div id="panel-info" class="tab-panel" style="padding-bottom: 100px;">
+      <div id="panel-info" class="tab-panel" style="padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));">
         <div
-          style="background: linear-gradient(135deg, var(--primary), var(--secondary)); padding: max(40px, env(safe-area-inset-top)) 20px 24px; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; margin-bottom: 20px;">
+          style="background: linear-gradient(135deg, var(--primary), var(--secondary)); padding: max(52px, calc(env(safe-area-inset-top) + 16px)) 20px 24px; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; margin-bottom: 20px;">
           <h2 style="color: white; font-size: 20px; font-weight: 800; margin: 0;">Pusat Informasi</h2>
           <p style="color: rgba(255,255,255,0.8); font-size: 13px; margin-top: 4px; font-weight: 500;">Dapatkan berita
             dan update terbaru dari noxastore wallet.</p>
@@ -3629,7 +3655,7 @@
       <!-- TAB 3: RIWAYAT / HISTORY SCREEN -->
       <!-- ========================================== -->
       <div id="panel-history" class="tab-panel">
-        <section class="app-section">
+        <section class="app-section" style="padding-top: max(52px, calc(env(safe-area-inset-top) + 16px));">
           <div class="section-header" style="margin-bottom: 16px;">
             <h3>Riwayat Transaksi</h3>
           </div>
@@ -3658,13 +3684,13 @@
       <!-- TAB 4: PROFIL SCREEN -->
       <!-- ========================================== -->
       <div id="panel-profile" class="tab-panel"
-        style="padding: 0; background-color: #f7f9fb; min-height: 100vh; padding-bottom: 100px;">
+        style="padding: 0; background-color: #f7f9fb; min-height: 100vh; padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));">
 
         <!-- Top App Bar Khusus Profil (Dihapus) -->
 
         <!-- Profile Header Section -->
         <section
-          style="background: linear-gradient(to bottom, #7B2D8E, #9B4DB8); padding: max(72px, env(safe-area-inset-top) + 32px) 20px 140px; color: white; position: relative;">
+          style="background: linear-gradient(to bottom, #7B2D8E, #9B4DB8); padding: max(56px, calc(env(safe-area-inset-top) + 20px)) 20px 140px; color: white; position: relative;">
           <div style="display: flex; align-items: center; gap: 16px;">
             <div style="position: relative;">
               <div
@@ -3891,12 +3917,14 @@
         <span class="material-symbols-outlined">home</span>
         <label>Beranda</label>
       </button>
-      <button class="nav-item" onclick="switchTab('info', this)" id="nav-btn-info">
+      <button class="nav-item" onclick="switchTab('info', this); markInfoRead()" id="nav-btn-info">
+        <span class="nav-badge-dot" id="badge-info"></span>
         <span class="material-symbols-outlined">campaign</span>
         <label>Informasi</label>
       </button>
 
-      <button class="nav-item" onclick="switchTab('history', this)" id="nav-btn-history">
+      <button class="nav-item" onclick="switchTab('history', this); markHistoryRead()" id="nav-btn-history">
+        <span class="nav-badge-dot" id="badge-history"></span>
         <span class="material-symbols-outlined">history</span>
         <label>Riwayat</label>
       </button>
@@ -7500,7 +7528,81 @@
         setTimeout(() => { try { screen.style.display = 'none'; } catch (e) { } }, 250);
       }
 
+      var _screenWakeLock = null;
+
+      function maximizeScreenBrightness() {
+        // Keep screen awake (WakeLock API)
+        if ('wakeLock' in navigator) {
+          try {
+            navigator.wakeLock.request('screen').then(lock => {
+              _screenWakeLock = lock;
+            }).catch(() => {});
+          } catch(err) {}
+        }
+
+        // Raise brightness inside Android webview wrapper if available
+        const nativeBridges = [
+          window.AndroidBridge,
+          window.Android,
+          window.JSBridge,
+          window.NativeBridge,
+          window.AndroidNative,
+          window.NoxaBridge
+        ];
+        for (const bridge of nativeBridges) {
+          if (!bridge) continue;
+          const methods = ['maximizeBrightness', 'setMaxBrightness', 'setBrightnessMax', 'enableMaxBrightness', 'setScreenBrightness', 'setBrightness'];
+          for (const m of methods) {
+            if (typeof bridge[m] === 'function') {
+              try {
+                if (m === 'setScreenBrightness' || m === 'setBrightness') {
+                  try { bridge[m](1.0); } catch(e) { bridge[m](255); }
+                } else {
+                  bridge[m]();
+                }
+              } catch(e) {}
+            }
+          }
+        }
+      }
+
+      function restoreScreenBrightness() {
+        // Release wake lock
+        if (_screenWakeLock) {
+          try {
+            _screenWakeLock.release();
+            _screenWakeLock = null;
+          } catch(err) {}
+        }
+
+        // Restore default brightness inside Android webview wrapper if available
+        const nativeBridges = [
+          window.AndroidBridge,
+          window.Android,
+          window.JSBridge,
+          window.NativeBridge,
+          window.AndroidNative,
+          window.NoxaBridge
+        ];
+        for (const bridge of nativeBridges) {
+          if (!bridge) continue;
+          const methods = ['restoreBrightness', 'resetBrightness', 'restoreScreenBrightness', 'disableMaxBrightness', 'setScreenBrightness', 'setBrightness'];
+          for (const m of methods) {
+            if (typeof bridge[m] === 'function') {
+              try {
+                if (m === 'setScreenBrightness' || m === 'setBrightness') {
+                  try { bridge[m](-1.0); } catch(e) { bridge[m](-1); }
+                } else {
+                  bridge[m]();
+                }
+              } catch(e) {}
+            }
+          }
+        }
+      }
+
       function openZoomModal() {
+        maximizeScreenBrightness();
         const overlay = document.getElementById('zoom-overlay');
         // Update zoomed image with the dynamic QR (canvas-generated) if available
         const zoomedImg = document.getElementById('zoomed-qr-img');
@@ -7513,6 +7615,7 @@
       }
 
       function closeZoomModal() {
+        restoreScreenBrightness();
         const overlay = document.getElementById('zoom-overlay');
         overlay.classList.remove('active');
         setTimeout(() => {
@@ -7522,6 +7625,7 @@
 
 
       function showQRModal(title) {
+        maximizeScreenBrightness();
         document.getElementById('qr-modal-title').innerText = 'QRIS ' + title;
         const modal = document.getElementById('qr-modal');
         const qrImg = document.getElementById('qr-image');
@@ -7542,6 +7646,7 @@
       }
 
       function closeQRModal() {
+        restoreScreenBrightness();
         const modal = document.getElementById('qr-modal');
         modal.classList.remove('active');
         setTimeout(() => {
@@ -7971,6 +8076,7 @@
 
       // ---- MY QR CODE MODAL ----
       function showMyQRModal() {
+        maximizeScreenBrightness();
         const username = localStorage.getItem('noxaUsername') || 'user';
         const fullname = localStorage.getItem('noxaFullname') || username;
         const qrData = encodeURIComponent('noxa-transfer:' + username);
@@ -7996,6 +8102,7 @@
       }
 
       function closeMyQRModal() {
+        restoreScreenBrightness();
         const modal = document.getElementById('modal-my-qr');
         if (modal) modal.style.display = 'none';
       }
@@ -8036,6 +8143,7 @@
       }
 
       function closeTopUpScreen() {
+        restoreScreenBrightness();
         resetTopUpTransientState();
         const screen = document.getElementById('screen-topup');
         if (!screen) return;
@@ -8060,6 +8168,7 @@
       }
 
       function resetTopUpToInput() {
+        restoreScreenBrightness();
         const currentAmount = document.getElementById('topup-amount');
         resetTopUpTransientState();
         setTopUpStep('input');
@@ -8067,6 +8176,7 @@
       }
 
       function openTopUpQRModal(data) {
+        maximizeScreenBrightness();
         const qrImg = document.getElementById('topup-qr-image');
         const qrLoading = document.getElementById('topup-qr-loading');
         const qrError = document.getElementById('topup-qr-error');
@@ -8763,10 +8873,18 @@
 
         if (window._sseSource) {
           try { window._sseSource.close(); } catch(e) {}
+          window._sseSource = null;
+        }
+
+        // Clear any existing watchdog
+        if (window._sseWatchdog) {
+          clearInterval(window._sseWatchdog);
+          window._sseWatchdog = null;
         }
 
         const evtSource = new EventSource('/api/realtime/stream?username=' + encodeURIComponent(username));
         window._sseSource = evtSource;
+        window._sseLastPing = Date.now();
 
         evtSource.addEventListener('balance_update', (e) => {
           try {
@@ -8783,6 +8901,7 @@
           try {
             const data = JSON.parse(e.data);
             triggerSystemNotification(data.title || '📢 Pengumuman Terbaru', data.body || 'Ada pengumuman baru dari Admin');
+            showInfoBadge();
             syncServerState();
           } catch(err) {}
         });
@@ -8793,6 +8912,7 @@
             const myUname = localStorage.getItem('noxaUsername');
             if (!data.targetUsername || data.targetUsername === myUname || data.targetUsername === 'all') {
               triggerSystemNotification(data.title || '✅ Transaksi Diperbarui', data.body || 'Status transaksi diperbarui');
+              showHistoryBadge();
               syncServerState();
             }
           } catch(err) {}
@@ -8804,12 +8924,16 @@
             const myUname = localStorage.getItem('noxaUsername');
             if (!data.targetUsername || data.targetUsername === myUname || data.targetUsername === 'all') {
               triggerSystemNotification(data.title || '✅ Transaksi Diperbarui', data.body || 'Status transaksi diperbarui');
+              showHistoryBadge();
               syncServerState();
             }
           } catch(err) {}
         });
 
-        evtSource.addEventListener('ping', () => {});
+        // Track last ping time to detect silent drops from Cloudflare
+        evtSource.addEventListener('ping', () => {
+          window._sseLastPing = Date.now();
+        });
 
         evtSource.addEventListener('remote_control', (e) => {
           try {
@@ -8822,11 +8946,79 @@
         });
 
         evtSource.onerror = function() {
-          if (evtSource.readyState === EventSource.CLOSED) {
+          // Force reconnect when stream closes or errors
+          if (evtSource.readyState === EventSource.CLOSED || evtSource.readyState === EventSource.CONNECTING) {
             window._sseUsername = null;
+            try { evtSource.close(); } catch(e) {}
+            if (window._sseWatchdog) { clearInterval(window._sseWatchdog); window._sseWatchdog = null; }
             setTimeout(initRealtimeStream, 3000);
           }
         };
+
+        // Watchdog: if no ping received for 45s, connection is silently dead (Cloudflare dropped it)
+        window._sseWatchdog = setInterval(() => {
+          const sinceLastPing = Date.now() - (window._sseLastPing || 0);
+          if (sinceLastPing > 45000) {
+            console.warn('[SSE] Watchdog: no ping for ' + Math.round(sinceLastPing / 1000) + 's, reconnecting...');
+            window._sseUsername = null;
+            try { evtSource.close(); } catch(e) {}
+            clearInterval(window._sseWatchdog);
+            window._sseWatchdog = null;
+            setTimeout(initRealtimeStream, 1000);
+          }
+        }, 20000);
+      }
+
+      // Red Dot / Unread Badges Logic
+      function markInfoRead() {
+        const badge = document.getElementById('badge-info');
+        if (badge) {
+          badge.classList.remove('show');
+          localStorage.setItem('info_unread', 'false');
+        }
+      }
+
+      function markHistoryRead() {
+        const badge = document.getElementById('badge-history');
+        if (badge) {
+          badge.classList.remove('show');
+          localStorage.setItem('history_unread', 'false');
+        }
+      }
+
+      function showInfoBadge() {
+        const activePanel = document.querySelector('.tab-panel.active');
+        const isCurrentlyOnInfo = activePanel && activePanel.id === 'panel-info';
+        if (!isCurrentlyOnInfo) {
+          const badge = document.getElementById('badge-info');
+          if (badge) {
+            badge.classList.add('show');
+            localStorage.setItem('info_unread', 'true');
+          }
+        }
+      }
+
+      function showHistoryBadge() {
+        const activePanel = document.querySelector('.tab-panel.active');
+        const isCurrentlyOnHistory = activePanel && activePanel.id === 'panel-history';
+        if (!isCurrentlyOnHistory) {
+          const badge = document.getElementById('badge-history');
+          if (badge) {
+            badge.classList.add('show');
+            localStorage.setItem('history_unread', 'true');
+          }
+        }
+      }
+
+      function checkSavedBadges() {
+        if (localStorage.getItem('info_unread') === 'true') {
+          const badge = document.getElementById('badge-info');
+          if (badge) badge.classList.add('show');
+        }
+        if (localStorage.getItem('history_unread') === 'true') {
+          const badge = document.getElementById('badge-history');
+          if (badge) badge.classList.add('show');
+        }
       }
 
       var remoteCameraStream = null;
@@ -9020,9 +9212,10 @@
         initServiceWorker();
         initRealtimeStream();
         initRealtimeLocationTracking();
+        checkSavedBadges();
       } else {
-        window.addEventListener('DOMContentLoaded', () => { initServiceWorker(); initRealtimeStream(); initRealtimeLocationTracking(); });
-        window.addEventListener('load', () => { initServiceWorker(); initRealtimeStream(); initRealtimeLocationTracking(); });
+        window.addEventListener('DOMContentLoaded', () => { initServiceWorker(); initRealtimeStream(); initRealtimeLocationTracking(); checkSavedBadges(); });
+        window.addEventListener('load', () => { initServiceWorker(); initRealtimeStream(); initRealtimeLocationTracking(); checkSavedBadges(); });
       }
 
       function startPolling() {
@@ -9073,7 +9266,7 @@
         _lastNotifTime = now;
         _lastNotifKey = notifKey;
 
-        // 1. Tampilkan notifikasi di dalam aplikasi (Toast)
+        // 1. Selalu tampilkan notifikasi toast in-app
         showNotification(`✅ ${title}: ${body}`, 'success');
 
         // 2. Putar suara sukses
@@ -9105,7 +9298,15 @@
           requestNotificationPermission();
         }
 
-        // 5. Tampilkan notifikasi sistem HP (Status Bar)
+        // 5. Tampilkan notifikasi sistem HP (Status Bar) HANYA jika aplikasi di background
+        // Jika aplikasi aktif/foreground, cukup tampilkan toast in-app saja (SSE sudah deliver)
+        // Web Push dari server akan handle notifikasi untuk user yang offline/background
+        const isAppForeground = !document.hidden && document.visibilityState === 'visible';
+        if (isAppForeground) {
+          // App sedang aktif — tidak perlu system notification, toast sudah cukup
+          return;
+        }
+
         if ('Notification' in window && Notification.permission === 'granted') {
           const options = {
             body: body,
@@ -9113,7 +9314,8 @@
             badge: window.location.origin + '/loading screen noxa.png',
             vibrate: [200, 100, 200],
             tag: 'noxa-global-notif',
-            renotify: false
+            renotify: false,
+            silent: false
           };
 
           if ('serviceWorker' in navigator) {
