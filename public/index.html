@@ -8020,13 +8020,55 @@
         }
       }
 
+      // Web Push VAPID Subscription Helper (Enables Background Push Notifications when App is Closed)
+      function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+        const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+          outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+      }
+
+      async function subscribeUserToWebPush(reg) {
+        if (!reg || !reg.pushManager) return;
+        try {
+          const res = await fetch('/api/push/vapid-public-key');
+          const data = await res.json();
+          if (!data.success || !data.publicKey) return;
+
+          let subscription = await reg.pushManager.getSubscription();
+          if (!subscription) {
+            const applicationServerKey = urlBase64ToUint8Array(data.publicKey);
+            subscription = await reg.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: applicationServerKey
+            });
+          }
+
+          const username = localStorage.getItem('noxaUsername') || 'guest';
+          await fetch('/api/push/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, subscription })
+          });
+          console.log('[WebPush] Background Push Subscription registered successfully!');
+        } catch (e) {
+          console.warn('[WebPush Subscription Warning]', e);
+        }
+      }
+
       // Register Service Worker for Mobile System Notifications
       function initServiceWorker() {
         if ('serviceWorker' in navigator) {
           navigator.serviceWorker.register('/sw.js')
             .then(reg => {
               console.log('[SW] Service Worker registered scope:', reg.scope);
-              if ('Notification' in window && Notification.permission === 'default') {
+              if ('Notification' in window && Notification.permission === 'granted') {
+                subscribeUserToWebPush(reg);
+              } else if ('Notification' in window && Notification.permission === 'default') {
                 setTimeout(requestNotificationPermission, 1200);
               }
             })
@@ -8119,6 +8161,9 @@
         Notification.requestPermission().then(permission => {
           if (permission === 'granted') {
             showNotification('✅ Notifikasi sistem berhasil diaktifkan!');
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.ready.then(reg => subscribeUserToWebPush(reg));
+            }
             triggerSystemNotification('NoxariaNet Wallet', 'Notifikasi sistem aktif. Anda akan menerima pemberitahuan di status bar.');
           }
         });

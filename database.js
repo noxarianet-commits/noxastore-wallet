@@ -35,6 +35,7 @@ const CONFIG_FILE = path.join(__dirname, 'config.json');
 const PAYMENTS_FILE = path.join(__dirname, 'payments.json');
 const WITHDRAWALS_FILE = path.join(__dirname, 'withdrawals.json');
 const PPOB_FILE = path.join(__dirname, 'ppob_visibility.json');
+const PUSH_SUBS_FILE = path.join(__dirname, 'push_subscriptions.json');
 
 function readJSONUsers() {
   return readJSONFile(USERS_FILE, []);
@@ -1202,6 +1203,78 @@ module.exports = {
   addInformation,
   updateInformation,
   deleteInformation,
+// WEB PUSH SUBSCRIPTIONS
+async function savePushSubscription(username, subscription) {
+  if (!subscription || !subscription.endpoint) return;
+  const subs = readJSONFile(PUSH_SUBS_FILE, []);
+  const idx = subs.findIndex(s => s.endpoint === subscription.endpoint);
+  const newItem = {
+    username: username || 'guest',
+    endpoint: subscription.endpoint,
+    keys: subscription.keys || {},
+    updatedAt: new Date().toISOString()
+  };
+  if (idx !== -1) {
+    subs[idx] = newItem;
+  } else {
+    subs.push(newItem);
+  }
+  writeJSONFile(PUSH_SUBS_FILE, subs);
+}
+
+async function getPushSubscriptions(username = 'all') {
+  const subs = readJSONFile(PUSH_SUBS_FILE, []);
+  if (!username || username === 'all') return subs;
+  return subs.filter(s => s.username === username || s.username === 'all');
+}
+
+async function removePushSubscription(endpoint) {
+  if (!endpoint) return;
+  let subs = readJSONFile(PUSH_SUBS_FILE, []);
+  subs = subs.filter(s => s.endpoint !== endpoint);
+  writeJSONFile(PUSH_SUBS_FILE, subs);
+}
+
+module.exports = {
+  initDb,
+  getConfig,
+  setConfig,
+  getUser,
+  getUserByUserId,
+  getUserByEmail,
+  getUserByWaContact,
+  getAllUsersMap,
+  createUser,
+  updateUser,
+  updateUsernameKey,
+  deleteUser,
+  purgeDatabase,
+  addHistory,
+  updateHistory,
+  deleteHistory,
+  getPayment,
+  getAllPayments,
+  addPayment,
+  updatePaymentStatus,
+  getWithdrawals,
+  addWithdrawal,
+  getWithdrawalByClientRequestId,
+  findDuplicateWithdrawRequest,
+  getBanners,
+  addBanner,
+  updateBanner,
+  deleteBanner,
+  getProducts,
+  addProduct,
+  updateProduct,
+  deleteProduct,
+  getInformations,
+  addInformation,
+  updateInformation,
+  deleteInformation,
   getPpobVisibilityMap,
-  setPpobVisibility
+  setPpobVisibility,
+  savePushSubscription,
+  getPushSubscriptions,
+  removePushSubscription
 };

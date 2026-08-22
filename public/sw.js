@@ -22,7 +22,9 @@ self.addEventListener('push', (event) => {
     body: data.body || 'Ada pembaruan status transaksi pada akun Anda.',
     icon: data.icon || '/loading screen noxa.png',
     badge: '/loading screen noxa.png',
-    vibrate: [100, 50, 100],
+    vibrate: [200, 100, 200],
+    tag: 'noxa-push-' + Date.now(),
+    renotify: true,
     data: {
       url: data.url || '/'
     }

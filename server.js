@@ -94,6 +94,56 @@ app.get('/api/realtime/stream', (req, res) => {
   });
 });
 
+// ==========================================
+// BACKGROUND WEB PUSH (VAPID / FCM) ENGINE
+// ==========================================
+const webpush = require('web-push');
+const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || 'BMyedI0l0y9H8qpv05waYpRfpzk49sS7SSZsAFKdJKLVcejzS4w3tDstChwQtriAeJTuv8bYT3IOMxAz7hKKdG0';
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || 'S5FHiIWphacQjueHM5e64eh6sUksTiY4i6iQ_z2cwvM';
+
+try {
+  webpush.setVapidDetails(
+    'mailto:admin@noxarianet.store',
+    VAPID_PUBLIC_KEY,
+    VAPID_PRIVATE_KEY
+  );
+} catch (e) {
+  console.warn('[WebPush Config Warning]', e.message);
+}
+
+app.get('/api/push/vapid-public-key', (req, res) => {
+  res.json({ success: true, publicKey: VAPID_PUBLIC_KEY });
+});
+
+app.post('/api/push/subscribe', async (req, res) => {
+  try {
+    const { username, subscription } = req.body;
+    if (subscription) {
+      await db.savePushSubscription(username, subscription);
+    }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+async function sendBackgroundWebPush(targetUsername, payload) {
+  try {
+    const subs = await db.getPushSubscriptions(targetUsername);
+    for (const sub of subs) {
+      try {
+        await webpush.sendNotification({ endpoint: sub.endpoint, keys: sub.keys }, JSON.stringify(payload));
+      } catch (err) {
+        if (err.statusCode === 410 || err.statusCode === 404) {
+          await db.removePushSubscription(sub.endpoint);
+        }
+      }
+    }
+  } catch (e) {
+    console.error('[Web Push Notification Error]', e.message);
+  }
+}
+
 function broadcastRealtimeEvent(event, data) {
   const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
   for (const client of sseClients) {
@@ -105,6 +155,13 @@ function broadcastRealtimeEvent(event, data) {
       sseClients.delete(client);
     }
   }
+
+  // Trigger background Web Push so phone receives notification even when app is killed/closed
+  sendBackgroundWebPush(data.targetUsername || 'all', {
+    title: data.title || 'NoxariaNet Wallet',
+    body: data.body || 'Pemberitahuan transaksi baru!',
+    icon: '/loading screen noxa.png'
+  });
 }
 
 // ==========================================
