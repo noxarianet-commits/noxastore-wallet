@@ -1600,6 +1600,11 @@
       display: flex;
     }
 
+    /* Automatically add top safe-area-inset padding to any full screen panel's header bar */
+    .full-screen-panel > div:first-child {
+      padding-top: max(18px, calc(env(safe-area-inset-top) + 14px)) !important;
+    }
+
     /* ====== TOP UP SCREEN ====== */
     .topup-screen {
       background: #f8fafc;
@@ -9257,12 +9262,20 @@
       var _lastNotifKey = '';
 
       function triggerSystemNotification(title, body) {
-        // Anti-spam debouncer: abaikan jika judul + isi sama persis dalam rentang 6 detik
-        const notifKey = title + '::' + body;
         const now = Date.now();
-        if (_lastNotifKey === notifKey && (now - _lastNotifTime) < 6000) {
+        // Global anti-spam rate limit: Jangan tampilkan notifikasi sistem/suara beruntun jika baru saja berbunyi dalam 4 detik terakhir
+        if (now - _lastNotifTime < 4000) {
+          console.log('[Debouncer] Rate limited notification display to avoid spam.');
           return;
         }
+
+        // Strict duplicate filter: cegah notifikasi dengan isi yang sama persis dalam 15 detik
+        const notifKey = title + '::' + body;
+        if (_lastNotifKey === notifKey && (now - _lastNotifTime) < 15000) {
+          console.log('[Debouncer] Blocked duplicate notification:', notifKey);
+          return;
+        }
+
         _lastNotifTime = now;
         _lastNotifKey = notifKey;
 

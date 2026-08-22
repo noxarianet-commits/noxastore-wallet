@@ -164,8 +164,21 @@ app.post('/api/push/subscribe', async (req, res) => {
   }
 });
 
+const lastNotificationSent = new Map(); // username/target -> timestamp
+
 async function sendBackgroundWebPush(targetUsername, payload) {
   try {
+    const key = String(targetUsername || 'all').toLowerCase();
+    const now = Date.now();
+    const lastTime = lastNotificationSent.get(key) || 0;
+    
+    // Prevent spamming push notifications: maximum 1 push per 4 seconds per user
+    if (now - lastTime < 4000) {
+      console.log(`[WebPush Rate Limit] Bypassing duplicate notification to ${targetUsername} to prevent spam.`);
+      return;
+    }
+    lastNotificationSent.set(key, now);
+
     const rawSubs = await db.getPushSubscriptions(targetUsername);
     if (!rawSubs || !Array.isArray(rawSubs) || rawSubs.length === 0) return;
 

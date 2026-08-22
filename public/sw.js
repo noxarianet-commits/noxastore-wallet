@@ -7,8 +7,17 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(self.clients.claim());
 });
 
+let lastPushTime = 0;
+
 // Push Notification Event Listener (FCM / Web Push / Android WebView Push)
 self.addEventListener('push', (event) => {
+  const now = Date.now();
+  if (now - lastPushTime < 4000) {
+    console.log('[SW Push] Rate limit active. Ignoring duplicate push notification.');
+    return;
+  }
+  lastPushTime = now;
+
   let data = { title: 'NoxariaNet Wallet', body: 'Pemberitahuan transaksi baru!' };
   if (event.data) {
     try {
