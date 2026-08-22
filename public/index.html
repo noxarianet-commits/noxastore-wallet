@@ -6512,55 +6512,66 @@
         if (thumb) thumb.style.left = enabled ? '23px' : '3px';
       }
 
+      // Global Android Native Bridge Callback
+      window.onBiometricAuthResult = function(res) {
+        const isOk = (res === true || res === 'true' || res === 'SUCCESS' || res === 'success' || res === 1 || res === '1' || res === 'OK' || (typeof res === 'object' && res && (res.success || res.status === 'success')));
+        if (isOk) {
+          handleBiometricSuccess(window._currentBiometricContext || 'app_lock');
+        } else {
+          showNotification('❌ Sidik jari tidak cocok atau dibatalkan.');
+        }
+      };
+      window.onBiometricResult = window.onBiometricAuthResult;
+
       async function triggerBiometricAuth(context) {
         if (!isBiometricEnabled) {
           showNotification('⚠️ Akses Sidik Jari dinonaktifkan di Pengaturan.');
           return false;
         }
 
-        // Prevent multiple simultaneous biometric prompts
         if (window._biometricInProgress) return false;
         window._biometricInProgress = true;
+        window._currentBiometricContext = context;
 
         const isSuccessResult = (res) => {
-          if (res === true || res === 'true' || res === 'SUCCESS' || res === 'success' || res === 1 || res === '1') return true;
-          if (typeof res === 'object' && res !== null && (res.success || res.status === 'success' || res.status === true)) return true;
+          if (res === true || res === 'true' || res === 'SUCCESS' || res === 'success' || res === 1 || res === '1' || res === 'OK') return true;
+          if (typeof res === 'object' && res !== null && (res.success || res.status === 'success' || res.status === true || res.verified)) return true;
           return false;
         };
 
         try {
-          // 1. Cek Android WebView Bridge (Web2APK / Custom WebView / TWA)
-          if (window.AndroidBridge && typeof window.AndroidBridge.requestBiometric === 'function') {
-            try {
-              const res = await window.AndroidBridge.requestBiometric(context);
-              if (isSuccessResult(res)) {
-                handleBiometricSuccess(context);
-                return true;
-              } else {
-                showNotification('❌ Sidik jari tidak cocok atau dibatalkan.');
-                return false;
-              }
-            } catch(e) {
-              console.warn('[AndroidBridge Biometric]', e);
-              showNotification('❌ Verifikasi sidik jari gagal.');
-              return false;
-            }
-          }
+          // 1. Cek semua Android WebView Native Bridges (Kodular, AppInventor, Web2App, Android Studio, Cordova)
+          const nativeBridges = [
+            window.AndroidBridge,
+            window.Android,
+            window.JSBridge,
+            window.NativeBridge,
+            window.AndroidNative,
+            window.NoxaBridge
+          ];
 
-          if (window.Android && typeof window.Android.authenticateBiometric === 'function') {
-            try {
-              const res = await window.Android.authenticateBiometric();
-              if (isSuccessResult(res)) {
-                handleBiometricSuccess(context);
-                return true;
-              } else {
-                showNotification('❌ Sidik jari tidak cocok atau dibatalkan.');
-                return false;
+          for (const bridge of nativeBridges) {
+            if (!bridge) continue;
+            const methods = ['requestBiometric', 'authenticateBiometric', 'showBiometric', 'biometricAuth', 'authenticate'];
+            for (const m of methods) {
+              if (typeof bridge[m] === 'function') {
+                try {
+                  const res = bridge[m](context, 'onBiometricAuthResult');
+                  if (res !== undefined) {
+                    if (res instanceof Promise) {
+                      const asyncRes = await res;
+                      if (isSuccessResult(asyncRes)) { handleBiometricSuccess(context); return true; }
+                    } else if (isSuccessResult(res)) {
+                      handleBiometricSuccess(context);
+                      return true;
+                    }
+                  } else {
+                    return true;
+                  }
+                } catch (bridgeErr) {
+                  console.warn('[Native Bridge Error]', bridgeErr);
+                }
               }
-            } catch(e) {
-              console.warn('[Android Biometric]', e);
-              showNotification('❌ Verifikasi sidik jari gagal.');
-              return false;
             }
           }
 
@@ -6583,7 +6594,6 @@
 
                 let credentialId = localStorage.getItem('noxaBiometricCredId');
 
-                // Coba authenticate dengan credential yang ada
                 if (credentialId) {
                   try {
                     const rawId = Uint8Array.from(atob(credentialId), c => c.charCodeAt(0));
@@ -6615,7 +6625,6 @@
                   }
                 }
 
-                // Belum ada credential atau fail — buat credential baru (register)
                 if (!credentialId) {
                   try {
                     const createOptions = {
@@ -6651,8 +6660,8 @@
             }
           }
 
-          // 3. Perangkat tidak mendukung biometrik — tampilkan pesan
-          showNotification('⚠️ Perangkat tidak mendukung sidik jari. Gunakan PIN.');
+          // 3. Perangkat / WebView tidak mendukung sidik jari — Arahkan ke PIN
+          showNotification('ℹ️ WebView ini menggunakan verifikasi PIN 6-digit.');
           return false;
 
         } finally {
@@ -8176,11 +8185,23 @@
         // 2. Putar suara sukses
         playSuccessSound();
 
-        // 3. Tampilkan notifikasi via Android Native Bridge (jika di WebView App)
-        if (window.AndroidBridge && typeof window.AndroidBridge.showNotification === 'function') {
-          try { window.AndroidBridge.showNotification(title, body); } catch(e) {}
-        } else if (window.Android && typeof window.Android.showNotification === 'function') {
-          try { window.Android.showNotification(title, body); } catch(e) {}
+        // 3. Tampilkan notifikasi via Android Native Bridge (Android APK WebView)
+        const nativeBridges = [
+          window.AndroidBridge,
+          window.Android,
+          window.JSBridge,
+          window.NativeBridge,
+          window.AndroidNative,
+          window.NoxaBridge
+        ];
+        for (const bridge of nativeBridges) {
+          if (!bridge) continue;
+          const notifMethods = ['showNotification', 'pushNotification', 'sendNotification', 'notify'];
+          for (const m of notifMethods) {
+            if (typeof bridge[m] === 'function') {
+              try { bridge[m](title, body); } catch(e) {}
+            }
+          }
         }
 
         // 4. Jika izin belum pernah diminta, Minta Izin
