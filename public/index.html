@@ -6992,8 +6992,18 @@
         }
       }
 
+      let _lastBiometricUnlockTime = 0;
+
       function handleBiometricSuccess(context) {
-        if (context === 'app_lock') {
+        _lastBiometricUnlockTime = Date.now();
+        window._biometricInProgress = false;
+        isAppLockActive = false;
+        sessionStorage.removeItem('noxaAppLocked');
+
+        const appLockModal = document.getElementById('modal-app-pin');
+        const isAppLockVisible = appLockModal && appLockModal.style.display !== 'none';
+
+        if (context === 'app_lock' || isAppLockVisible || !context || context === 'lock') {
           closeAppLockModal();
           showNotification('🔓 Sidik Jari Terverifikasi! Kunci aplikasi terbuka.');
         } else if (context === 'transaction') {
@@ -7007,7 +7017,8 @@
       function openAppLockModal() {
         const username = localStorage.getItem('noxaUsername');
         if (!username || localStorage.getItem('noxAdminToken')) return;
-        
+        if (Date.now() - _lastBiometricUnlockTime < 4000) return;
+
         isAppLockActive = true;
         _appPinValue = "";
         updateAppPinDots();
@@ -7030,6 +7041,7 @@
       function closeAppLockModal() {
         isAppLockActive = false;
         _appPinValue = "";
+        _lastBiometricUnlockTime = Date.now();
         sessionStorage.removeItem('noxaAppLocked');
         const modal = document.getElementById('modal-app-pin');
         if (modal) modal.style.display = 'none';
@@ -7082,6 +7094,8 @@
       async function checkAndPromptPin() {
         const username = localStorage.getItem('noxaUsername');
         if (!username || localStorage.getItem('noxAdminToken')) return;
+        if (Date.now() - _lastBiometricUnlockTime < 4000) return;
+
         try {
           const res = await fetch('/pin-status', {
             headers: { 'Authorization': 'Bearer ' + username }
@@ -7104,6 +7118,8 @@
       }
 
       function markAppAsLocked() {
+        if (window._biometricInProgress) return;
+        if (Date.now() - _lastBiometricUnlockTime < 4000) return;
         if (localStorage.getItem('noxaUsername') && !localStorage.getItem('noxAdminToken')) {
           sessionStorage.setItem('noxaAppLocked', 'true');
         }
@@ -7115,6 +7131,7 @@
         if (document.visibilityState === 'hidden') {
           markAppAsLocked();
         } else if (document.visibilityState === 'visible') {
+          if (Date.now() - _lastBiometricUnlockTime < 4000) return;
           if (sessionStorage.getItem('noxaAppLocked') === 'true') {
             checkAndPromptPin();
           }
@@ -8502,7 +8519,19 @@
         });
       }
 
+      var _lastNotifTime = 0;
+      var _lastNotifKey = '';
+
       function triggerSystemNotification(title, body) {
+        // Anti-spam debouncer: abaikan jika judul + isi sama persis dalam rentang 3 detik
+        const notifKey = title + '::' + body;
+        const now = Date.now();
+        if (_lastNotifKey === notifKey && (now - _lastNotifTime) < 3000) {
+          return;
+        }
+        _lastNotifTime = now;
+        _lastNotifKey = notifKey;
+
         // 1. Tampilkan notifikasi di dalam aplikasi (Toast)
         showNotification(`✅ ${title}: ${body}`, 'success');
 
@@ -8540,8 +8569,8 @@
             icon: window.location.origin + '/loading screen noxa.png',
             badge: window.location.origin + '/loading screen noxa.png',
             vibrate: [200, 100, 200],
-            tag: 'noxa-notif-' + Date.now(),
-            renotify: true
+            tag: 'noxa-status-notif',
+            renotify: false
           };
 
           if ('serviceWorker' in navigator) {

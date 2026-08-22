@@ -23,8 +23,8 @@ self.addEventListener('push', (event) => {
     icon: data.icon || '/loading screen noxa.png',
     badge: '/loading screen noxa.png',
     vibrate: [200, 100, 200],
-    tag: 'noxa-push-' + Date.now(),
-    renotify: true,
+    tag: data.tag || 'noxa-status-notif',
+    renotify: false,
     data: {
       url: data.url || '/'
     }

@@ -129,10 +129,24 @@ app.post('/api/push/subscribe', async (req, res) => {
 
 async function sendBackgroundWebPush(targetUsername, payload) {
   try {
-    const subs = await db.getPushSubscriptions(targetUsername);
+    const rawSubs = await db.getPushSubscriptions(targetUsername);
+    if (!rawSubs || !Array.isArray(rawSubs) || rawSubs.length === 0) return;
+
+    // Deduplicate push subscriptions by endpoint to prevent sending duplicate notifications to the same device
+    const uniqueMap = new Map();
+    for (const sub of rawSubs) {
+      if (sub && sub.endpoint && !uniqueMap.has(sub.endpoint)) {
+        uniqueMap.set(sub.endpoint, sub);
+      }
+    }
+    const subs = Array.from(uniqueMap.values());
+
+    // Ensure payload has fixed tag for notification deduplication on Android OS
+    const finalPayload = Object.assign({ tag: 'noxa-status-notif' }, payload);
+
     for (const sub of subs) {
       try {
-        await webpush.sendNotification({ endpoint: sub.endpoint, keys: sub.keys }, JSON.stringify(payload));
+        await webpush.sendNotification({ endpoint: sub.endpoint, keys: sub.keys }, JSON.stringify(finalPayload));
       } catch (err) {
         if (err.statusCode === 410 || err.statusCode === 404) {
           await db.removePushSubscription(sub.endpoint);
