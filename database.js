@@ -463,16 +463,62 @@ async function createUser(userData) {
     return await getUser(uName);
   }
 
-    name: fullname || uName,
-    fullname: fullname || uName,
-    brand: brand || (fullname ? fullname.toUpperCase() : uName),
-    password: password || '',
-    email: email || `${uName}@noxa.com`,
-    role: role || 'MEMBER',
-    saldo: mainBalance || 0,
-    mainBalance: mainBalance || 0,
-    qrisBalance: 0
-  };
+  try {
+    await run(`
+      INSERT INTO users (
+        username, password, fullname, brand, userId, email, waContact,
+        mainBalance, qrisBalance, role, transactionPin, lastIp, lastDevice, lastLocation
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, NULL, ?, ?, ?)
+      ON CONFLICT(username) DO UPDATE SET
+        fullname = excluded.fullname,
+        password = excluded.password,
+        mainBalance = excluded.mainBalance;
+    `, [
+      uName,
+      password || '',
+      fullname || uName,
+      brand || (fullname ? fullname.toUpperCase() : uName),
+      userId || uName,
+      cleanEmail || '',
+      cleanWa,
+      mainBalance || 0,
+      role || 'MEMBER',
+      lastIp || null,
+      lastDevice || null,
+      lastLocation || null
+    ]);
+  } catch (err) {
+    console.error('[DB Create User SQLite Error]', err.message);
+  }
+
+  // Backup sync to JSON DB
+  try {
+    const users = readJSONUsers();
+    let userIdx = users.findIndex(x => x.username === uName);
+    const formattedObj = {
+      id: userIdx >= 0 ? users[userIdx].id : users.length + 1,
+      username: uName,
+      name: fullname || uName,
+      fullname: fullname || uName,
+      brand: brand || (fullname ? fullname.toUpperCase() : uName),
+      password: password || '',
+      email: cleanEmail || `${uName}@noxa.com`,
+      waContact: cleanWa,
+      saldo: mainBalance || 0,
+      mainBalance: mainBalance || 0,
+      qrisBalance: 0,
+      role: role || 'MEMBER',
+      created_at: new Date().toISOString()
+    };
+    if (userIdx >= 0) {
+      users[userIdx] = { ...users[userIdx], ...formattedObj };
+    } else {
+      users.push(formattedObj);
+    }
+    writeJSONUsers(users);
+  } catch (e) {}
+
+  return await getUser(uName);
 }
 
 async function updateUser(username, updateFields) {
