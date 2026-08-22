@@ -69,29 +69,51 @@ const sseClients = new Set();
 
 app.get('/api/realtime/stream', (req, res) => {
   const username = req.query.username || 'guest';
-  res.setHeader('Content-Type', 'text/event-stream');
-  res.setHeader('Cache-Control', 'no-cache, no-transform');
-  res.setHeader('Connection', 'keep-alive');
-  res.setHeader('X-Accel-Buffering', 'no');
+  if (req.socket) {
+    req.socket.setTimeout(0);
+    req.socket.setNoDelay(true);
+    req.socket.setKeepAlive(true);
+  }
+
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache, no-transform, private',
+    'Connection': 'keep-alive',
+    'X-Accel-Buffering': 'no',
+    'Access-Control-Allow-Origin': '*'
+  });
 
   const client = { id: Date.now(), username, res };
   sseClients.add(client);
 
+  // Send SSE retry interval (3000ms) and initial ping
+  res.write(`retry: 3000\n`);
   res.write(`event: ping\ndata: ${JSON.stringify({ time: new Date().toISOString() })}\n\n`);
 
+  // Heartbeat every 10 seconds to keep Cloudflare Tunnel HTTP/2 stream active
   const heartbeat = setInterval(() => {
     try {
-      res.write(`: heartbeat\n\n`);
+      if (res.writableEnded || res.finished) {
+        cleanup();
+        return;
+      }
+      res.write(`event: ping\ndata: ${JSON.stringify({ keepalive: true })}\n\n`);
     } catch (e) {
-      clearInterval(heartbeat);
-      sseClients.delete(client);
+      cleanup();
     }
-  }, 15000);
+  }, 10000);
 
-  req.on('close', () => {
+  function cleanup() {
     clearInterval(heartbeat);
     sseClients.delete(client);
-  });
+    try {
+      if (!res.writableEnded) res.end();
+    } catch(e) {}
+  }
+
+  req.on('close', cleanup);
+  req.on('error', cleanup);
+  res.on('error', cleanup);
 });
 
 // ==========================================

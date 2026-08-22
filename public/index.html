@@ -8809,9 +8809,13 @@
           } catch(err) {}
         });
 
+        evtSource.addEventListener('ping', () => {});
+
         evtSource.onerror = function() {
-          evtSource.close();
-          setTimeout(initRealtimeStream, 5000);
+          if (evtSource.readyState === EventSource.CLOSED) {
+            window._sseUsername = null;
+            setTimeout(initRealtimeStream, 3000);
+          }
         };
       }
 
