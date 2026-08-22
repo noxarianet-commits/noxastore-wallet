@@ -3,11 +3,47 @@
 
 <head>
   <meta charset="utf-8" />
-  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport" />
   <title>noxastore wallet - Verifikasi Bukti Transfer</title>
+
+  <!-- PWA & Mobile WebView Settings -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#6d23f9">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
   <!-- Favicon -->
   <link rel="icon" href="loading%20screen%20noxa.png" type="image/png">
+
+  <!-- NoxaNative JS Bridge for Android & iOS WebView -->
+  <script>
+    window.NoxaNative = {
+      isWebView: function() {
+        return !!(window.AndroidBridge || window.Android || (window.webkit && window.webkit.messageHandlers));
+      },
+      requestBiometric: function(callbackName) {
+        const cbName = callbackName || 'onBiometricResult';
+        if (window.AndroidBridge && typeof window.AndroidBridge.requestBiometric === 'function') {
+          window.AndroidBridge.requestBiometric(cbName);
+        } else if (window.Android && typeof window.Android.requestBiometric === 'function') {
+          window.Android.requestBiometric(cbName);
+        } else if (window.PublicKeyCredential) {
+          console.log('[Biometric] Falling back to WebAuthn browser API');
+        } else {
+          console.warn('[Biometric] Biometric API not available');
+        }
+      },
+      requestLocation: function(successCb, errorCb) {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(successCb, errorCb, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+          });
+        }
+      }
+    };
+  </script>
 
   <!-- Tailwind CSS & Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
@@ -6486,12 +6522,18 @@
         if (window._biometricInProgress) return false;
         window._biometricInProgress = true;
 
+        const isSuccessResult = (res) => {
+          if (res === true || res === 'true' || res === 'SUCCESS' || res === 'success' || res === 1 || res === '1') return true;
+          if (typeof res === 'object' && res !== null && (res.success || res.status === 'success' || res.status === true)) return true;
+          return false;
+        };
+
         try {
-          // 1. Cek Android WebView Bridge (Web2APK / Custom WebView)
+          // 1. Cek Android WebView Bridge (Web2APK / Custom WebView / TWA)
           if (window.AndroidBridge && typeof window.AndroidBridge.requestBiometric === 'function') {
             try {
               const res = await window.AndroidBridge.requestBiometric(context);
-              if (res === true || res === 'SUCCESS') {
+              if (isSuccessResult(res)) {
                 handleBiometricSuccess(context);
                 return true;
               } else {
@@ -6508,7 +6550,7 @@
           if (window.Android && typeof window.Android.authenticateBiometric === 'function') {
             try {
               const res = await window.Android.authenticateBiometric();
-              if (res === true || res === 'SUCCESS') {
+              if (isSuccessResult(res)) {
                 handleBiometricSuccess(context);
                 return true;
               } else {
@@ -6530,23 +6572,59 @@
                 const challenge = new Uint8Array(32);
                 window.crypto.getRandomValues(challenge);
 
-                const userId = new TextEncoder().encode(localStorage.getItem('noxaUsername') || 'noxauser');
+                const username = localStorage.getItem('noxaUsername') || 'noxauser';
+                const userId = new TextEncoder().encode(username);
+
+                const rawHost = (window.location.hostname || '').split(':')[0];
+                const isIP = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(rawHost);
+                const rpConfig = (rawHost && !isIP && rawHost !== 'file') ? { name: 'NoxaPay', id: rawHost } : { name: 'NoxaPay' };
 
                 showNotification('👆 Tempelkan jari Anda pada sensor sidik jari...');
 
-                // Coba ambil credential yang sudah tersimpan dulu
                 let credentialId = localStorage.getItem('noxaBiometricCredId');
 
+                // Coba authenticate dengan credential yang ada
+                if (credentialId) {
+                  try {
+                    const rawId = Uint8Array.from(atob(credentialId), c => c.charCodeAt(0));
+                    const getOptions = {
+                      publicKey: {
+                        challenge: challenge,
+                        timeout: 60000,
+                        userVerification: 'preferred',
+                        allowCredentials: [{ type: 'public-key', id: rawId }]
+                      }
+                    };
+                    if (rawHost && !isIP && rawHost !== 'file') {
+                      getOptions.publicKey.rpId = rawHost;
+                    }
+
+                    const assertion = await navigator.credentials.get(getOptions);
+                    if (assertion) {
+                      handleBiometricSuccess(context);
+                      return true;
+                    }
+                  } catch (getErr) {
+                    if (getErr.name === 'NotAllowedError') {
+                      showNotification('❌ Verifikasi sidik jari dibatalkan.');
+                      return false;
+                    }
+                    console.warn('[WebAuthn Get - Re-registering]', getErr);
+                    localStorage.removeItem('noxaBiometricCredId');
+                    credentialId = null;
+                  }
+                }
+
+                // Belum ada credential atau fail — buat credential baru (register)
                 if (!credentialId) {
-                  // Belum ada credential — buat baru (register)
                   try {
                     const createOptions = {
                       publicKey: {
                         challenge: challenge,
-                        rp: { name: 'NoxaPay', id: window.location.hostname || 'localhost' },
-                        user: { id: userId, name: localStorage.getItem('noxaUsername') || 'user', displayName: 'NoxaPay User' },
+                        rp: rpConfig,
+                        user: { id: userId, name: username, displayName: username },
                         pubKeyCredParams: [{ alg: -7, type: 'public-key' }, { alg: -257, type: 'public-key' }],
-                        authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required' },
+                        authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'preferred' },
                         timeout: 60000,
                         attestation: 'none'
                       }
@@ -6554,7 +6632,6 @@
 
                     const newCred = await navigator.credentials.create(createOptions);
                     if (newCred && newCred.rawId) {
-                      // Simpan credential ID untuk penggunaan berikutnya
                       const credIdBase64 = btoa(String.fromCharCode(...new Uint8Array(newCred.rawId)));
                       localStorage.setItem('noxaBiometricCredId', credIdBase64);
                       handleBiometricSuccess(context);
@@ -6567,36 +6644,6 @@
                     }
                     console.warn('[WebAuthn Create]', createErr);
                   }
-                } else {
-                  // Ada credential — verifikasi (authenticate)
-                  try {
-                    const rawId = Uint8Array.from(atob(credentialId), c => c.charCodeAt(0));
-                    const getOptions = {
-                      publicKey: {
-                        challenge: challenge,
-                        timeout: 60000,
-                        rpId: window.location.hostname || 'localhost',
-                        userVerification: 'required',
-                        allowCredentials: [{ type: 'public-key', id: rawId, transports: ['internal'] }]
-                      }
-                    };
-
-                    const assertion = await navigator.credentials.get(getOptions);
-                    if (assertion) {
-                      handleBiometricSuccess(context);
-                      return true;
-                    }
-                  } catch (getErr) {
-                    if (getErr.name === 'NotAllowedError') {
-                      showNotification('❌ Verifikasi sidik jari dibatalkan.');
-                      return false;
-                    }
-                    // Credential mungkin expired, hapus dan coba register ulang
-                    localStorage.removeItem('noxaBiometricCredId');
-                    console.warn('[WebAuthn Get]', getErr);
-                    showNotification('⚠️ Credential sidik jari kadaluarsa. Coba lagi.');
-                    return false;
-                  }
                 }
               }
             } catch (err) {
@@ -6604,7 +6651,7 @@
             }
           }
 
-          // 3. Perangkat tidak mendukung biometrik — TIDAK auto-sukses, tampilkan pesan
+          // 3. Perangkat tidak mendukung biometrik — tampilkan pesan
           showNotification('⚠️ Perangkat tidak mendukung sidik jari. Gunakan PIN.');
           return false;
 
@@ -7938,12 +7985,19 @@
       }
 
       // Register Service Worker for Mobile System Notifications
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
+      function initServiceWorker() {
+        if ('serviceWorker' in navigator) {
           navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('Service Worker registered scope:', reg.scope))
-            .catch(err => console.warn('Service Worker registration failed:', err));
-        });
+            .then(reg => console.log('[SW] Service Worker registered scope:', reg.scope))
+            .catch(err => console.warn('[SW] Service Worker registration failed:', err));
+        }
+      }
+
+      if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        initServiceWorker();
+      } else {
+        window.addEventListener('DOMContentLoaded', initServiceWorker);
+        window.addEventListener('load', initServiceWorker);
       }
 
       function startPolling() {
@@ -7971,7 +8025,7 @@
         Notification.requestPermission().then(permission => {
           if (permission === 'granted') {
             showNotification('✅ Notifikasi sistem berhasil diaktifkan!');
-            triggerSystemNotification('Noxarianet Wallet', 'Notifikasi sistem aktif. Anda akan menerima pemberitahuan di status bar.');
+            triggerSystemNotification('NoxariaNet Wallet', 'Notifikasi sistem aktif. Anda akan menerima pemberitahuan di status bar.');
           } else {
             showNotification('⚠️ Izin notifikasi ditolak. Aktifkan melalui pengaturan browser.');
           }
@@ -7985,26 +8039,33 @@
         // 2. Putar suara sukses
         playSuccessSound();
 
-        // 3. Tampilkan notifikasi sistem HP (jika diizinkan)
+        // 3. Tampilkan notifikasi via Android Native Bridge (jika di WebView App)
+        if (window.AndroidBridge && typeof window.AndroidBridge.showNotification === 'function') {
+          try { window.AndroidBridge.showNotification(title, body); } catch(e) {}
+        } else if (window.Android && typeof window.Android.showNotification === 'function') {
+          try { window.Android.showNotification(title, body); } catch(e) {}
+        }
+
+        // 4. Tampilkan notifikasi sistem HP (Web Push / Service Worker)
         if ('Notification' in window && Notification.permission === 'granted') {
           if ('serviceWorker' in navigator) {
             navigator.serviceWorker.ready.then(reg => {
               reg.showNotification(title, {
                 body: body,
-                icon: 'loading screen noxa.png',
-                badge: 'loading screen noxa.png',
+                icon: '/loading screen noxa.png',
+                badge: '/loading screen noxa.png',
                 vibrate: [200, 100, 200]
               });
             }).catch(() => {
               new Notification(title, {
                 body: body,
-                icon: 'loading screen noxa.png'
+                icon: '/loading screen noxa.png'
               });
             });
           } else {
             new Notification(title, {
               body: body,
-              icon: 'loading screen noxa.png'
+              icon: '/loading screen noxa.png'
             });
           }
         }

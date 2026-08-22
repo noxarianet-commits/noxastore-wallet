@@ -6,6 +6,7 @@ const fs = require('fs');
 const crypto = require('crypto');
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
+const { exec } = require('child_process');
 const SekaliPayService = require('./sekalipayService');
 const db = require('./database');
 const orkutService = require('./orkutService');
@@ -325,8 +326,9 @@ app.post('/register', async (req, res) => {
     writeJSON(USERS_FILE, users);
   }
 
+  const userObj = newUser || { username: username, role: 'MEMBER' };
   const token = jwt.sign(
-    { username: newUser.username, role: newUser.role || 'MEMBER' },
+    { username: userObj.username, role: userObj.role || 'MEMBER' },
     JWT_SECRET,
     { expiresIn: '30d' }
   );
@@ -336,8 +338,8 @@ app.post('/register', async (req, res) => {
     status: true,
     msg: 'Registrasi berhasil!',
     token: token,
-    data: newUser,
-    user: newUser
+    data: userObj,
+    user: userObj
   });
 });
 
@@ -1965,4 +1967,24 @@ app.listen(PORT, HOST, () => {
   console.log(`   Internal  : http://localhost:${PORT}`);
   console.log(`   External  : http://203.175.125.151:${PORT}`);
   console.log(`================================================================`);
+
+  const tunnelToken = process.env.CLOUDFLARE_TUNNEL_TOKEN;
+  if (tunnelToken) {
+    console.log('[Cloudflare Tunnel] Launching automatic tunnel process...');
+    const binPath = fs.existsSync(path.join(__dirname, 'cloudflared')) ? './cloudflared' : 'cloudflared';
+    const tunnelProc = exec(`${binPath} tunnel run --token "${tunnelToken}"`);
+    if (tunnelProc.stdout) {
+      tunnelProc.stdout.on('data', data => console.log(`[Tunnel] ${data.toString().trim()}`));
+    }
+    if (tunnelProc.stderr) {
+      tunnelProc.stderr.on('data', data => {
+        const str = data.toString().trim();
+        if (str.includes('Registered tunnel connection')) {
+          console.log(`[Tunnel SUCCESS] Cloudflare Tunnel connected!`);
+        } else if (str.includes('ERR')) {
+          console.error(`[Tunnel Error] ${str}`);
+        }
+      });
+    }
+  }
 });

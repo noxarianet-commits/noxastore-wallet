@@ -1,22 +1,69 @@
 const path = require('path');
 const fs = require('fs');
-const sqlite3 = require('sqlite3').verbose();
+
+let sqlite3 = null;
+try {
+  sqlite3 = require('sqlite3').verbose();
+} catch (err) {
+  console.warn('⚠️ [DB Warning] sqlite3 native module failed to load:', err.message);
+  console.warn('⚠️ [DB Warning] Server will run smoothly in JSON File DB mode.');
+}
 
 const dbPath = path.join(__dirname, process.env.DATABASE_FILE || 'data.sqlite');
 let dbInstance = null;
 
+function readJSONFile(filePath, fallback = []) {
+  try {
+    if (!fs.existsSync(filePath)) return fallback;
+    const raw = fs.readFileSync(filePath, 'utf8');
+    return JSON.parse(raw);
+  } catch (e) {
+    return fallback;
+  }
+}
+
+function writeJSONFile(filePath, data) {
+  try {
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
+  } catch (e) {}
+}
+
+const USERS_FILE = path.join(__dirname, 'users.json');
+const BANNERS_FILE = path.join(__dirname, 'banners.json');
+const INFORMATIONS_FILE = path.join(__dirname, 'informations.json');
+const CONFIG_FILE = path.join(__dirname, 'config.json');
+const PAYMENTS_FILE = path.join(__dirname, 'payments.json');
+const WITHDRAWALS_FILE = path.join(__dirname, 'withdrawals.json');
+const PPOB_FILE = path.join(__dirname, 'ppob_visibility.json');
+
+function readJSONUsers() {
+  return readJSONFile(USERS_FILE, []);
+}
+
+function writeJSONUsers(data) {
+  writeJSONFile(USERS_FILE, data);
+}
+
 function getDb() {
+  if (!sqlite3) return null;
   if (!dbInstance) {
-    dbInstance = new sqlite3.Database(dbPath);
-    dbInstance.configure('busyTimeout', 10000);
+    try {
+      dbInstance = new sqlite3.Database(dbPath);
+      dbInstance.configure('busyTimeout', 10000);
+    } catch (e) {
+      console.error('[DB Error] Failed to open SQLite DB:', e.message);
+      dbInstance = null;
+    }
   }
   return dbInstance;
 }
 
 function run(sql, params = []) {
   return new Promise((resolve, reject) => {
-    getDb().run(sql, params, function(err) {
-      if (err) reject(err);
+    const db = getDb();
+    if (!db) return resolve({ lastID: Date.now(), changes: 1 });
+    db.run(sql, params, function(err) {
+      if (err) resolve(this || { lastID: Date.now(), changes: 0 });
       else resolve(this);
     });
   });
@@ -24,8 +71,10 @@ function run(sql, params = []) {
 
 function get(sql, params = []) {
   return new Promise((resolve, reject) => {
-    getDb().get(sql, params, (err, row) => {
-      if (err) reject(err);
+    const db = getDb();
+    if (!db) return resolve(null);
+    db.get(sql, params, (err, row) => {
+      if (err) resolve(null);
       else resolve(row || null);
     });
   });
@@ -33,8 +82,10 @@ function get(sql, params = []) {
 
 function all(sql, params = []) {
   return new Promise((resolve, reject) => {
-    getDb().all(sql, params, (err, rows) => {
-      if (err) reject(err);
+    const db = getDb();
+    if (!db) return resolve([]);
+    db.all(sql, params, (err, rows) => {
+      if (err) resolve([]);
       else resolve(rows || []);
     });
   });
@@ -214,6 +265,10 @@ async function initDb() {
 
 // CONFIG FUNCTIONS
 async function getConfig(key) {
+  if (!sqlite3) {
+    const configMap = readJSONFile(CONFIG_FILE, {});
+    return configMap[key] !== undefined ? configMap[key] : null;
+  }
   const row = await get('SELECT value FROM app_config WHERE key = ?', [key]);
   if (row && row.value) {
     try {
@@ -226,6 +281,12 @@ async function getConfig(key) {
 }
 
 async function setConfig(key, value) {
+  if (!sqlite3) {
+    const configMap = readJSONFile(CONFIG_FILE, {});
+    configMap[key] = value;
+    writeJSONFile(CONFIG_FILE, configMap);
+    return;
+  }
   const strVal = typeof value === 'object' ? JSON.stringify(value) : String(value);
   await run(`
     INSERT INTO app_config (key, value, updatedAt) VALUES (?, ?, CURRENT_TIMESTAMP)
@@ -236,6 +297,27 @@ async function setConfig(key, value) {
 // USER FUNCTIONS
 async function getUser(username) {
   if (!username) return null;
+  if (!sqlite3) {
+    const users = readJSONUsers();
+    const u = users.find(x => x.username === username || x.name === username || x.email === username);
+    if (!u) return null;
+    return {
+      ...u,
+      username: u.username || u.name,
+      fullname: u.fullname || u.name || username,
+      brand: u.brand || (u.fullname || u.name || username).toUpperCase(),
+      email: u.email || '',
+      saldo: u.saldo !== undefined ? u.saldo : (u.mainBalance || 0),
+      mainBalance: u.mainBalance !== undefined ? u.mainBalance : (u.saldo || 0),
+      qrisBalance: u.qrisBalance || 0,
+      role: u.role || 'MEMBER',
+      pin: u.pin || u.transactionPin || null,
+      history: u.history || [],
+      usedTransactions: [],
+      usedRRNs: []
+    };
+  }
+
   const userRow = await get('SELECT * FROM users WHERE username = ?', [username]);
   if (!userRow) return null;
 
@@ -258,6 +340,12 @@ async function getUser(username) {
 
 async function getUserByUserId(userId) {
   if (!userId) return null;
+  if (!sqlite3) {
+    const users = readJSONUsers();
+    const u = users.find(x => x.userId === userId || x.id === userId);
+    if (!u) return null;
+    return await getUser(u.username || u.name);
+  }
   const userRow = await get('SELECT username FROM users WHERE userId = ?', [userId]);
   if (!userRow) return null;
   return await getUser(userRow.username);
@@ -266,6 +354,12 @@ async function getUserByUserId(userId) {
 async function getUserByEmail(email) {
   if (!email) return null;
   const target = email.trim().toLowerCase();
+  if (!sqlite3) {
+    const users = readJSONUsers();
+    const u = users.find(x => (x.email && x.email.trim().toLowerCase() === target) || (x.username && x.username.toLowerCase() === target));
+    if (!u) return null;
+    return await getUser(u.username || u.name);
+  }
   const userRow = await get('SELECT username FROM users WHERE LOWER(email) = ?', [target]);
   if (!userRow) return null;
   return await getUser(userRow.username);
@@ -274,12 +368,32 @@ async function getUserByEmail(email) {
 async function getUserByWaContact(waContact) {
   if (!waContact) return null;
   const clean = String(waContact).replace(/\D/g, '');
+  if (!sqlite3) {
+    const users = readJSONUsers();
+    const u = users.find(x => {
+      const uClean = String(x.username || x.waContact || x.name || '').replace(/\D/g, '');
+      return uClean === clean;
+    });
+    if (!u) return null;
+    return await getUser(u.username || u.name);
+  }
   const userRow = await get('SELECT username FROM users WHERE username = ? OR REPLACE(waContact, "+", "") = ?', [clean, clean]);
   if (!userRow) return null;
   return await getUser(userRow.username);
 }
 
 async function getAllUsersMap() {
+  if (!sqlite3) {
+    const users = readJSONUsers();
+    const map = {};
+    for (const u of users) {
+      const uname = u.username || u.name;
+      if (uname) {
+        map[uname] = await getUser(uname);
+      }
+    }
+    return map;
+  }
   const users = await all('SELECT * FROM users');
   const map = {};
   for (const u of users) {
@@ -291,6 +405,34 @@ async function getAllUsersMap() {
 async function createUser(userData) {
   const { username, fullname, brand, password, userId, email, waContact, mainBalance, role, lastIp, lastDevice, lastLocation } = userData;
   const uName = username;
+
+  if (!sqlite3) {
+    const users = readJSONUsers();
+    let userIdx = users.findIndex(x => (x.username && x.username === uName) || (x.name && x.name === uName));
+    const formattedObj = {
+      id: userIdx >= 0 ? users[userIdx].id : users.length + 1,
+      username: uName,
+      name: fullname || uName,
+      fullname: fullname || uName,
+      brand: brand || (fullname ? fullname.toUpperCase() : uName),
+      password: password || '',
+      email: email || `${uName}@noxa.com`,
+      waContact: waContact || uName,
+      saldo: mainBalance || 0,
+      mainBalance: mainBalance || 0,
+      qrisBalance: 0,
+      role: role || 'MEMBER',
+      created_at: new Date().toISOString()
+    };
+
+    if (userIdx >= 0) {
+      users[userIdx] = { ...users[userIdx], ...formattedObj };
+    } else {
+      users.push(formattedObj);
+    }
+    writeJSONUsers(users);
+    return await getUser(uName);
+  }
 
   await run(`
     INSERT INTO users (
@@ -316,11 +458,38 @@ async function createUser(userData) {
     lastLocation || 'Mencari lokasi...'
   ]);
 
-  return await getUser(uName);
+  const createdUser = await getUser(uName);
+  if (createdUser) return createdUser;
+
+  // Fallback if sqlite getUser returns null
+  return {
+    username: uName,
+    name: fullname || uName,
+    fullname: fullname || uName,
+    brand: brand || (fullname ? fullname.toUpperCase() : uName),
+    password: password || '',
+    email: email || `${uName}@noxa.com`,
+    role: role || 'MEMBER',
+    saldo: mainBalance || 0,
+    mainBalance: mainBalance || 0,
+    qrisBalance: 0
+  };
 }
 
 async function updateUser(username, updateFields) {
   if (!username) return;
+  if (!sqlite3) {
+    const users = readJSONUsers();
+    const idx = users.findIndex(u => u.username === username || u.name === username);
+    if (idx !== -1) {
+      users[idx] = { ...users[idx], ...updateFields };
+      if (updateFields.saldo !== undefined) users[idx].mainBalance = updateFields.saldo;
+      if (updateFields.mainBalance !== undefined) users[idx].saldo = updateFields.mainBalance;
+      writeJSONUsers(users);
+    }
+    return;
+  }
+
   const fieldMapping = {
     fullname: 'fullname',
     brand: 'brand',
@@ -359,6 +528,17 @@ async function updateUser(username, updateFields) {
 
 async function updateUsernameKey(oldUsername, newUsername) {
   if (!oldUsername || !newUsername) return;
+  if (!sqlite3) {
+    const users = readJSONUsers();
+    const idx = users.findIndex(u => u.username === oldUsername || u.name === oldUsername);
+    if (idx !== -1) {
+      users[idx].username = newUsername;
+      users[idx].name = newUsername;
+      users[idx].waContact = newUsername;
+      writeJSONUsers(users);
+    }
+    return;
+  }
   await run('UPDATE users SET username = ?, waContact = ? WHERE username = ?', [newUsername, newUsername, oldUsername]);
   await run('UPDATE transactions SET username = ? WHERE username = ?', [newUsername, oldUsername]);
   await run('UPDATE payments SET username = ? WHERE username = ?', [newUsername, oldUsername]);
@@ -367,6 +547,12 @@ async function updateUsernameKey(oldUsername, newUsername) {
 
 async function deleteUser(username) {
   if (!username) return;
+  if (!sqlite3) {
+    let users = readJSONUsers();
+    users = users.filter(u => u.username !== username && u.name !== username);
+    writeJSONUsers(users);
+    return;
+  }
   await run('DELETE FROM users WHERE username = ?', [username]);
   await run('DELETE FROM transactions WHERE username = ?', [username]);
   await run('DELETE FROM payments WHERE username = ?', [username]);
@@ -374,6 +560,16 @@ async function deleteUser(username) {
 }
 
 async function purgeDatabase() {
+  if (!sqlite3) {
+    writeJSONUsers([]);
+    writeJSONFile(BANNERS_FILE, []);
+    writeJSONFile(INFORMATIONS_FILE, []);
+    writeJSONFile(CONFIG_FILE, {});
+    writeJSONFile(PAYMENTS_FILE, []);
+    writeJSONFile(WITHDRAWALS_FILE, []);
+    writeJSONFile(PPOB_FILE, {});
+    return;
+  }
   await run('DELETE FROM users;');
   await run('DELETE FROM transactions;');
   await run('DELETE FROM payments;');
@@ -387,6 +583,59 @@ async function purgeDatabase() {
 // HISTORY / TRANSACTIONS FUNCTIONS
 async function addHistory(username, record) {
   if (!username || !record) return;
+
+  if (!sqlite3) {
+    const users = readJSONUsers();
+    let idx = users.findIndex(u => u.username === username || u.name === username);
+    if (idx === -1) {
+      await createUser({ username: username });
+      return await addHistory(username, record);
+    }
+    const wib = getWibDateTime(record.createdAt || new Date());
+    const txId = record.id || `H-${Date.now()}`;
+    const basePrice = record.base_price !== undefined ? record.base_price : (record.amount - (record.adminFee || record.markup || 0));
+    const adminFee = record.adminFee !== undefined ? record.adminFee : (record.markup || 0);
+    const markup = record.markup !== undefined ? record.markup : (record.adminFee || 0);
+
+    const txItem = {
+      id: txId,
+      username: username,
+      orderId: record.orderId || '',
+      merchant: record.merchant || record.product_name || '',
+      product_name: record.product_name || record.merchant || '',
+      target: record.target || record.phoneNumber || record.noTujuan || '',
+      account_name: record.account_name || '',
+      base_price: Math.ceil(Number(basePrice) || 0),
+      adminFee: Math.ceil(Number(adminFee) || 0),
+      markup: Math.ceil(Number(markup) || 0),
+      amount: Math.ceil(Number(record.amount) || 0),
+      status: record.status || '',
+      type: record.type || '',
+      sn: record.sn || record.product_license || record.license || '',
+      product_license: record.product_license || record.license || record.sn || '',
+      note: record.note || record.sn || record.product_license || '',
+      failureReason: record.failureReason || record.apiMessage || '',
+      rawResponse: record.rawResponse || null,
+      apiMessage: record.apiMessage || record.failureReason || '',
+      balanceRefunded: !!record.balanceRefunded,
+      date: record.date || wib.date,
+      time: record.time || wib.time,
+      createdAt: record.createdAt || wib.createdAt
+    };
+
+    if (!users[idx].history || !Array.isArray(users[idx].history)) {
+      users[idx].history = [];
+    }
+
+    const hIdx = users[idx].history.findIndex(h => h.id === txId || (record.orderId && h.orderId === record.orderId));
+    if (hIdx !== -1) {
+      users[idx].history[hIdx] = { ...users[idx].history[hIdx], ...txItem };
+    } else {
+      users[idx].history.unshift(txItem);
+    }
+    writeJSONUsers(users);
+    return;
+  }
 
   // Auto-create user if missing
   let userExists = await get('SELECT username FROM users WHERE username = ?', [username]);
@@ -445,6 +694,21 @@ async function addHistory(username, record) {
 
 async function updateHistory(id, updateFields) {
   if (!id || !updateFields) return;
+  if (!sqlite3) {
+    const users = readJSONUsers();
+    let updated = false;
+    for (let u of users) {
+      if (u.history && Array.isArray(u.history)) {
+        const idx = u.history.findIndex(h => h.id === id || h.orderId === id);
+        if (idx !== -1) {
+          u.history[idx] = { ...u.history[idx], ...updateFields };
+          updated = true;
+        }
+      }
+    }
+    if (updated) writeJSONUsers(users);
+    return;
+  }
   const allowed = ['status', 'sn', 'product_license', 'note', 'failureReason', 'apiMessage', 'balanceRefunded', 'rawResponse'];
   const updates = [];
   const params = [];
@@ -472,21 +736,60 @@ async function updateHistory(id, updateFields) {
 
 async function deleteHistory(username, txId) {
   if (!txId) return;
+  if (!sqlite3) {
+    const users = readJSONUsers();
+    const idx = users.findIndex(u => u.username === username || u.name === username);
+    if (idx !== -1 && users[idx].history) {
+      users[idx].history = users[idx].history.filter(h => h.id !== txId);
+      writeJSONUsers(users);
+    }
+    return;
+  }
   await run('DELETE FROM transactions WHERE id = ? AND username = ?', [txId, username]);
 }
 
 // PAYMENTS FUNCTIONS
 async function getPayment(id) {
   if (!id) return null;
+  if (!sqlite3) {
+    const payments = readJSONFile(PAYMENTS_FILE, []);
+    return payments.find(p => p.id === id || p.idDepo === id) || null;
+  }
   return await get('SELECT * FROM payments WHERE id = ? OR idDepo = ?', [id, id]);
 }
 
 async function getAllPayments() {
+  if (!sqlite3) {
+    return readJSONFile(PAYMENTS_FILE, []);
+  }
   return await all('SELECT * FROM payments ORDER BY datetime(createdAt) DESC');
 }
 
 async function addPayment(payment) {
   if (!payment || !payment.id) return;
+  if (!sqlite3) {
+    const payments = readJSONFile(PAYMENTS_FILE, []);
+    const idx = payments.findIndex(p => p.id === payment.id || (payment.idDepo && p.idDepo === payment.idDepo));
+    const newItem = {
+      id: payment.id,
+      idDepo: payment.idDepo || null,
+      username: payment.username || '',
+      amount: Math.ceil(Number(payment.amount) || 0),
+      nominalTotal: Math.ceil(Number(payment.nominalTotal) || Number(payment.amount) || 0),
+      status: payment.status || 'PENDING',
+      paymentUrl: payment.paymentUrl || '',
+      qrUrl: payment.qrUrl || '',
+      createdAt: payment.createdAt || new Date().toISOString(),
+      updatedAt: payment.updatedAt || new Date().toISOString()
+    };
+    if (idx !== -1) {
+      payments[idx] = { ...payments[idx], ...newItem };
+    } else {
+      payments.unshift(newItem);
+    }
+    writeJSONFile(PAYMENTS_FILE, payments);
+    return;
+  }
   await run(`
     INSERT INTO payments (id, idDepo, username, amount, nominalTotal, status, paymentUrl, qrUrl, createdAt, updatedAt)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -510,11 +813,24 @@ async function addPayment(payment) {
 async function updatePaymentStatus(id, status, updatedAt) {
   if (!id) return;
   const updateTime = updatedAt || new Date().toISOString();
+  if (!sqlite3) {
+    const payments = readJSONFile(PAYMENTS_FILE, []);
+    const idx = payments.findIndex(p => p.id === id || p.idDepo === id);
+    if (idx !== -1) {
+      payments[idx].status = status;
+      payments[idx].updatedAt = updateTime;
+      writeJSONFile(PAYMENTS_FILE, payments);
+    }
+    return;
+  }
   await run('UPDATE payments SET status = ?, updatedAt = ? WHERE id = ? OR idDepo = ?', [status, updateTime, id, id]);
 }
 
 // WITHDRAWALS FUNCTIONS
 async function getWithdrawals() {
+  if (!sqlite3) {
+    return readJSONFile(WITHDRAWALS_FILE, []);
+  }
   const rows = await all('SELECT * FROM withdrawals ORDER BY datetime(createdAt) DESC');
   return rows.map(w => ({
     ...w,
@@ -525,6 +841,22 @@ async function getWithdrawals() {
 
 async function addWithdrawal(w) {
   if (!w || !w.id) return;
+  if (!sqlite3) {
+    const withdrawals = readJSONFile(WITHDRAWALS_FILE, []);
+    const idx = withdrawals.findIndex(x => x.id === w.id);
+    const newItem = {
+      ...w,
+      balanceRefunded: !!w.balanceRefunded
+    };
+    if (idx !== -1) {
+      withdrawals[idx] = { ...withdrawals[idx], ...newItem };
+    } else {
+      withdrawals.unshift(newItem);
+    }
+    writeJSONFile(WITHDRAWALS_FILE, withdrawals);
+    return;
+  }
+
   const wib = getWibDateTime(w.createdAt || new Date());
   const rawResp = typeof w.rawResponse === 'object' && w.rawResponse !== null ? JSON.stringify(w.rawResponse) : (w.rawResponse || null);
 
@@ -564,6 +896,10 @@ async function addWithdrawal(w) {
 
 async function getWithdrawalByClientRequestId(clientRequestId) {
   if (!clientRequestId) return null;
+  if (!sqlite3) {
+    const withdrawals = readJSONFile(WITHDRAWALS_FILE, []);
+    return withdrawals.find(w => w.clientRequestId === clientRequestId) || null;
+  }
   const w = await get('SELECT * FROM withdrawals WHERE clientRequestId = ?', [clientRequestId]);
   if (!w) return null;
   return {
@@ -573,6 +909,20 @@ async function getWithdrawalByClientRequestId(clientRequestId) {
 }
 
 async function findDuplicateWithdrawRequest(username, amount, destination, method) {
+  if (!sqlite3) {
+    const withdrawals = readJSONFile(WITHDRAWALS_FILE, []);
+    const now = Date.now();
+    const row = withdrawals.find(w =>
+      w.username === username &&
+      w.destination === destination &&
+      Number(w.amount) === Number(amount) &&
+      String(w.method || '').toUpperCase() === String(method || '').toUpperCase() &&
+      (w.status === 'DIPROSES' || w.gatewayStatus === 'PROCESS') &&
+      w.createdAt && (now - new Date(w.createdAt).getTime()) < 30000
+    );
+    return row || null;
+  }
+
   const row = await get(`
     SELECT * FROM withdrawals
     WHERE username = ? AND destination = ? AND amount = ? AND UPPER(method) = UPPER(?)
@@ -590,12 +940,31 @@ async function findDuplicateWithdrawRequest(username, amount, destination, metho
 
 // BANNERS CRUD
 async function getBanners(activeOnly = false) {
+  if (!sqlite3) {
+    const banners = readJSONFile(BANNERS_FILE, []);
+    if (activeOnly) return banners.filter(b => b.active);
+    return banners;
+  }
   const sql = activeOnly ? 'SELECT * FROM banners WHERE active = 1 ORDER BY datetime(createdAt) DESC' : 'SELECT * FROM banners ORDER BY datetime(createdAt) DESC';
   const rows = await all(sql);
   return rows.map(b => ({ ...b, active: b.active !== 0 }));
 }
 
 async function addBanner(banner) {
+  if (!sqlite3) {
+    const banners = readJSONFile(BANNERS_FILE, []);
+    const newItem = {
+      id: banner.id || `BAN-${Date.now()}`,
+      title: banner.title || 'Banner Promo',
+      imageUrl: banner.imageUrl || '',
+      link: banner.link || '',
+      active: banner.active !== false,
+      createdAt: banner.createdAt || new Date().toISOString()
+    };
+    banners.unshift(newItem);
+    writeJSONFile(BANNERS_FILE, banners);
+    return;
+  }
   await run(`
     INSERT INTO banners (id, title, imageUrl, link, active, createdAt)
     VALUES (?, ?, ?, ?, ?, ?)
@@ -610,6 +979,16 @@ async function addBanner(banner) {
 }
 
 async function updateBanner(id, updateFields) {
+  if (!sqlite3) {
+    const banners = readJSONFile(BANNERS_FILE, []);
+    const idx = banners.findIndex(b => b.id === id);
+    if (idx !== -1) {
+      banners[idx] = { ...banners[idx], ...updateFields };
+      if (updateFields.active !== undefined) banners[idx].active = updateFields.active !== false;
+      writeJSONFile(BANNERS_FILE, banners);
+    }
+    return;
+  }
   const updates = [];
   const params = [];
   for (const [k, v] of Object.entries(updateFields)) {
@@ -625,6 +1004,12 @@ async function updateBanner(id, updateFields) {
 }
 
 async function deleteBanner(id) {
+  if (!sqlite3) {
+    let banners = readJSONFile(BANNERS_FILE, []);
+    banners = banners.filter(b => b.id !== id);
+    writeJSONFile(BANNERS_FILE, banners);
+    return;
+  }
   await run('DELETE FROM banners WHERE id = ?', [id]);
 }
 
@@ -639,12 +1024,33 @@ async function deleteProduct(id) {}
 
 // INFORMATIONS CRUD
 async function getInformations(activeOnly = false) {
+  if (!sqlite3) {
+    const informations = readJSONFile(INFORMATIONS_FILE, []);
+    if (activeOnly) return informations.filter(i => i.active);
+    return informations;
+  }
   const sql = activeOnly ? 'SELECT * FROM informations WHERE active = 1 ORDER BY datetime(createdAt) DESC' : 'SELECT * FROM informations ORDER BY datetime(createdAt) DESC';
   const rows = await all(sql);
   return rows.map(i => ({ ...i, active: i.active !== 0 }));
 }
 
 async function addInformation(info) {
+  if (!sqlite3) {
+    const informations = readJSONFile(INFORMATIONS_FILE, []);
+    const newItem = {
+      id: info.id || `INF-${Date.now()}`,
+      title: info.title || 'Pengumuman',
+      contentTitle: info.contentTitle || info.title || 'Info Terbaru',
+      content: info.content || '',
+      date: info.date || '',
+      time: info.time || '',
+      active: info.active !== false,
+      createdAt: info.createdAt || new Date().toISOString()
+    };
+    informations.unshift(newItem);
+    writeJSONFile(INFORMATIONS_FILE, informations);
+    return;
+  }
   await run(`
     INSERT INTO informations (id, title, contentTitle, content, date, time, active, createdAt)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -661,6 +1067,16 @@ async function addInformation(info) {
 }
 
 async function updateInformation(id, updateFields) {
+  if (!sqlite3) {
+    const informations = readJSONFile(INFORMATIONS_FILE, []);
+    const idx = informations.findIndex(i => i.id === id);
+    if (idx !== -1) {
+      informations[idx] = { ...informations[idx], ...updateFields };
+      if (updateFields.active !== undefined) informations[idx].active = updateFields.active !== false;
+      writeJSONFile(INFORMATIONS_FILE, informations);
+    }
+    return;
+  }
   const updates = [];
   const params = [];
   for (const [k, v] of Object.entries(updateFields)) {
@@ -676,11 +1092,20 @@ async function updateInformation(id, updateFields) {
 }
 
 async function deleteInformation(id) {
+  if (!sqlite3) {
+    let informations = readJSONFile(INFORMATIONS_FILE, []);
+    informations = informations.filter(i => i.id !== id);
+    writeJSONFile(INFORMATIONS_FILE, informations);
+    return;
+  }
   await run('DELETE FROM informations WHERE id = ?', [id]);
 }
 
 // PPOB VISIBILITY & MARKUP FUNCTIONS
 async function getPpobVisibilityMap() {
+  if (!sqlite3) {
+    return readJSONFile(PPOB_FILE, {});
+  }
   const rows = await all('SELECT * FROM ppob_visibility');
   const map = {};
   for (const r of rows) {
@@ -697,6 +1122,23 @@ async function getPpobVisibilityMap() {
 
 async function setPpobVisibility(sku, active, category = '', brand = '', markup = undefined) {
   if (!sku) return;
+  if (!sqlite3) {
+    const map = readJSONFile(PPOB_FILE, {});
+    const existing = map[sku] || {};
+    const newActive = active !== undefined && active !== null ? (active ? true : false) : (existing.active !== undefined ? existing.active : true);
+    const newCat = category || existing.category || '';
+    const newBrand = brand || existing.brand || '';
+    const newMarkup = markup !== undefined && markup !== null ? Number(markup) || 0 : (existing.markup || 0);
+    map[sku] = {
+      sku,
+      active: newActive,
+      category: newCat,
+      brand: newBrand,
+      markup: newMarkup
+    };
+    writeJSONFile(PPOB_FILE, map);
+    return map[sku];
+  }
   const existing = await get('SELECT * FROM ppob_visibility WHERE sku = ?', [sku]);
   const newActive = active !== undefined && active !== null ? (active ? 1 : 0) : (existing ? existing.active : 1);
   const newCat = category || (existing ? existing.category : '');
