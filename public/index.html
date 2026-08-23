@@ -3162,54 +3162,33 @@
       }
     }
 
-    /* Watermark Grid */
+    /* Anti-Forgery DANA-Style Watermark Grid */
     .watermark-grid {
       position: absolute;
       inset: 0;
       display: grid;
-      grid-template-columns: repeat(8, 1fr);
-      grid-template-rows: repeat(8, 1fr);
-      gap: 2px;
+      grid-template-columns: repeat(6, 1fr);
+      grid-template-rows: repeat(12, 1fr);
+      gap: 4px;
       pointer-events: none;
       z-index: 0;
       user-select: none;
-      opacity: 0.35;
-      padding: 4px;
+      opacity: 0.65;
+      padding: 8px;
+      overflow: hidden;
     }
     .watermark-item {
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: 8px;
-      font-weight: 700;
-      color: rgba(123, 45, 142, 0.035);
+      font-size: 9.5px;
+      font-weight: 800;
+      color: rgba(123, 45, 142, 0.045);
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      transform: rotate(var(--rot, -12deg));
-      font-family: 'Inter', sans-serif;
+      letter-spacing: 0.8px;
+      transform: rotate(-25deg);
+      font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
       white-space: nowrap;
-      animation: watermarkFloat 6s ease-in-out infinite alternate;
-      animation-delay: var(--delay, 0s);
-    }
-    .watermark-item:nth-child(odd) {
-      --rot: 8deg;
-      --delay: 0.5s;
-      color: rgba(123, 45, 142, 0.025);
-    }
-    .watermark-item:nth-child(3n) {
-      --rot: -5deg;
-      --delay: 1s;
-      color: rgba(123, 45, 142, 0.02);
-    }
-    .watermark-item:nth-child(5n) {
-      --rot: 15deg;
-      --delay: 0.3s;
-      color: rgba(123, 45, 142, 0.03);
-    }
-    .watermark-item:nth-child(7n) {
-      --rot: -20deg;
-      --delay: 1.5s;
-      color: rgba(123, 45, 142, 0.025);
     }
     @keyframes watermarkFloat {
       0% {
@@ -3965,16 +3944,16 @@
         style="padding: 0; background-color: #f7f9fb; min-height: 100vh; padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));">
 
         <!-- Profile Header Section -->
-        <section style="background: linear-gradient(135deg, #7B2D8E 0%, #9B4DB8 100%); padding: max(48px, calc(env(safe-area-inset-top) + 16px)) 18px 140px; color: white; position: relative;">
+        <section style="background: linear-gradient(135deg, #7B2D8E 0%, #9B4DB8 100%); padding: max(44px, calc(env(safe-area-inset-top) + 14px)) 18px 68px; color: white; position: relative;">
           <div style="display: flex; align-items: center; gap: 14px;">
             <div style="position: relative; flex-shrink: 0;">
-              <div style="width: 52px; height: 52px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.35); background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
-                <span class="material-symbols-outlined" style="font-size: 30px; color: white;">person</span>
+              <div style="width: 50px; height: 50px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.35); background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+                <span class="material-symbols-outlined" style="font-size: 28px; color: white;">person</span>
               </div>
               <div style="position: absolute; bottom: 0; right: 0; background: #22c55e; border: 2px solid #7B2D8E; width: 14px; height: 14px; border-radius: 50%;"></div>
             </div>
             <div style="flex: 1; min-width: 0;">
-              <h2 id="profile-fullname" style="font-size: 17px; font-weight: 800; margin: 0 0 3px; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              <h2 id="profile-fullname" style="font-size: 16.5px; font-weight: 800; margin: 0 0 3px; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                 noxastore wallet
               </h2>
               <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
@@ -3987,8 +3966,8 @@
           </div>
 
           <!-- Floating Main Balance Card -->
-          <div style="position: absolute; bottom: 0; left: 16px; right: 16px; transform: translateY(50%); background: #ffffff; border-radius: 20px; padding: 18px 20px; box-shadow: 0 10px 30px rgba(123, 45, 142, 0.08); border: 1px solid rgba(123,45,142,0.06); z-index: 10;">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+          <div style="position: absolute; bottom: 0; left: 16px; right: 16px; transform: translateY(50%); background: #ffffff; border-radius: 20px; padding: 16px 18px; box-shadow: 0 10px 30px rgba(123, 45, 142, 0.08); border: 1px solid rgba(123,45,142,0.06); z-index: 10;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
               <div style="display: flex; align-items: center; gap: 6px;">
                 <div style="background: rgba(123, 45, 142, 0.08); width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
                   <span class="material-symbols-outlined" style="color: #7B2D8E; font-size: 16px;">account_balance_wallet</span>
@@ -4007,7 +3986,7 @@
             </div>
 
             <!-- QR Code My Profile Button -->
-            <button onclick="showMyQRModal()" style="margin-top: 14px; width: 100%; padding: 11px; background: linear-gradient(135deg, #7B2D8E, #9B4DB8); border: none; border-radius: 12px; color: white; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(123,45,142,0.2); transition: opacity 0.2s;">
+            <button onclick="showMyQRModal()" style="margin-top: 12px; width: 100%; padding: 10px; background: linear-gradient(135deg, #7B2D8E, #9B4DB8); border: none; border-radius: 12px; color: white; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(123,45,142,0.2); transition: opacity 0.2s;">
               <span class="material-symbols-outlined" style="font-size: 18px;">qr_code_2</span>
               QR Code Saya
             </button>
@@ -4015,7 +3994,7 @@
         </section>
 
         <!-- Menu Content -->
-        <div style="margin-top: 95px; padding: 0 16px; display: flex; flex-direction: column; gap: 18px;">
+        <div style="margin-top: 54px; padding: 0 16px; display: flex; flex-direction: column; gap: 14px;">
           <!-- Pengaturan Akun -->
           <section>
             <h3 style="font-size: 11px; font-weight: 800; color: #64748b; letter-spacing: 0.8px; margin-bottom: 8px; padding: 0 4px; text-transform: uppercase;">
@@ -4122,15 +4101,14 @@
           </button>
 
           <!-- Logout Button -->
-          <button onclick="logout()" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; color: #dc2626; font-size: 13.5px; font-weight: 700; background: #fef2f2; border: 1px solid #fecaca; border-radius: 14px; cursor: pointer; margin-bottom: 24px; transition: background 0.2s;">
+          <button onclick="logout()" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; color: #dc2626; font-size: 13.5px; font-weight: 700; background: #fef2f2; border: 1px solid #fecaca; border-radius: 14px; cursor: pointer; margin-bottom: 12px; transition: background 0.2s;">
             <span class="material-symbols-outlined" style="font-size: 18px;">logout</span>
             Keluar Akun
           </button>
-        </div> </button>
 
           <!-- Footer Small Text -->
-          <div style="text-align: center; padding: 16px 0;">
-            <p style="font-size: 12px; font-weight: 600; color: #7b7486; margin: 0;">noxastore wallet Indonesia © 2025
+          <div style="text-align: center; padding: 10px 0 16px;">
+            <p style="font-size: 12px; font-weight: 600; color: #7b7486; margin: 0;">noxastore wallet Indonesia © 2026
             </p>
           </div>
         </div>
@@ -4462,12 +4440,6 @@
           <button id="share-wa-btn" onclick="shareReceiptToWA()" style="width: 100%; padding: 12px 14px; background: #25D366; color: white; border: none; border-radius: 14px; font-weight: 700; font-size: 13.5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(37,211,102,0.25); transition: opacity 0.2s;">
             <svg style="width: 18px; height: 18px; fill: currentColor; flex-shrink: 0;" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
             Bagikan ke WhatsApp
-          </button>
-
-          <!-- Download Struk Button -->
-          <button id="download-receipt-btn" onclick="downloadReceiptImage()" style="width: 100%; padding: 12px 14px; background: linear-gradient(135deg, #7B2D8E, #9B4DB8); color: white; border: none; border-radius: 14px; font-weight: 700; font-size: 13.5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(123,45,142,0.2); transition: opacity 0.2s;">
-            <span class="material-symbols-outlined" style="font-size: 18px;">download</span>
-            Unduh Gambar Struk
           </button>
         </div>
 
@@ -4901,68 +4873,102 @@
       </div>
     </div>
 
-    <!-- e-Wallet List Screen -->
-    <div id="screen-ewallet-list" class="full-screen-panel"
-      style="display:none; position: fixed; inset: 0; background: #f8fafc; z-index: 1000; flex-direction: column;">
-      <div
-        style="background: var(--primary-gradient); padding: 16px; color: white; display: flex; align-items: center; gap: 16px;">
-        <button onclick="closeEwalletListScreen()"
-          style="background: none; border: none; color: white; cursor: pointer; display: flex;"><span
-            class="material-symbols-outlined">arrow_back</span></button>
-        <h2 style="font-size: 16px; font-weight: 700; flex: 1;">Pilih e-Wallet</h2>
+    <!-- e-Wallet List Screen (Squircle Grid Layout - Styled per user design) -->
+    <div id="screen-ewallet-list" class="full-screen-panel" style="display:none; position: fixed; inset: 0; background: #f8fafc; z-index: 1000; flex-direction: column;">
+      <div style="background: linear-gradient(135deg, #7B2D8E 0%, #9B4DB8 100%); padding: 16px; color: white; display: flex; align-items: center; gap: 14px; box-shadow: 0 4px 16px rgba(123,45,142,0.15);">
+        <button onclick="closeEwalletListScreen()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+          <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
+        </button>
+        <div>
+          <h2 style="font-size: 16px; font-weight: 800; margin: 0; color: #ffffff;">Top Up e-Wallet</h2>
+          <p style="font-size: 11px; opacity: 0.9; margin: 0; color: rgba(255,255,255,0.85);">Pilih layanan dompet digital SekaliPay</p>
+        </div>
       </div>
-      <div style="padding: 24px; display: flex; flex-direction: column; gap: 12px; flex: 1; overflow-y: auto;">
-        <!-- DANA -->
-        <div onclick="openEwalletDanaScreen()"
-          style="background: white; border-radius: 16px; padding: 16px; display: flex; align-items: center; gap: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); cursor: pointer;">
-          <div
-            style="width: 40px; height: 40px; background: #E0F2FE; border-radius: 12px; display: flex; justify-content: center; align-items: center;">
-            <span class="material-symbols-outlined" style="color: #0284C7;">account_balance_wallet</span>
+
+      <div style="padding: 24px 16px; flex: 1; overflow-y: auto;">
+        <!-- Grid Container for Squircle E-Wallet App Icons (4 Columns) -->
+        <div id="ewallet-brand-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px 10px;">
+
+          <!-- Topup Bebas Nominal -->
+          <div onclick="openEwalletDanaScreen()" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; text-align: center;">
+            <div style="width: 60px; height: 60px; border-radius: 20px; background: #ffffff; box-shadow: 0 4px 14px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.04); display: flex; align-items: center; justify-content: center; margin-bottom: 8px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='none'">
+              <div style="width: 38px; height: 38px; border-radius: 50%; background: #e0f2fe; border: 2px dashed #0284c7; display: flex; align-items: center; justify-content: center; color: #0284c7; font-weight: 900; font-size: 13px;">
+                Rp
+              </div>
+            </div>
+            <span style="font-size: 10.5px; font-weight: 700; color: #0f172a; line-height: 1.2;">Topup Bebas Nominal</span>
           </div>
-          <div style="flex: 1;">
-            <div style="font-weight: 700; font-size: 14px; color: #0f172a;">DANA</div>
-            <div style="font-size: 11px; color: #64748b;">Penarikan Instan</div>
+
+          <!-- ShopeePay -->
+          <div onclick="openEwalletShopeePayScreen()" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; text-align: center;">
+            <div style="width: 60px; height: 60px; border-radius: 20px; background: #ffffff; box-shadow: 0 4px 14px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.04); display: flex; align-items: center; justify-content: center; margin-bottom: 8px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='none'">
+              <div style="width: 38px; height: 38px; border-radius: 12px; background: linear-gradient(135deg, #ee4d2d, #ff7337); display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-size: 18px; font-family: sans-serif; box-shadow: 0 2px 8px rgba(238,77,45,0.3);">
+                S
+              </div>
+            </div>
+            <span style="font-size: 10.5px; font-weight: 700; color: #0f172a; line-height: 1.2;">ShopeePay</span>
           </div>
-          <span class="material-symbols-outlined" style="color: #cbd5e1;">chevron_right</span>
-        </div>
-        <!-- OVO -->
-        <div onclick="openEwalletOvoScreen()"
-          style="background: white; border-radius: 16px; padding: 16px; display: flex; align-items: center; gap: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); cursor: pointer;">
-          <div
-            style="width: 40px; height: 40px; background: #F3E8FF; border-radius: 12px; display: flex; justify-content: center; align-items: center;">
-            <span class="material-symbols-outlined" style="color: #9333EA;">account_balance_wallet</span>
+
+          <!-- Gopay -->
+          <div onclick="openEwalletGopayScreen()" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; text-align: center;">
+            <div style="width: 60px; height: 60px; border-radius: 20px; background: #ffffff; box-shadow: 0 4px 14px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.04); display: flex; align-items: center; justify-content: center; margin-bottom: 8px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='none'">
+              <div style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #00a5cf, #0284c7); display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 2px 8px rgba(0,165,207,0.3);">
+                <span class="material-symbols-outlined" style="font-size: 20px;">account_balance_wallet</span>
+              </div>
+            </div>
+            <span style="font-size: 10.5px; font-weight: 700; color: #0f172a; line-height: 1.2;">Gopay</span>
           </div>
-          <div style="flex: 1;">
-            <div style="font-weight: 700; font-size: 14px; color: #0f172a;">OVO</div>
-            <div style="font-size: 11px; color: #64748b;">Penarikan Instan</div>
+
+          <!-- DANA -->
+          <div onclick="openEwalletDanaScreen()" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; text-align: center;">
+            <div style="width: 60px; height: 60px; border-radius: 20px; background: #ffffff; box-shadow: 0 4px 14px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.04); display: flex; align-items: center; justify-content: center; margin-bottom: 8px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='none'">
+              <div style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #108ee9, #0284c7); display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 2px 8px rgba(16,142,233,0.3);">
+                <span class="material-symbols-outlined" style="font-size: 20px;">waves</span>
+              </div>
+            </div>
+            <span style="font-size: 10.5px; font-weight: 700; color: #0f172a; line-height: 1.2;">DANA</span>
           </div>
-          <span class="material-symbols-outlined" style="color: #cbd5e1;">chevron_right</span>
-        </div>
-        <!-- GoPay -->
-        <div onclick="openEwalletGopayScreen()"
-          style="background: white; border-radius: 16px; padding: 16px; display: flex; align-items: center; gap: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); cursor: pointer;">
-          <div
-            style="width: 40px; height: 40px; background: #DCFCE7; border-radius: 12px; display: flex; justify-content: center; align-items: center;">
-            <span class="material-symbols-outlined" style="color: #16A34A;">account_balance_wallet</span>
+
+          <!-- OVO -->
+          <div onclick="openEwalletOvoScreen()" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; text-align: center;">
+            <div style="width: 60px; height: 60px; border-radius: 20px; background: #ffffff; box-shadow: 0 4px 14px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.04); display: flex; align-items: center; justify-content: center; margin-bottom: 8px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='none'">
+              <div style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #4c2a86, #7e22ce); display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-size: 13px; box-shadow: 0 2px 8px rgba(76,42,134,0.3);">
+                OVO
+              </div>
+            </div>
+            <span style="font-size: 10.5px; font-weight: 700; color: #0f172a; line-height: 1.2;">OVO</span>
           </div>
-          <div style="flex: 1;">
-            <div style="font-weight: 700; font-size: 14px; color: #0f172a;">GoPay</div>
-            <div style="font-size: 11px; color: #22c55e;">Penarikan Instan</div>
+
+          <!-- LinkAja -->
+          <div onclick="openEwalletWithdrawScreen('LINKAJA')" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; text-align: center;">
+            <div style="width: 60px; height: 60px; border-radius: 20px; background: #ffffff; box-shadow: 0 4px 14px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.04); display: flex; align-items: center; justify-content: center; margin-bottom: 8px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='none'">
+              <div style="width: 38px; height: 38px; border-radius: 12px; background: linear-gradient(135deg, #e1251b, #ef4444); display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-size: 13px; box-shadow: 0 2px 8px rgba(225,37,27,0.3);">
+                LA
+              </div>
+            </div>
+            <span style="font-size: 10.5px; font-weight: 700; color: #0f172a; line-height: 1.2;">LinkAja</span>
           </div>
-          <span class="material-symbols-outlined" style="color: #cbd5e1;">chevron_right</span>
-        </div>
-        <!-- ShopeePay -->
-        <div onclick="openEwalletShopeePayScreen()"
-          style="background: white; border-radius: 16px; padding: 16px; display: flex; align-items: center; gap: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); cursor: pointer;">
-          <div
-            style="width: 40px; height: 40px; background: #FFEDD5; border-radius: 12px; display: flex; justify-content: center; align-items: center;">
-            <span class="material-symbols-outlined" style="color: #EA580C;">account_balance_wallet</span>
+
+          <!-- iSaKu -->
+          <div onclick="openEwalletWithdrawScreen('ISAKU')" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; text-align: center;">
+            <div style="width: 60px; height: 60px; border-radius: 20px; background: #ffffff; box-shadow: 0 4px 14px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.04); display: flex; align-items: center; justify-content: center; margin-bottom: 8px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='none'">
+              <div style="width: 38px; height: 38px; border-radius: 12px; background: linear-gradient(135deg, #ffb703, #fbbf24); display: flex; align-items: center; justify-content: center; color: #023047; font-weight: 900; font-size: 13px; box-shadow: 0 2px 8px rgba(255,183,3,0.3);">
+                iS
+              </div>
+            </div>
+            <span style="font-size: 10.5px; font-weight: 700; color: #0f172a; line-height: 1.2;">iSaKu</span>
           </div>
-          <div style="flex: 1;">
-            <div style="font-weight: 700; font-size: 14px; color: #0f172a;">ShopeePay</div>
-            <div style="font-size: 11px; color: #f97316;">Penarikan Instan</div>
+
+          <!-- AstraPay -->
+          <div onclick="openEwalletWithdrawScreen('ASTRAPAY')" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; text-align: center;">
+            <div style="width: 60px; height: 60px; border-radius: 20px; background: #ffffff; box-shadow: 0 4px 14px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.04); display: flex; align-items: center; justify-content: center; margin-bottom: 8px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='none'">
+              <div style="width: 38px; height: 38px; border-radius: 12px; background: linear-gradient(135deg, #004b93, #2563eb); display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-size: 13px; box-shadow: 0 2px 8px rgba(0,75,147,0.3);">
+                AP
+              </div>
+            </div>
+            <span style="font-size: 10.5px; font-weight: 700; color: #0f172a; line-height: 1.2;">AstraPay</span>
           </div>
-          <span class="material-symbols-outlined" style="color: #cbd5e1;">chevron_right</span>
+
         </div>
       </div>
     </div>
@@ -5365,127 +5371,128 @@
       </div>
     </div>
 
-    <!-- Dedicated Full-Screen Page: Top Up Saldo -->
-    <div id="screen-topup" class="full-screen-panel topup-screen">
+    <!-- Dedicated Full-Screen Page: Top Up Saldo (Ungu & Putih Layout - Styled per user design) -->
+    <div id="screen-topup" class="full-screen-panel topup-screen" style="background: #f8fafc; z-index: 1000; flex-direction: column; display: none;">
 
-      <div class="topup-header">
-        <div class="topup-header-row">
-          <button onclick="closeTopUpScreen()" class="topup-back-btn">
-            <span class="material-symbols-outlined" style="font-size: 22px;">arrow_back</span>
-          </button>
-          <h3 class="topup-header-title">Top Up Saldo</h3>
-          <div style="width: 38px;"></div>
+      <!-- Header Top Bar (Ungu Putih) -->
+      <div style="background: linear-gradient(135deg, #7B2D8E 0%, #9B4DB8 100%); padding: max(44px, calc(env(safe-area-inset-top) + 14px)) 16px 18px; color: white; display: flex; align-items: center; gap: 14px; box-shadow: 0 4px 16px rgba(123,45,142,0.15);">
+        <button onclick="closeTopUpScreen()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+          <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
+        </button>
+        <div>
+          <h2 style="font-size: 16px; font-weight: 800; margin: 0; color: #ffffff;">Top Up Saldo</h2>
+          <p style="font-size: 11px; opacity: 0.9; margin: 0; color: rgba(255,255,255,0.85);">Isi saldo otomatis instan via QRIS</p>
         </div>
       </div>
 
-      <div class="topup-shell">
-        <div class="topup-balance-card">
+      <div style="padding: 20px 16px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 20px;">
+
+        <!-- STEP PANEL 1: INPUT NOMINAL -->
+        <div id="topup-step-input" class="topup-step-panel" style="display: flex; flex-direction: column; gap: 20px;">
+          
+          <!-- TOP CARD: NOMINAL TOP UP -->
+          <div style="background: #ffffff; border-radius: 20px; padding: 20px; box-shadow: 0 4px 20px rgba(123,45,142,0.06); border: 1px solid rgba(123,45,142,0.08);">
+            <div style="font-size: 11px; font-weight: 800; color: #64748b; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 12px;">
+              NOMINAL TOP UP
+            </div>
+
+            <!-- Amount Input Field -->
+            <div style="display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 14px; transition: border-color 0.2s;" id="topup-input-border">
+              <span style="font-size: 22px; font-weight: 800; color: #7B2D8E;">Rp</span>
+              <input type="number" id="topup-amount" style="width: 100%; border: none; outline: none; background: transparent; font-size: 24px; font-weight: 800; color: #0f172a; font-family: 'Plus Jakarta Sans', sans-serif;" placeholder="0" oninput="handleTopUpAmountInput(this.value)" />
+            </div>
+
+            <!-- Saldo Aktif Row -->
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+              <span style="color: #64748b; font-weight: 500;">Saldo Aktif:</span>
+              <strong id="topup-current-balance-text" style="color: #0f172a; font-weight: 800;">Rp 0</strong>
+            </div>
+          </div>
+
+          <!-- SECTION: PILIH NOMINAL CEPAT -->
           <div>
-            <span class="topup-balance-label">Saldo Akun Utama</span>
-            <h4 id="topup-current-balance-text" class="topup-balance-value">Rp 0</h4>
+            <h3 style="font-size: 14px; font-weight: 800; color: #0f172a; margin: 0 0 12px 2px;">
+              Pilih Nominal Cepat
+            </h3>
+
+            <!-- 2-Column Grid for Quick Nominals -->
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+
+              <div onclick="selectTopUpNominal(20000)" class="quick-nominal-card" style="background: #ffffff; border-radius: 18px; border: 1.5px solid #e2e8f0; padding: 18px 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 14px rgba(0,0,0,0.03);">
+                <div style="width: 38px; height: 38px; border-radius: 12px; background: #F3E8FF; display: flex; align-items: center; justify-content: center; color: #7B2D8E;">
+                  <span class="material-symbols-outlined" style="font-size: 20px;">payments</span>
+                </div>
+                <span style="font-size: 15px; font-weight: 800; color: #0f172a;">Rp 20.000</span>
+              </div>
+
+              <div onclick="selectTopUpNominal(50000)" class="quick-nominal-card" style="background: #ffffff; border-radius: 18px; border: 1.5px solid #e2e8f0; padding: 18px 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 14px rgba(0,0,0,0.03);">
+                <div style="width: 38px; height: 38px; border-radius: 12px; background: #F3E8FF; display: flex; align-items: center; justify-content: center; color: #7B2D8E;">
+                  <span class="material-symbols-outlined" style="font-size: 20px;">payments</span>
+                </div>
+                <span style="font-size: 15px; font-weight: 800; color: #0f172a;">Rp 50.000</span>
+              </div>
+
+              <div onclick="selectTopUpNominal(100000)" class="quick-nominal-card" style="background: #ffffff; border-radius: 18px; border: 1.5px solid #e2e8f0; padding: 18px 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 14px rgba(0,0,0,0.03);">
+                <div style="width: 38px; height: 38px; border-radius: 12px; background: #F3E8FF; display: flex; align-items: center; justify-content: center; color: #7B2D8E;">
+                  <span class="material-symbols-outlined" style="font-size: 20px;">payments</span>
+                </div>
+                <span style="font-size: 15px; font-weight: 800; color: #0f172a;">Rp 100.000</span>
+              </div>
+
+              <div onclick="selectTopUpNominal(150000)" class="quick-nominal-card" style="background: #ffffff; border-radius: 18px; border: 1.5px solid #e2e8f0; padding: 18px 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 14px rgba(0,0,0,0.03);">
+                <div style="width: 38px; height: 38px; border-radius: 12px; background: #F3E8FF; display: flex; align-items: center; justify-content: center; color: #7B2D8E;">
+                  <span class="material-symbols-outlined" style="font-size: 20px;">payments</span>
+                </div>
+                <span style="font-size: 15px; font-weight: 800; color: #0f172a;">Rp 150.000</span>
+              </div>
+
+              <div onclick="selectTopUpNominal(200000)" class="quick-nominal-card" style="background: #ffffff; border-radius: 18px; border: 1.5px solid #e2e8f0; padding: 18px 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 14px rgba(0,0,0,0.03);">
+                <div style="width: 38px; height: 38px; border-radius: 12px; background: #F3E8FF; display: flex; align-items: center; justify-content: center; color: #7B2D8E;">
+                  <span class="material-symbols-outlined" style="font-size: 20px;">payments</span>
+                </div>
+                <span style="font-size: 15px; font-weight: 800; color: #0f172a;">Rp 200.000</span>
+              </div>
+
+              <div onclick="selectTopUpNominal(250000)" class="quick-nominal-card" style="background: #ffffff; border-radius: 18px; border: 1.5px solid #e2e8f0; padding: 18px 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 14px rgba(0,0,0,0.03);">
+                <div style="width: 38px; height: 38px; border-radius: 12px; background: #F3E8FF; display: flex; align-items: center; justify-content: center; color: #7B2D8E;">
+                  <span class="material-symbols-outlined" style="font-size: 20px;">payments</span>
+                </div>
+                <span style="font-size: 15px; font-weight: 800; color: #0f172a;">Rp 250.000</span>
+              </div>
+
+            </div>
           </div>
-          <div class="topup-balance-icon">
-            <span class="material-symbols-outlined" style="font-size: 24px;">account_balance_wallet</span>
+
+          <!-- BOTTOM ACTION BUTTON -->
+          <div style="margin-top: 10px;">
+            <button onclick="submitTopUp()" id="btn-submit-topup" style="width: 100%; height: 52px; background: linear-gradient(135deg, #7B2D8E 0%, #9B4DB8 100%); color: white; border: none; border-radius: 16px; font-size: 15px; font-weight: 800; letter-spacing: 0.5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 6px 20px rgba(123,45,142,0.25); transition: all 0.2s;">
+              LANJUT PEMBAYARAN <span class="material-symbols-outlined" style="font-size: 20px;">arrow_forward</span>
+            </button>
           </div>
+
         </div>
 
-        <div class="topup-step-rail">
-          <div class="topup-step-pill active" id="topup-pill-input">1. Nominal</div>
-          <div class="topup-step-pill" id="topup-pill-qris">2. Bayar</div>
-          <div class="topup-step-pill" id="topup-pill-success">3. Selesai</div>
-        </div>
-
-        <div id="topup-step-input" class="topup-step-panel">
-          <div class="topup-card">
-            <div class="topup-section-label">Nominal Top Up</div>
-            <h4 class="topup-card-title">Masukkan jumlah saldo yang ingin diisi</h4>
-            <p class="topup-card-desc">Pilih nominal cepat atau ketik sendiri, lalu lanjutkan ke pembayaran QRIS.</p>
-
-            <div id="topup-input-wrapper" class="topup-amount-field">
-              <span class="topup-currency">Rp</span>
-              <input type="number" id="topup-amount" class="topup-amount-input" placeholder="10.000" oninput="handleTopUpAmountInput(this.value)" />
+        <!-- STEP PANEL 2: QRIS PAYMENT -->
+        <div id="topup-step-qris" class="topup-step-panel" style="display: none; flex-direction: column; gap: 16px;">
+          <div style="background: #ffffff; border-radius: 24px; padding: 24px 20px; box-shadow: 0 10px 30px rgba(123,45,142,0.08); border: 1px solid rgba(123,45,142,0.08); text-align: center;">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px dashed #e2e8f0;">
+              <span style="font-size: 13px; font-weight: 700; color: #64748b;">Kode QRIS Resmi</span>
+              <span id="topup-qr-timer" style="background: #fef3c7; color: #d97706; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 800;">30:00</span>
             </div>
 
-            <div class="topup-helper-row">
-              <span>Minimal Rp 1.000</span>
-              <span>Otomatis 24 jam</span>
-            </div>
-          </div>
-
-          <div class="topup-card">
-            <div class="topup-section-label">Nominal Cepat</div>
-            <h4 class="topup-card-title">Pilih nominal favorit</h4>
-            <p class="topup-card-desc">Tombol cepat membantu pengguna memilih nominal tanpa perlu mengetik ulang.</p>
-
-            <div class="topup-quick-grid">
-              <button type="button" onclick="selectTopUpNominal(10000)" class="preset-topup-btn" data-amount="10000">10.000</button>
-              <button type="button" onclick="selectTopUpNominal(20000)" class="preset-topup-btn" data-amount="20000">20.000</button>
-              <button type="button" onclick="selectTopUpNominal(50000)" class="preset-topup-btn" data-amount="50000">50.000</button>
-              <button type="button" onclick="selectTopUpNominal(100000)" class="preset-topup-btn" data-amount="100000">100.000</button>
-              <button type="button" onclick="selectTopUpNominal(250000)" class="preset-topup-btn" data-amount="250000">250.000</button>
-              <button type="button" onclick="selectTopUpNominal(500000)" class="preset-topup-btn" data-amount="500000">500.000</button>
-            </div>
-          </div>
-
-          <div class="topup-card topup-method-card">
-            <div class="topup-method-icon">
-              <span class="material-symbols-outlined" style="font-size: 24px;">qr_code_2</span>
-            </div>
-            <div>
-              <h5 class="topup-method-title">Metode Pembayaran: QRIS Instan</h5>
-              <p class="topup-method-desc">Bisa dibayar lewat m-Banking dan e-wallet seperti BCA, Mandiri, BRI, Dana, GoPay, OVO, dan ShopeePay.</p>
-            </div>
-            <div class="topup-method-tag">Aktif</div>
-          </div>
-
-          <div class="topup-card topup-note-card">
-            <div class="topup-note-icon">
-              <span class="material-symbols-outlined" style="font-size: 24px;">tips_and_updates</span>
-            </div>
-            <div>
-              <h5 class="topup-method-title">Informasi Pembayaran</h5>
-              <p>Setelah QRIS dibuat, pembayaran akan dipantau otomatis sampai status berhasil atau kedaluwarsa.</p>
-              <ul class="topup-info-list">
-                <li>Bayar sesuai nominal final yang tampil di QRIS.</li>
-                <li>Gunakan tombol cek status bila pembayaran sudah dilakukan.</li>
-                <li>Saldo utama masuk otomatis setelah transaksi terverifikasi.</li>
-              </ul>
-            </div>
-          </div>
-
-          <button onclick="submitTopUp()" id="btn-submit-topup" class="topup-primary-btn">
-            <span class="material-symbols-outlined" style="font-size: 22px;">qr_code_2</span>
-            Lanjutkan Pembayaran
-          </button>
-        </div>
-
-        <div id="topup-step-qris" class="topup-step-panel" style="display: none;">
-          <div class="topup-card topup-qr-card">
-            <div class="topup-qr-head">
-              <div>
-                <h4 class="topup-qr-title">Scan dan bayar QRIS</h4>
-                <p class="topup-qr-desc">Gunakan aplikasi pembayaran favorit Anda. Status akan dicek otomatis setelah QRIS aktif.</p>
-              </div>
-              <span id="topup-qr-timer" class="topup-timer-badge">30:00</span>
+            <div style="margin-bottom: 16px;">
+              <span style="font-size: 12px; color: #64748b;">Total Bayar:</span>
+              <h3 id="topup-qr-amount-text" style="font-size: 26px; font-weight: 800; color: #7B2D8E; margin: 4px 0 0;">Rp 0</h3>
             </div>
 
-            <div class="topup-summary-grid">
-              <div>
-                <span>Total Pembayaran</span>
-                <strong id="topup-qr-amount-text">Rp 0</strong>
-              </div>
-              <div>
-                <span>Ref Transaksi</span>
-                <strong id="topup-qr-ref" class="topup-ref-text">-</strong>
-              </div>
-            </div>
-
-            <div class="topup-qr-box">
-              <img id="topup-qr-image" style="width: 100%; max-width: 240px; height: auto; aspect-ratio: 1/1; object-fit: contain; display: none; border-radius: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.06);" alt="Kode QRIS Top Up" />
+            <!-- QRIS IMAGE BOX -->
+            <div style="background: #f8fafc; border-radius: 16px; padding: 20px; display: flex; justify-content: center; align-items: center; margin-bottom: 16px; min-height: 240px; border: 1px solid #e2e8f0;">
+              <img id="topup-qr-image" style="width: 100%; max-width: 220px; height: auto; aspect-ratio: 1/1; object-fit: contain; display: none; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.06);" alt="Kode QRIS Top Up" />
 
               <div id="topup-qr-loading" style="display: flex; flex-direction: column; align-items: center; gap: 14px;">
-                <div style="width: 48px; height: 48px; border: 4px solid #e2e8f0; border-top-color: var(--primary); border-radius: 50%; animation: ptr-spin 0.8s linear infinite;"></div>
-                <span style="font-size: 13px; font-weight: 700; color: var(--primary);">Membuat Kode QRIS...</span>
+                <div style="width: 44px; height: 44px; border: 4px solid #e2e8f0; border-top-color: #7B2D8E; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+                <span style="font-size: 13px; font-weight: 700; color: #7B2D8E;">Membuat QRIS Instan...</span>
               </div>
 
               <div id="topup-qr-error" style="display: none; flex-direction: column; align-items: center; gap: 10px; color: #ef4444;">
@@ -5494,72 +5501,30 @@
               </div>
             </div>
 
-            <div id="topup-qr-status" class="topup-status-banner">
-              <span class="material-symbols-outlined" style="font-size: 18px; animation: pulse 1.5s ease-in-out infinite;">hourglass_top</span>
-              <span id="topup-qr-status-text">Menunggu pembayaran...</span>
+            <!-- REALTIME MONITORING STATUS -->
+            <div id="topup-qr-status" style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 14px; padding: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; color: #1d4ed8; font-size: 12.5px; font-weight: 700; margin-bottom: 16px;">
+              <span class="material-symbols-outlined" style="font-size: 18px; animation: spin 2s linear infinite;">sync</span>
+              <span id="topup-qr-status-text">Menunggu pembayaran (Realtime)...</span>
             </div>
 
-            <div class="topup-qr-meta">
-              <div>
-                <span>Kedaluwarsa</span>
-                <strong id="topup-qr-expired-at" class="topup-ref-text">-</strong>
-              </div>
-              <div>
-                <span>Pemantauan</span>
-                <strong class="topup-ref-text">Otomatis setiap 4 detik</strong>
-              </div>
-            </div>
-
-            <div class="topup-qr-actions">
-              <button onclick="downloadTopUpQRIS()" id="btn-download-qris" class="topup-secondary-btn">
-                <span class="material-symbols-outlined" style="font-size: 22px;">download</span>
-                Download Gambar QRIS
+            <!-- ACTION BUTTONS -->
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <button onclick="downloadTopUpQRIS()" id="btn-download-qris" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #7B2D8E, #9B4DB8); color: white; border: none; border-radius: 14px; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(123,45,142,0.2);">
+                <span class="material-symbols-outlined" style="font-size: 18px;">download</span> Unduh QRIS
               </button>
 
-              <button onclick="checkDepositStatusNow()" class="topup-secondary-btn is-neutral">
-                <span class="material-symbols-outlined" style="font-size: 20px;">sync</span>
-                Cek Status Pembayaran
+              <button onclick="checkDepositStatusNow()" style="width: 100%; padding: 12px; background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; border-radius: 14px; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <span class="material-symbols-outlined" style="font-size: 18px;">sync</span> Cek Status Manual
               </button>
 
-              <button onclick="resetTopUpToInput()" class="topup-link-btn">
+              <button onclick="resetTopUpToInput()" style="background: none; border: none; color: #64748b; font-size: 12.5px; font-weight: 600; cursor: pointer; padding: 8px; margin-top: 4px;">
                 Ganti Nominal Top Up
               </button>
             </div>
+
           </div>
         </div>
 
-        <div id="topup-step-success" class="topup-step-panel" style="display: none;">
-          <div class="topup-card topup-success-card">
-            <div id="topup-confetti-container" class="topup-confetti-container"></div>
-
-            <div class="topup-success-icon">
-              <span class="material-symbols-outlined" style="font-size: 42px;">check_circle</span>
-            </div>
-
-            <h3 class="topup-success-title">Top Up Berhasil!</h3>
-            <p class="topup-success-desc">Pembayaran Anda terverifikasi instan dan saldo utama langsung diperbarui.</p>
-
-            <div class="topup-summary-grid" style="margin-bottom: 20px;">
-              <div style="background: #f0fdf4; border-color: #86efac;">
-                <span style="color: #166534;">Nominal Masuk</span>
-                <strong id="topup-success-amount-val" style="color: #15803d;">Rp 0</strong>
-              </div>
-              <div>
-                <span>Ref Transaksi</span>
-                <strong id="topup-success-ref" class="topup-ref-text">-</strong>
-              </div>
-            </div>
-
-            <div id="topup-success-new-balance" class="topup-success-balance">
-              <div class="topup-success-balance-label">Saldo Utama Sekarang</div>
-              <div id="topup-success-balance-val" class="topup-success-balance-value">Rp 0</div>
-            </div>
-
-            <button onclick="closeTopUpScreen()" class="topup-primary-btn" style="background: linear-gradient(135deg, #16a34a, #22c55e); box-shadow: 0 8px 25px rgba(34,197,94,0.35);">
-              Selesai
-            </button>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -6818,13 +6783,29 @@
         const screen = document.getElementById('screen-ewallet-dana');
         if (!screen) return;
 
-        const titles = { DANA: 'Top Up DANA', OVO: 'Top Up OVO', GOPAY: 'Top Up GoPay', SHOPEEPAY: 'Top Up ShopeePay' };
-        const phoneLabels = { DANA: 'NOMOR DANA TUJUAN', OVO: 'NOMOR OVO TUJUAN', GOPAY: 'NOMOR GOPAY TUJUAN', SHOPEEPAY: 'NOMOR SHOPEEPAY TUJUAN' };
+        const titles = {
+          DANA: 'Top Up DANA',
+          OVO: 'Top Up OVO',
+          GOPAY: 'Top Up GoPay',
+          SHOPEEPAY: 'Top Up ShopeePay',
+          LINKAJA: 'Top Up LinkAja',
+          ISAKU: 'Top Up iSaKu',
+          ASTRAPAY: 'Top Up AstraPay'
+        };
+        const phoneLabels = {
+          DANA: 'NOMOR DANA TUJUAN',
+          OVO: 'NOMOR OVO TUJUAN',
+          GOPAY: 'NOMOR GOPAY TUJUAN',
+          SHOPEEPAY: 'NOMOR SHOPEEPAY TUJUAN',
+          LINKAJA: 'NOMOR LINKAJA TUJUAN',
+          ISAKU: 'NOMOR ISAKU TUJUAN',
+          ASTRAPAY: 'NOMOR ASTRAPAY TUJUAN'
+        };
 
         const titleEl = document.getElementById('ewallet-withdraw-title');
         const labelEl = document.getElementById('ewallet-withdraw-phone-label');
-        if (titleEl) titleEl.innerText = titles[method] || titles.DANA;
-        if (labelEl) labelEl.innerText = phoneLabels[method] || phoneLabels.DANA;
+        if (titleEl) titleEl.innerText = titles[method] || ('Top Up ' + method);
+        if (labelEl) labelEl.innerText = phoneLabels[method] || (`NOMOR ${method} TUJUAN`);
 
         document.getElementById('dana-main-balance-text').innerText = formatRupiah(currentBalance);
         document.getElementById('dana-withdraw-phone').value = '';
@@ -6856,7 +6837,15 @@
 
       async function fetchEwalletNominals(method) {
         // Map method ke brand SekaliPay
-        const brandMap = { DANA: 'DANA', OVO: 'OVO', GOPAY: 'GO PAY', SHOPEEPAY: 'SHOPEE PAY' };
+        const brandMap = {
+          DANA: 'DANA',
+          OVO: 'OVO',
+          GOPAY: 'GO PAY',
+          SHOPEEPAY: 'SHOPEE PAY',
+          LINKAJA: 'LINKAJA',
+          ISAKU: 'ISAKU',
+          ASTRAPAY: 'ASTRAPAY'
+        };
         const brand = brandMap[method] || method;
 
         const loadingEl = document.getElementById('ewallet-nominal-loading');
@@ -7018,7 +7007,7 @@
           destination: phone.replace(/\D/g, ''),
           method,
           account_name: accName,
-          requestId: 'WDR-FE-' + Date.now() + '-' + Math.floor(Math.random() * 9000)
+          requestId: 'TPU-EWAL-' + Date.now() + '-' + Math.floor(Math.random() * 9000)
         };
 
         document.getElementById('modal-checkout-heading').innerText = 'Konfirmasi Top Up ' + method;
@@ -7093,7 +7082,7 @@
           return;
         }
 
-        // Default: WITHDRAW
+        // Default: WITHDRAW / TOP UP EWALLET
         try {
           const response = await fetch('/withdraw-buatqris', {
             method: 'POST',
@@ -7112,7 +7101,7 @@
             await syncServerState();
 
             const txData = (result.history && result.history[0]) ? Object.assign({}, result.history[0]) : {
-              id: (result.data && result.data.id) || ('WDR_' + Date.now()),
+              id: (result.data && result.data.id) || ('TPU_' + Date.now()),
               merchant: 'Top Up ' + (_pendingWithdrawData.method || 'E-Wallet'),
               product_name: 'Top Up ' + (_pendingWithdrawData.method || 'E-Wallet'),
               amount: _pendingWithdrawData.amount,
@@ -7129,7 +7118,7 @@
             showNotification('✅ Top Up ' + (_pendingWithdrawData.method || 'E-Wallet') + ' Berhasil!');
           } else {
             const errMsg = document.getElementById('pin-error-msg');
-            if (errMsg) { errMsg.innerText = result.error || 'Penarikan gagal. Coba lagi.'; errMsg.style.display = 'block'; }
+            if (errMsg) { errMsg.innerText = result.error || 'Top Up E-Wallet gagal. Coba lagi.'; errMsg.style.display = 'block'; }
             clearPinInputs('pin');
             const el = document.getElementById('pin-d1'); if (el) el.focus();
             if (result.mainBalance !== undefined) {
@@ -8660,30 +8649,7 @@
             setTopUpStatus('paid', 'Pembayaran diterima dan saldo sedang diperbarui.');
 
             const formattedVal = Number(data.amount).toLocaleString('id-ID');
-            const successAmtVal = document.getElementById('topup-success-amount-val');
-            const successRefVal = document.getElementById('topup-success-ref');
-            if (successAmtVal) {
-              successAmtVal.textContent = 'Rp ' + formattedVal;
-            }
-            if (successRefVal) {
-              successRefVal.textContent = currentTrxId || trxId;
-            }
-
-            if (data.mainBalance !== undefined) {
-              const newBalVal = document.getElementById('topup-success-balance-val');
-              const newBalContainer = document.getElementById('topup-success-new-balance');
-              if (newBalVal && newBalContainer) {
-                newBalVal.textContent = formatRupiah(data.mainBalance);
-                newBalContainer.style.display = 'block';
-              }
-            }
-
-            setTopUpStep('success');
-
-            triggerTopUpConfetti();
-
             playSuccessSound();
-            triggerSystemNotification('Top Up Berhasil! 🎉', 'Saldo Rp ' + formattedVal + ' telah masuk ke Akun Utama Anda.');
             showNotification('✅ Top Up Rp ' + formattedVal + ' berhasil!');
 
             if (data.mainBalance !== undefined) {
@@ -8691,6 +8657,20 @@
             } else {
               syncServerState();
             }
+
+            closeTopUpScreen();
+
+            // Trigger Official Struk Success Screen with checkmark animation!
+            openPostCheckoutStatus({
+              id: currentTrxId || trxId,
+              merchant: 'Top Up Saldo QRIS',
+              product_name: 'Top Up Saldo QRIS',
+              amount: data.amount || 0,
+              target: localStorage.getItem('noxaUsername') || 'User',
+              account_name: localStorage.getItem('noxaUsername') || 'User',
+              status: 'BERHASIL',
+              createdAt: new Date().toISOString()
+            });
 
           } else if (data.success && (data.status === 'FAILED' || data.status === 'EXPIRED')) {
             clearInterval(depositPollInterval);
@@ -10338,15 +10318,15 @@
         document.getElementById('screen-trx-detail').classList.add('active');
       }
 
-      // Generate watermark grid programmatically to fit container dimensions
+      // Generate watermark grid programmatically to fit container dimensions (DANA-style repeating pattern)
       function generateReceiptWatermark() {
         const grid = document.getElementById('watermarkGrid');
         if (!grid) return;
         const text = 'Noxarianet';
         
-        let cols = 8, rows = 8;
-        if (window.innerWidth <= 480) { cols = 6; rows = 6; }
-        if (window.innerWidth <= 380) { cols = 4; rows = 6; }
+        let cols = 6, rows = 12;
+        if (window.innerWidth <= 480) { cols = 5; rows = 10; }
+        if (window.innerWidth <= 380) { cols = 4; rows = 10; }
 
         const total = cols * rows;
         grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
@@ -10850,7 +10830,6 @@
           // Open the receipt download & preview modal so the user gets direct access to image preview & download
           openReceiptDownloadModal(dataUrl, fileName, blobUrl);
 
-          // Also attempt programmatic download link trigger via Blob URL / Data URL
           try {
             const a = document.createElement('a');
             a.download = fileName;
@@ -10858,9 +10837,7 @@
             a.target = '_blank';
             document.body.appendChild(a);
             a.click();
-            setTimeout(() => {
-              if (document.body.contains(a)) document.body.removeChild(a);
-            }, 1000);
+            setTimeout(() => { if (document.body.contains(a)) document.body.removeChild(a); }, 1000);
           } catch(e) {}
 
           showNotification(nativeSaved ? '✅ Gambar struk tersimpan ke galeri!' : '✅ Struk siap diunduh & disimpan!');
@@ -10884,17 +10861,37 @@
         const originalHTML = btn ? btn.innerHTML : '';
         if (btn) {
           btn.disabled = true;
-          btn.innerHTML = '<span class="material-symbols-outlined" style="animation: spin 1s linear infinite;">sync</span> Menyiapkan Gambar Struk...';
+          btn.innerHTML = '<span class="material-symbols-outlined" style="animation: spin 1s linear infinite;">sync</span> Menyiapkan Pesan Struk...';
         }
 
         try {
+          const targetNo = currentPrintTx.target || currentPrintTx.phoneNumber || currentPrintTx.customerNo || currentPrintTx.noTujuan || '-';
+          const accName = currentPrintTx.account_name || currentPrintTx.customerName || '-';
+          const snCode = currentPrintTx.product_license || currentPrintTx.license || currentPrintTx.sn || currentPrintTx.voucher || '-';
+          const txDate = document.getElementById('receipt-date-time') ? document.getElementById('receipt-date-time').innerText : (currentPrintTx.date || '-');
+          const secHash = currentPrintTx._secCode || 'NXW-VERIFIED';
+
+          const captionText = `🧾 *STRUK PEMBAYARAN RESMI NOXAPAY*\n` +
+            `----------------------------------------\n` +
+            `📌 *Layanan / Produk:* ${currentPrintTx.merchant || currentPrintTx.product_name || 'NoxaPay'}\n` +
+            `👤 *Atas Nama / Penerima:* ${accName !== '-' ? accName : (currentPrintTx.merchant || 'Pelanggan')}\n` +
+            `📱 *No. Tujuan / ID:* ${targetNo}\n` +
+            `💵 *Total Pembayaran:* ${formatRupiah(currentPrintTx.amount || 0)}\n` +
+            `✅ *Status Transaksi:* ${currentPrintTx.status || 'BERHASIL'}\n` +
+            `🕒 *Waktu Transaksi:* ${txDate}\n` +
+            `🔢 *ID Transaksi:* ${currentPrintTx.transactionId || currentPrintTx.id || '-'}\n` +
+            (snCode && snCode !== '-' ? `🔑 *SN / Lisensi:* ${snCode}\n` : '') +
+            `🔐 *Kode Keamanan:* SEC: ${secHash}\n` +
+            `----------------------------------------\n` +
+            `*NoxariaNet Wallet — Transaksi Enkripsi Sah & Diterbitkan Resmi.*`;
+
           const canvas = await html2canvas(card, {
             scale: 3,
             useCORS: true,
             backgroundColor: '#ffffff',
             logging: false,
             scrollX: 0,
-            scrollY: -window.scrollY, // Fix scroll shift bug in html2canvas (prevents grey/blank cutoffs)
+            scrollY: -window.scrollY,
             windowWidth: document.documentElement.clientWidth,
             windowHeight: document.documentElement.clientHeight
           });
@@ -10902,16 +10899,6 @@
           const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
           const fileName = `Struk_NoxaPay_${currentPrintTx.id || 'TRX'}.png`;
           const file = new File([blob], fileName, { type: 'image/png' });
-
-          const captionText = `*NOXAPAY - STRUK RESMI*\n` +
-            `----------------------------------------\n` +
-            `*Merchant:* ${currentPrintTx.merchant || 'NoxaPay'}\n` +
-            `*Nominal Total:* ${formatRupiah(currentPrintTx.amount)}\n` +
-            `*Status:* ${currentPrintTx.status || 'BERHASIL'}\n` +
-            `*Waktu & Tanggal:* ${currentPrintTx.date || '-'} ${currentPrintTx.time || ''}\n` +
-            `*ID Transaksi:* ${currentPrintTx.transactionId || currentPrintTx.id || '-'}\n` +
-            `----------------------------------------\n` +
-            `Struk ini diterbitkan sah dan terekam secara enkripsi di sistem NoxaPay.`;
 
           if (navigator.canShare && navigator.canShare({ files: [file] })) {
             await navigator.share({

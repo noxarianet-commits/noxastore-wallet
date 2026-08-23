@@ -2067,7 +2067,7 @@ async function handleWithdrawEwallet(req, res) {
       });
     }
 
-    const refId = requestId || `WDR_${username}_${Date.now()}`;
+    const refId = requestId || `TPU_${username}_${Date.now()}`;
     let orderResult;
     try {
       orderResult = await sekalipayService.createTransaction({
@@ -2082,6 +2082,7 @@ async function handleWithdrawEwallet(req, res) {
     const isSuccess = orderResult && (orderResult.success || orderResult.status === true || orderResult.httpCode === 200 || orderResult.data);
     const sn = (orderResult.data && (orderResult.data.sn || orderResult.data.serial_number || orderResult.data.voucher)) || '';
     const accName = account_name || (orderResult.data && (orderResult.data.account_name || orderResult.data.customer_name)) || '';
+    const productName = item.name && item.name.toLowerCase().includes('top up') ? item.name : `Top Up ${method}`;
 
     if (isSuccess) {
       const newBalance = Math.max(0, currentBal - totalPrice);
@@ -2089,13 +2090,14 @@ async function handleWithdrawEwallet(req, res) {
 
       await db.addHistory(username, {
         id: refId,
-        merchant: item.name,
-        product_name: item.name,
+        merchant: productName,
+        product_name: productName,
         target: String(destination),
         account_name: accName,
         amount: totalPrice,
         status: 'BERHASIL',
-        type: 'EWALLET',
+        type: 'TOPUP_EWALLET',
+        category: 'Top Up E-Wallet',
         sn: sn,
         note: sn
       });
@@ -2103,11 +2105,11 @@ async function handleWithdrawEwallet(req, res) {
       const updatedUser = await db.getUser(username);
       const userHistory = updatedUser ? (updatedUser.history || []) : [];
 
-      // Broadcast: E-Wallet berhasil
+      // Broadcast: Top Up E-Wallet berhasil
       broadcastRealtimeEvent('transaction', {
         targetUsername: username,
-        title: '✅ Withdraw E-Wallet Berhasil',
-        body: `${method} Rp ${nominal.toLocaleString('id-ID')} ke ${destination} berhasil dikirim.`,
+        title: '✅ Top Up E-Wallet Berhasil',
+        body: `Top Up ${method} Rp ${nominal.toLocaleString('id-ID')} ke ${destination} berhasil diproses.`,
         type: 'ewallet_success',
         amount: totalPrice
       });
@@ -2118,7 +2120,7 @@ async function handleWithdrawEwallet(req, res) {
         msg: `Berhasil Top Up ${method} Rp ${nominal.toLocaleString('id-ID')} ke ${destination}`,
         mainBalance: newBalance,
         history: userHistory,
-        data: { id: refId, merchant: item.name, target: destination, account_name: accName, amount: totalPrice, sn }
+        data: { id: refId, merchant: productName, target: destination, account_name: accName, amount: totalPrice, sn }
       });
     } else {
       const rawErr = (orderResult && (orderResult.message || orderResult.error)) || 'Respon gagal dari provider.';
@@ -2126,30 +2128,31 @@ async function handleWithdrawEwallet(req, res) {
 
       await db.addHistory(username, {
         id: refId,
-        merchant: item.name,
-        product_name: item.name,
+        merchant: productName,
+        product_name: productName,
         target: String(destination),
         amount: totalPrice,
         status: 'GAGAL',
-        type: 'EWALLET',
+        type: 'TOPUP_EWALLET',
+        category: 'Top Up E-Wallet',
         note: errMsg
       });
 
       const updatedUser = await db.getUser(username);
       const userHistory = updatedUser ? (updatedUser.history || []) : [];
 
-      // Broadcast: E-Wallet gagal
+      // Broadcast: Top Up E-Wallet gagal
       broadcastRealtimeEvent('transaction', {
         targetUsername: username,
-        title: '❌ Withdraw E-Wallet Gagal',
-        body: `${method} ke ${destination} gagal: ${errMsg}`,
+        title: '❌ Top Up E-Wallet Gagal',
+        body: `Top Up ${method} ke ${destination} gagal: ${errMsg}`,
         type: 'ewallet_failed',
         amount: totalPrice
       });
 
       return res.status(400).json({
         success: false,
-        error: `Gagal memproses penarikan: ${errMsg}`,
+        error: `Gagal memproses Top Up E-Wallet: ${errMsg}`,
         mainBalance: currentBal,
         history: userHistory
       });
