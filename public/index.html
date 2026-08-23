@@ -3964,8 +3964,8 @@
       <div id="panel-profile" class="tab-panel"
         style="padding: 0; background-color: #f7f9fb; min-height: 100vh; padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));">
 
-        <!-- Top App Bar Khusus Profil (Dihapu        <!-- Profile Header Section -->
-        <section style="background: linear-gradient(135deg, #7B2D8E 0%, #9B4DB8 100%); padding: max(48px, calc(env(safe-area-inset-top) + 16px)) 18px 90px; color: white; position: relative;">
+        <!-- Profile Header Section -->
+        <section style="background: linear-gradient(135deg, #7B2D8E 0%, #9B4DB8 100%); padding: max(48px, calc(env(safe-area-inset-top) + 16px)) 18px 140px; color: white; position: relative;">
           <div style="display: flex; align-items: center; gap: 14px;">
             <div style="position: relative; flex-shrink: 0;">
               <div style="width: 52px; height: 52px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.35); background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
@@ -3987,7 +3987,7 @@
           </div>
 
           <!-- Floating Main Balance Card -->
-          <div style="position: absolute; bottom: 0; left: 16px; right: 16px; transform: translateY(45%); background: #ffffff; border-radius: 20px; padding: 18px 20px; box-shadow: 0 10px 30px rgba(123, 45, 142, 0.08); border: 1px solid rgba(123,45,142,0.06); z-index: 10;">
+          <div style="position: absolute; bottom: 0; left: 16px; right: 16px; transform: translateY(50%); background: #ffffff; border-radius: 20px; padding: 18px 20px; box-shadow: 0 10px 30px rgba(123, 45, 142, 0.08); border: 1px solid rgba(123,45,142,0.06); z-index: 10;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
               <div style="display: flex; align-items: center; gap: 6px;">
                 <div style="background: rgba(123, 45, 142, 0.08); width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
@@ -4015,7 +4015,7 @@
         </section>
 
         <!-- Menu Content -->
-        <div style="margin-top: 90px; padding: 0 16px; display: flex; flex-direction: column; gap: 18px;">
+        <div style="margin-top: 95px; padding: 0 16px; display: flex; flex-direction: column; gap: 18px;">
           <!-- Pengaturan Akun -->
           <section>
             <h3 style="font-size: 11px; font-weight: 800; color: #64748b; letter-spacing: 0.8px; margin-bottom: 8px; padding: 0 4px; text-transform: uppercase;">
@@ -5802,19 +5802,22 @@
         return originalFetch(resource, config);
       };
 
-      // Global error handlers to avoid uncaught exceptions from breaking UI
+      // Global error handlers to log exceptions without showing disruptive UI toasts for harmless cleanup/media events
       window.addEventListener('error', (event) => {
         try {
-          console.error('Global Error:', event.message, event.error);
-          // Show user-friendly toast for critical errors (non-blocking)
-          const toast = document.getElementById('toast-banner');
-          if (toast) {
-            document.getElementById('toast-message').innerText = 'Terjadi kesalahan pada aplikasi (cek console).';
-            toast.style.top = '70px';
-            setTimeout(() => { toast.style.top = '-100px'; }, 2200);
+          const msg = String(event.message || event.error || '').toLowerCase();
+          // Filter out harmless non-critical background/cleanup errors
+          if (msg.includes('resizeobserver') ||
+              msg.includes('html5qrcode') ||
+              msg.includes('aborted') ||
+              msg.includes('media resource') ||
+              msg.includes('srcobject') ||
+              msg.includes('script error') ||
+              msg.includes('canceled')) {
+            return;
           }
+          console.error('Global Error:', event.message, event.error);
         } catch (e) { /* swallow */ }
-        // Do not call event.preventDefault() so dev tools still show the error
       });
 
       window.addEventListener('unhandledrejection', (ev) => {
@@ -8276,28 +8279,39 @@
         }
       }
 
-      function _stopQRScanner() {
+      async function _stopQRScanner() {
         _isFlashlightOn = false;
         const flashIcon = document.getElementById('qr-flash-icon');
         const flashBtn = document.getElementById('btn-qr-flash');
         if (flashIcon) { flashIcon.textContent = 'flash_on'; flashIcon.style.color = '#fbbf24'; }
         if (flashBtn) { flashBtn.style.background = 'rgba(255, 255, 255, 0.12)'; }
 
-        // Kill camera tracks immediately for instant response
+        if (_qrHtml5Scanner) {
+          const scannerToStop = _qrHtml5Scanner;
+          _qrHtml5Scanner = null;
+          try {
+            if (typeof scannerToStop.stop === 'function') {
+              await scannerToStop.stop().catch(() => {});
+            }
+          } catch(e) {}
+          try {
+            if (typeof scannerToStop.clear === 'function') {
+              await scannerToStop.clear().catch(() => {});
+            }
+          } catch(e) {}
+        }
+
         try {
           const videoEl = document.querySelector('#qr-reader video');
           if (videoEl && videoEl.srcObject) {
             const tracks = videoEl.srcObject.getTracks();
-            tracks.forEach(track => track.stop());
+            tracks.forEach(track => {
+              try { track.stop(); } catch(tErr) {}
+            });
             videoEl.srcObject = null;
           }
         } catch(e) {}
 
-        if (_qrHtml5Scanner) {
-          try { _qrHtml5Scanner.stop().catch(() => {}); } catch(e) {}
-          try { _qrHtml5Scanner.clear().catch(() => {}); } catch(e) {}
-          _qrHtml5Scanner = null;
-        }
         const readerEl = document.getElementById('qr-reader');
         if (readerEl) readerEl.innerHTML = '';
       }
