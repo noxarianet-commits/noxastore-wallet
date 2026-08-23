@@ -4139,8 +4139,21 @@
             <p style="font-size: 12px; font-weight: 600; color: #7b7486; margin: 0;">noxastore wallet Indonesia © 2026
             </p>
           </div>
+    <!-- ========================================== -->
+    <!-- ULTRA-PREMIUM MODERN IN-APP ALERT MODAL    -->
+    <!-- ========================================== -->
+    <div id="app-custom-alert-modal" style="display: none; position: fixed; inset: 0; z-index: 10000; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 20px;">
+      <div id="custom-alert-card" style="background: #ffffff; border-radius: 28px; padding: 28px 24px 22px; width: 100%; max-width: 340px; text-align: center; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.8); transform: scale(0.9); opacity: 0; transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease;">
+        <div id="custom-alert-icon-box" style="width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px rgba(239, 68, 68, 0.25); background: linear-gradient(135deg, #ef4444, #dc2626);">
+          <span class="material-symbols-outlined" id="custom-alert-icon" style="font-size: 36px; color: white;">error</span>
         </div>
+        <h3 id="custom-alert-title" style="font-size: 17px; font-weight: 800; color: #0f172a; margin: 0 0 8px; letter-spacing: -0.2px;">Pemberitahuan</h3>
+        <p id="custom-alert-message" style="font-size: 13px; color: #64748b; margin: 0 0 20px; line-height: 1.55; word-break: break-word;">Pesan alert sistem</p>
+        <button id="custom-alert-btn" onclick="closeCustomAlert()" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #7B2D8E, #a855f7); color: white; border: none; border-radius: 16px; font-weight: 800; font-size: 14px; cursor: pointer; box-shadow: 0 6px 18px rgba(123, 45, 142, 0.3); transition: transform 0.15s ease;" onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'">
+          Mengerti
+        </button>
       </div>
+    </div>
 
     </main>
 
@@ -9787,19 +9800,111 @@
         }
       }
 
+      // ============================================================
+      // ULTRA-PREMIUM MODERN IN-APP ALERT MODAL SYSTEM
+      // ============================================================
+      let _customAlertCallback = null;
+
+      function showCustomAlert(title, message, type = 'error', buttonText = 'Mengerti', callback = null) {
+        _customAlertCallback = callback;
+        const modal = document.getElementById('app-custom-alert-modal');
+        const card = document.getElementById('custom-alert-card');
+        const iconBox = document.getElementById('custom-alert-icon-box');
+        const iconEl = document.getElementById('custom-alert-icon');
+        const titleEl = document.getElementById('custom-alert-title');
+        const msgEl = document.getElementById('custom-alert-message');
+        const btnEl = document.getElementById('custom-alert-btn');
+
+        if (!modal || !card) {
+          if (callback) callback();
+          return;
+        }
+
+        if (titleEl) titleEl.innerText = title || 'Pemberitahuan';
+        if (msgEl) msgEl.innerText = sanitizeErrorMessage(message || '');
+        if (btnEl) btnEl.innerText = buttonText || 'Mengerti';
+
+        if (type === 'success') {
+          if (iconBox) {
+            iconBox.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+            iconBox.style.boxShadow = '0 10px 25px rgba(16, 185, 129, 0.25)';
+          }
+          if (iconEl) iconEl.innerText = 'check_circle';
+          if (btnEl) {
+            btnEl.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+            btnEl.style.boxShadow = '0 6px 18px rgba(16, 185, 129, 0.3)';
+          }
+        } else if (type === 'warning' || type === 'info') {
+          if (iconBox) {
+            iconBox.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
+            iconBox.style.boxShadow = '0 10px 25px rgba(245, 158, 11, 0.25)';
+          }
+          if (iconEl) iconEl.innerText = 'warning';
+          if (btnEl) {
+            btnEl.style.background = 'linear-gradient(135deg, #7B2D8E, #a855f7)';
+            btnEl.style.boxShadow = '0 6px 18px rgba(123, 45, 142, 0.3)';
+          }
+        } else {
+          if (iconBox) {
+            iconBox.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+            iconBox.style.boxShadow = '0 10px 25px rgba(239, 68, 68, 0.25)';
+          }
+          if (iconEl) iconEl.innerText = 'error';
+          if (btnEl) {
+            btnEl.style.background = 'linear-gradient(135deg, #7B2D8E, #a855f7)';
+            btnEl.style.boxShadow = '0 6px 18px rgba(123, 45, 142, 0.3)';
+          }
+        }
+
+        modal.style.display = 'flex';
+        requestAnimationFrame(() => {
+          card.style.opacity = '1';
+          card.style.transform = 'scale(1)';
+        });
+      }
+
+      function closeCustomAlert() {
+        const modal = document.getElementById('app-custom-alert-modal');
+        const card = document.getElementById('custom-alert-card');
+        if (card) {
+          card.style.opacity = '0';
+          card.style.transform = 'scale(0.9)';
+        }
+        setTimeout(() => {
+          if (modal) modal.style.display = 'none';
+          if (typeof _customAlertCallback === 'function') {
+            const cb = _customAlertCallback;
+            _customAlertCallback = null;
+            cb();
+          }
+        }, 200);
+      }
+
       // Custom Toast Notification Banner
       function showNotification(message, type) {
-        const banner = document.getElementById('toast-banner');
-        const messageEl = document.getElementById('toast-message');
-        const iconEl = document.getElementById('toast-icon');
+        if (!message) return;
 
         // Auto-detect type from emoji prefix or content if not explicitly provided
         if (!type) {
-          if (message.startsWith('\u274c') || message.startsWith('\u26a0')) type = 'error';
-          else if (message.startsWith('\u2705')) type = 'success';
-          else if (message.includes('Silakan masuk') || message.includes('Administrator')) type = 'warning';
-          else type = 'info';
+          if (message.startsWith('❌') || message.startsWith('⚠️') || message.toLowerCase().includes('gagal') || message.toLowerCase().includes('salah')) {
+            type = 'error';
+          } else if (message.startsWith('✅')) {
+            type = 'success';
+          } else {
+            type = 'info';
+          }
         }
+
+        // Trigger ultra-premium in-app alert modal for errors & warnings
+        if (type === 'error' || type === 'warning' || message.startsWith('❌') || message.startsWith('⚠️')) {
+          let cleanMsg = message.replace(/^[\u274c\u26a0\u2705\u26a1\u26a0️\s]+/, '').trim();
+          let alertTitle = (type === 'error' || message.startsWith('❌')) ? 'Pemberitahuan' : 'Pemberitahuan';
+          showCustomAlert(alertTitle, cleanMsg, type);
+        }
+
+        const banner = document.getElementById('toast-banner');
+        const messageEl = document.getElementById('toast-message');
+        const iconEl = document.getElementById('toast-icon');
 
         const colors = {
           success: '#059669',
@@ -9818,15 +9923,17 @@
           iconEl.innerText = icons[type] || 'info';
           iconEl.style.color = colors[type] || colors.info;
         }
-        banner.style.background = type === 'error' ? '#1C1012' : type === 'success' ? '#0A1F15' : '#0F172A';
+        if (banner) {
+          banner.style.background = type === 'error' ? '#1C1012' : type === 'success' ? '#0A1F15' : '#0F172A';
 
-        messageEl.innerText = message;
-        banner.style.top = '70px';
+          if (messageEl) messageEl.innerText = message;
+          banner.style.top = '70px';
 
-        clearTimeout(banner._hideTimer);
-        banner._hideTimer = setTimeout(() => {
-          banner.style.top = '-100px';
-        }, type === 'error' && message.length > 80 ? 3200 : 2200);
+          clearTimeout(banner._hideTimer);
+          banner._hideTimer = setTimeout(() => {
+            banner.style.top = '-100px';
+          }, type === 'error' && message.length > 80 ? 3200 : 2200);
+        }
       }
 
       function checkAppUpdate(btn) {
@@ -9945,18 +10052,10 @@
           setTimeout(() => {
             if (loader) loader.classList.remove('active');
             if (result.success) {
-              pendingTransaction = result.data;
-              claimBalance(); // Langsung tambahkan ke saldo
+              showCustomAlert('Bukti Terkirim', result.message || 'Bukti pembayaran berhasil dikirim. Menunggu verifikasi dari Admin.', 'success');
+              if (result.mainBalance !== undefined) applyBalanceUpdate(result.mainBalance, transactionHistory, false);
             } else {
-              // Tampilkan reason spesifik dari server, bukan generic "Bukti tidak valid"
-              let errorMsg = 'Bukti tidak valid — pastikan bukti QRIS dari merchant NOXARIA CELL';
-              if (result.reasons && result.reasons.length > 0) {
-                errorMsg = Array.isArray(result.reasons) ? result.reasons.join(' | ') : result.reasons;
-              } else if (result.error) {
-                errorMsg = result.error;
-              } else {
-                errorMsg = 'Bukti tidak valid — silakan coba lagi dengan bukti DANA ke EBELANJA';
-              }
+              let errorMsg = result.error || 'Bukti pembayaran tidak dapat diproses oleh sistem.';
               showNotification('❌ Gagal: ' + errorMsg);
             }
           }, 600);
@@ -10087,6 +10186,15 @@
         return 'success-badge';
       }
 
+      function isLicenseOrUrl(str) {
+        if (!str) return false;
+        const s = String(str).trim();
+        if (s.match(/https?:\/\/[^\s"']+/i)) return true; // It's a URL link!
+        if (looksLikeCredential(s)) return true; // It's credentials like user:pass
+        if (s.length > 35 && !s.includes(' ')) return true; // Long token without spaces
+        return false;
+      }
+
       function buildTransactionItemHtml(tx) {
         const info = getTxDisplayInfo(tx);
         let fullDate = tx.date || '-';
@@ -10114,21 +10222,27 @@
         const badgeClass = getStatusBadgeClass(tx.status);
         let noteSub = '';
         if (tx.note && tx.note !== '-' && !tx.note.startsWith('Transfer saldo ke') && !tx.note.startsWith('Terima saldo dari')) {
-          noteSub = `<span style="display: block; font-size: 11px; color: #7B2D8E; font-weight: 700; font-style: italic; margin-top: 2px;">💬 "${tx.note}"</span>`;
+          if (isLicenseOrUrl(tx.note)) {
+            noteSub = `<span style="display: inline-block; font-size: 10px; font-weight: 800; color: #7B2D8E; background: #f3e8ff; padding: 2px 8px; border-radius: 10px; margin-top: 2px;">🔑 Klik untuk lihat Lisensi / Link</span>`;
+          } else {
+            let cleanNote = tx.note.trim();
+            if (cleanNote.length > 25) cleanNote = cleanNote.substring(0, 25) + '...';
+            noteSub = `<span style="display: block; font-size: 11px; color: #7B2D8E; font-weight: 700; font-style: italic; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px;">💬 "${cleanNote}"</span>`;
+          }
         }
 
         return `
-        <div class="left-col">
+        <div class="left-col" style="flex: 1; min-width: 0; padding-right: 8px;">
           <div class="icon-wrapper ${info.iconClass}">
             <span class="material-symbols-outlined">${info.icon}</span>
           </div>
-          <div class="tx-details">
-            <h5>${info.title}</h5>
+          <div class="tx-details" style="flex: 1; min-width: 0; overflow: hidden;">
+            <h5 style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px;">${info.title}</h5>
             ${noteSub}
             <p>${fullDate}${fullTime ? ' • ' + fullTime : ''}</p>
           </div>
         </div>
-        <div class="right-col">
+        <div class="right-col" style="flex-shrink: 0; text-align: right;">
           <p class="tx-amount ${info.amountClass}">${info.prefix}${formatRupiah(tx.amount)}</p>
           <span class="status-badge ${badgeClass}">${tx.status || 'BERHASIL'}</span>
         </div>
@@ -12729,7 +12843,13 @@
 
           let noteSub = '';
           if (tx.note && tx.note !== '-' && !tx.note.startsWith('Transfer saldo ke') && !tx.note.startsWith('Terima saldo dari')) {
-            noteSub = `<span style="display: block; font-size: 11px; color: #7B2D8E; font-weight: 700; font-style: italic; margin-top: 2px;">💬 "${tx.note}"</span>`;
+            if (isLicenseOrUrl(tx.note)) {
+              noteSub = `<span style="display: inline-block; font-size: 10px; font-weight: 800; color: #7B2D8E; background: #f3e8ff; padding: 2px 8px; border-radius: 10px; margin-top: 2px;">🔑 Klik untuk lihat Lisensi / Link</span>`;
+            } else {
+              let cleanNote = tx.note.trim();
+              if (cleanNote.length > 25) cleanNote = cleanNote.substring(0, 25) + '...';
+              noteSub = `<span style="display: block; font-size: 11px; color: #7B2D8E; font-weight: 700; font-style: italic; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px;">💬 "${cleanNote}"</span>`;
+            }
           }
 
           let dateStr = tx.date || '-';

@@ -2440,15 +2440,20 @@ app.post('/change-password', requireAuth, async (req, res) => {
   }
 });
 
-// Upload & Claim Receipts Helper
+// Upload & Verification Helper - NO AUTOMATIC DUMMY SALDO CREDIT
 app.post('/upload', requireAuth, async (req, res) => {
+  const username = req.user.username;
+  const user = await db.getUser(username);
+  const curBal = user ? (user.mainBalance !== undefined ? user.mainBalance : user.saldo || 0) : 0;
   res.json({
     success: true,
+    message: 'Bukti pembayaran berhasil dikirim. Menunggu verifikasi admin.',
+    mainBalance: curBal,
+    qrisBalance: user ? (user.qrisBalance || 0) : 0,
     data: {
-      id: `CLM-${Date.now()}`,
-      amount: 10000,
-      merchant: 'Deposit Bukti QRIS',
-      status: 'BERHASIL'
+      id: `PROOF-${Date.now()}`,
+      merchant: 'Pengajuan Bukti Pembayaran',
+      status: 'DIPROSES'
     }
   });
 });
@@ -2461,7 +2466,7 @@ app.post('/claim', requireAuth, async (req, res) => {
     success: true,
     mainBalance: curBal,
     qrisBalance: user ? (user.qrisBalance || 0) : 0,
-    message: 'Klaim saldo berhasil diproses'
+    message: 'Status saldo diverifikasi'
   });
 });
 
