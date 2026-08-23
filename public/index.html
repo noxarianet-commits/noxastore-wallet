@@ -4459,21 +4459,15 @@
         <!-- ACTION BUTTONS -->
         <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px;">
           <!-- Share ke WhatsApp Direct Button -->
-          <button id="share-wa-btn" onclick="shareReceiptToWA()" style="width: 100%; padding: 16px; background: #25D366; color: white; border: none; border-radius: 16px; font-weight: 800; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 8px 20px rgba(37,211,102,0.3);">
-            <svg style="width: 22px; height: 22px; fill: currentColor; flex-shrink: 0;" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+          <button id="share-wa-btn" onclick="shareReceiptToWA()" style="width: 100%; padding: 12px 14px; background: #25D366; color: white; border: none; border-radius: 14px; font-weight: 700; font-size: 13.5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(37,211,102,0.25); transition: opacity 0.2s;">
+            <svg style="width: 18px; height: 18px; fill: currentColor; flex-shrink: 0;" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
             Bagikan ke WhatsApp
           </button>
 
           <!-- Download Struk Button -->
-          <button id="download-receipt-btn" onclick="downloadReceiptImage()" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #7B2D8E, #9B4DB8); color: white; border: none; border-radius: 16px; font-weight: 800; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 8px 20px rgba(123,45,142,0.2);">
-            <span class="material-symbols-outlined" style="font-size: 20px;">download</span>
+          <button id="download-receipt-btn" onclick="downloadReceiptImage()" style="width: 100%; padding: 12px 14px; background: linear-gradient(135deg, #7B2D8E, #9B4DB8); color: white; border: none; border-radius: 14px; font-weight: 700; font-size: 13.5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(123,45,142,0.2); transition: opacity 0.2s;">
+            <span class="material-symbols-outlined" style="font-size: 18px;">download</span>
             Unduh Gambar Struk
-          </button>
-
-          <!-- General Share Button -->
-          <button onclick="shareReceiptGeneral()" style="width: 100%; padding: 14px; background: rgba(123,45,142,0.08); color: #7B2D8E; border: 1.5px solid rgba(123,45,142,0.25); border-radius: 16px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
-            <span class="material-symbols-outlined" style="font-size: 20px;">share</span>
-            Bagikan ke Media Lain
           </button>
         </div>
 
@@ -5285,39 +5279,40 @@
       </div>
     </div>
 
-    <!-- Receipt Download & Preview Modal Overlay -->
-    <div id="receipt-download-modal" class="modal-overlay" onclick="closeReceiptDownloadModal(event)" style="z-index: 10000;">
-      <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 380px; width: 92%; max-height: 90vh; overflow-y: auto; padding: 20px; text-align: center; border-radius: 28px; background: #ffffff;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-          <h3 style="font-size: 16px; font-weight: 800; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 6px;">
-            <span class="material-symbols-outlined" style="color: #7B2D8E;">verified</span> Struk Siap Disimpan
+    <!-- Receipt Download & Preview Modal Overlay (Centered, Scroll-Safe, 100% Responsive) -->
+    <div id="receipt-download-modal" class="modal-overlay" onclick="closeReceiptDownloadModal(event)" style="z-index: 10000; padding: 16px; align-items: center; justify-content: center;">
+      <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 360px; width: 100%; max-height: 85vh; display: flex; flex-direction: column; padding: 16px 16px 20px; text-align: center; border-radius: 24px; background: #ffffff; box-shadow: 0 20px 50px rgba(0,0,0,0.2); box-sizing: border-box; position: relative;">
+        <!-- Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-shrink: 0;">
+          <h3 style="font-size: 15px; font-weight: 800; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 6px;">
+            <span class="material-symbols-outlined" style="color: #7B2D8E; font-size: 18px;">verified</span> Struk Siap Disimpan
           </h3>
-          <button onclick="closeReceiptDownloadModal()" style="background: none; border: none; font-size: 20px; color: #64748b; cursor: pointer; display: flex; align-items: center;">
-            <span class="material-symbols-outlined">close</span>
+          <button onclick="closeReceiptDownloadModal()" style="background: rgba(0,0,0,0.05); border: none; font-size: 18px; color: #64748b; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%;">
+            <span class="material-symbols-outlined" style="font-size: 16px;">close</span>
           </button>
         </div>
 
-        <p style="font-size: 11.5px; color: #64748b; margin-bottom: 12px; line-height: 1.4;">
-          Gambar struk telah berhasil dibuat. Klik tombol di bawah atau <strong>tekan lama gambar</strong> untuk menyimpan ke galeri HP.
+        <p style="font-size: 11px; color: #64748b; margin-bottom: 10px; line-height: 1.35; flex-shrink: 0;">
+          Gambar struk berhasil dibuat. Klik tombol di bawah atau <strong>tekan lama gambar</strong> untuk menyimpan ke galeri HP.
         </p>
 
-        <!-- Preview Image Container -->
-        <div style="border: 2px solid rgba(123, 45, 142, 0.15); border-radius: 18px; padding: 6px; background: #fafafa; margin-bottom: 16px; overflow: hidden;">
-          <img id="receipt-preview-img" src="" alt="Struk Digital NoxaPay" style="width: 100%; height: auto; border-radius: 12px; display: block; box-shadow: 0 4px 12px rgba(0,0,0,0.08);" />
+        <!-- Preview Image Container (Scrollable if needed) -->
+        <div style="flex: 1; min-height: 0; max-height: 48vh; overflow-y: auto; border: 1.5px solid rgba(123, 45, 142, 0.15); border-radius: 16px; padding: 4px; background: #f8fafc; margin-bottom: 12px; -webkit-overflow-scrolling: touch;">
+          <img id="receipt-preview-img" src="" alt="Struk Digital NoxaPay" style="width: 100%; height: auto; border-radius: 12px; display: block; box-shadow: 0 4px 10px rgba(0,0,0,0.06);" />
         </div>
 
         <!-- Download & Share Action Buttons -->
-        <div style="display: flex; flex-direction: column; gap: 10px;">
-          <a id="receipt-direct-download-btn" download="Struk_NoxaPay.png" href="#" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #7B2D8E, #9B4DB8); color: white; border: none; border-radius: 16px; font-weight: 800; font-size: 14px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 6px 18px rgba(123,45,142,0.25);">
-            <span class="material-symbols-outlined" style="font-size: 20px;">download</span> Unduh Ke Galeri
+        <div style="display: flex; flex-direction: column; gap: 8px; flex-shrink: 0;">
+          <a id="receipt-direct-download-btn" download="Struk_NoxaPay.png" href="#" onclick="handleDirectReceiptDownload(event)" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #7B2D8E, #9B4DB8); color: white; border: none; border-radius: 14px; font-weight: 800; font-size: 13.5px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 14px rgba(123,45,142,0.25); box-sizing: border-box;">
+            <span class="material-symbols-outlined" style="font-size: 18px;">download</span> Unduh Ke Galeri
           </a>
 
-          <button onclick="shareReceiptFromPreviewModal()" style="width: 100%; padding: 12px; background: #25D366; color: white; border: none; border-radius: 16px; font-weight: 800; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
-            <svg style="width: 18px; height: 18px; fill: currentColor;" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg> Bagikan ke WhatsApp
+          <button onclick="shareReceiptFromPreviewModal()" style="width: 100%; padding: 10px; background: #25D366; color: white; border: none; border-radius: 14px; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-sizing: border-box;">
+            <svg style="width: 16px; height: 16px; fill: currentColor;" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg> Bagikan ke WhatsApp
           </button>
         </div>
 
-        <div style="margin-top: 12px; padding: 8px 10px; background: rgba(123, 45, 142, 0.04); border-radius: 10px; font-size: 10.5px; color: #475569; line-height: 1.4;">
+        <div style="margin-top: 8px; padding: 6px 8px; background: rgba(123, 45, 142, 0.04); border-radius: 8px; font-size: 10px; color: #475569; line-height: 1.3; flex-shrink: 0;">
           💡 <strong>Petunjuk Simpan Manual:</strong> Jika file tidak tersimpan otomatis, sentuh &amp; tahan (tekan lama) pada gambar di atas lalu pilih <strong>"Simpan Gambar"</strong> / <strong>"Download Gambar"</strong>.
         </div>
       </div>
@@ -10695,7 +10690,7 @@
       let _lastGeneratedReceiptFileName = 'Struk_NoxaPay.png';
       let _lastGeneratedReceiptBlobUrl = null;
 
-      function openReceiptDownloadModal(dataUrl, fileName, blobUrl = null) {
+      async function openReceiptDownloadModal(dataUrl, fileName, blobUrl = null) {
         _lastGeneratedReceiptDataUrl = dataUrl;
         _lastGeneratedReceiptFileName = fileName || 'Struk_NoxaPay.png';
         _lastGeneratedReceiptBlobUrl = blobUrl;
@@ -10711,6 +10706,48 @@
           directBtn.target = '_blank';
         }
         if (modal) modal.classList.add('active');
+
+        // Register temporary real HTTP download URL for 100% Android WebView / Mobile browser download trigger
+        try {
+          const res = await fetch('/api/receipt/save-temp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imageBase64: dataUrl, filename: _lastGeneratedReceiptFileName })
+          });
+          const result = await res.json();
+          if (result && result.success && result.downloadUrl) {
+            if (directBtn) {
+              directBtn.href = result.downloadUrl;
+            }
+          }
+        } catch(e) {
+          console.warn('[Save Temp Receipt Warning]', e.message);
+        }
+      }
+
+      function handleDirectReceiptDownload(event) {
+        const directBtn = document.getElementById('receipt-direct-download-btn');
+        if (directBtn && directBtn.href && directBtn.href.includes('/api/receipt/download/')) {
+          // Triggers real HTTP attachment download via window.location
+          window.location.href = directBtn.href;
+          showNotification('📥 Mengunduh berkas gambar struk...');
+          event.preventDefault();
+          return;
+        }
+
+        // Fallback: Blob URL or Data URI download
+        try {
+          if (_lastGeneratedReceiptBlobUrl || _lastGeneratedReceiptDataUrl) {
+            const a = document.createElement('a');
+            a.download = _lastGeneratedReceiptFileName || 'Struk_NoxaPay.png';
+            a.href = _lastGeneratedReceiptBlobUrl || _lastGeneratedReceiptDataUrl;
+            a.target = '_blank';
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => { if (document.body.contains(a)) document.body.removeChild(a); }, 1000);
+            showNotification('📥 Memproses simpan gambar...');
+          }
+        } catch(e) {}
       }
 
       function closeReceiptDownloadModal(e) {

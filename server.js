@@ -164,6 +164,52 @@ app.post('/api/push/subscribe', async (req, res) => {
   }
 });
 
+// ==========================================
+// TEMPORARY REAL HTTP RECEIPT DOWNLOAD ENDPOINT (FOR ANDROID WEBVIEW / MOBILE BROWSERS)
+// ==========================================
+const tempReceiptMap = new Map();
+
+app.post('/api/receipt/save-temp', (req, res) => {
+  try {
+    const { imageBase64, filename } = req.body;
+    if (!imageBase64) return res.status(400).json({ success: false, error: 'Data gambar kosong.' });
+    
+    const id = 'rec_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+    const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
+    const buffer = Buffer.from(base64Data, 'base64');
+    
+    tempReceiptMap.set(id, {
+      buffer,
+      filename: filename || 'Struk_NoxaPay.png',
+      created: Date.now()
+    });
+
+    // Housekeeping: remove receipts older than 15 mins
+    const now = Date.now();
+    for (const [k, v] of tempReceiptMap.entries()) {
+      if (now - v.created > 900000) tempReceiptMap.delete(k);
+    }
+
+    res.json({ success: true, downloadUrl: `/api/receipt/download/${id}` });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get('/api/receipt/download/:id', (req, res) => {
+  try {
+    const item = tempReceiptMap.get(req.params.id);
+    if (!item) return res.status(404).send('Struk tidak ditemukan atau telah kedaluwarsa.');
+    
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Content-Disposition', `attachment; filename="${item.filename}"`);
+    res.setHeader('Cache-Control', 'no-cache');
+    res.send(item.buffer);
+  } catch (err) {
+    res.status(500).send('Gagal mengunduh berkas struk.');
+  }
+});
+
 const lastNotificationSent = new Map(); // username/target -> timestamp
 
 async function sendBackgroundWebPush(targetUsername, payload) {
