@@ -3964,81 +3964,50 @@
       <div id="panel-profile" class="tab-panel"
         style="padding: 0; background-color: #f7f9fb; min-height: 100vh; padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));">
 
-        <!-- Top App Bar Khusus Profil (Dihapus) -->
-
-        <!-- Profile Header Section -->
-        <section
-          style="background: linear-gradient(to bottom, #7B2D8E, #9B4DB8); padding: max(56px, calc(env(safe-area-inset-top) + 20px)) 20px 140px; color: white; position: relative;">
-          <div style="display: flex; align-items: center; gap: 16px;">
-            <div style="position: relative;">
-              <div
-                style="width: 64px; height: 64px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center;">
-                <span class="material-symbols-outlined" style="font-size: 36px; color: white;">person</span>
+        <!-- Top App Bar Khusus Profil (Dihapu        <!-- Profile Header Section -->
+        <section style="background: linear-gradient(135deg, #7B2D8E 0%, #9B4DB8 100%); padding: max(48px, calc(env(safe-area-inset-top) + 16px)) 18px 90px; color: white; position: relative;">
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="position: relative; flex-shrink: 0;">
+              <div style="width: 52px; height: 52px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.35); background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+                <span class="material-symbols-outlined" style="font-size: 30px; color: white;">person</span>
               </div>
-              <div
-                style="position: absolute; bottom: 0; right: 0; background: #22c55e; border: 2px solid #7B2D8E; width: 16px; height: 16px; border-radius: 50%;">
-              </div>
+              <div style="position: absolute; bottom: 0; right: 0; background: #22c55e; border: 2px solid #7B2D8E; width: 14px; height: 14px; border-radius: 50%;"></div>
             </div>
-            <div style="flex: 1;">
-              <h2 id="profile-fullname" style="font-size: 20px; font-weight: 700; margin: 0; margin-bottom: 4px;">
-                noxastore wallet</h2>
-              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                <div
-                  style="background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.2); padding: 4px 12px; border-radius: 9999px; display: flex; align-items: center; gap: 4px;">
-                  <span style="font-size: 12px; font-weight: 600; opacity: 0.9;">UID: <span
-                      id="profile-username">user</span></span>
-                  <span id="copy-profile-uid" class="material-symbols-outlined" title="Salin UID"
-                    style="font-size: 12px; cursor: pointer;" onclick="copyProfileUid()">content_copy</span>
-                </div>
-                <div id="profile-location-badge"
-                  style="background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.2); padding: 4px 12px; border-radius: 9999px; display: inline-flex; align-items: center; gap: 4px;">
-                  <span class="material-symbols-outlined" style="font-size: 13px; color: #4ade80;">location_on</span>
-                  <span id="profile-location-text" style="font-size: 11px; font-weight: 600; opacity: 0.95;">Mendeteksi GPS...</span>
+            <div style="flex: 1; min-width: 0;">
+              <h2 id="profile-fullname" style="font-size: 17px; font-weight: 800; margin: 0 0 3px; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                noxastore wallet
+              </h2>
+              <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                <div style="background: rgba(255, 255, 255, 0.18); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.25); padding: 2px 10px; border-radius: 99px; display: inline-flex; align-items: center; gap: 4px;">
+                  <span style="font-size: 11px; font-weight: 600; opacity: 0.95;">UID: <span id="profile-username">user</span></span>
+                  <span id="copy-profile-uid" class="material-symbols-outlined" title="Salin UID" style="font-size: 12px; cursor: pointer; opacity: 0.9;" onclick="copyProfileUid()">content_copy</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Floating card - REDESIGNED (Clean White Premium) -->
-          <div
-            style="position: absolute; bottom: 0; left: 20px; right: 20px; transform: translateY(50%); background: #ffffff; border-radius: 24px; padding: 24px; box-shadow: 0 16px 40px rgba(123, 45, 142, 0.12); z-index: 10;">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <div
-                  style="background: rgba(123, 45, 142, 0.1); width: 32px; height: 32px; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
-                  <span class="material-symbols-outlined"
-                    style="color: #7B2D8E; font-size: 18px;">account_balance_wallet</span>
+          <!-- Floating Main Balance Card -->
+          <div style="position: absolute; bottom: 0; left: 16px; right: 16px; transform: translateY(45%); background: #ffffff; border-radius: 20px; padding: 18px 20px; box-shadow: 0 10px 30px rgba(123, 45, 142, 0.08); border: 1px solid rgba(123,45,142,0.06); z-index: 10;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <div style="background: rgba(123, 45, 142, 0.08); width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                  <span class="material-symbols-outlined" style="color: #7B2D8E; font-size: 16px;">account_balance_wallet</span>
                 </div>
-                <span style="font-size: 14px; font-weight: 800; color: #1e293b;">Saldo Utama</span>
+                <span style="font-size: 13px; font-weight: 700; color: #475569;">Saldo Utama</span>
               </div>
-              <span id="profile-membership-badge-container"
-                style="background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 10px; font-weight: 800; display: flex; align-items: center; gap: 4px; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);">
-                <span class="material-symbols-outlined" style="font-size: 14px;">workspace_premium</span> VIP
+              <span id="profile-membership-badge-container" style="background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #fff; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 800; display: flex; align-items: center; gap: 3px; box-shadow: 0 3px 8px rgba(245, 158, 11, 0.25);">
+                <span class="material-symbols-outlined" style="font-size: 12px;">workspace_premium</span> VIP
               </span>
             </div>
 
-            <div style="margin-bottom: 20px;">
-              <p id="profile-main-balance"
-                style="font-size: 28px; font-weight: 800; color: #7B2D8E; margin: 0; letter-spacing: -0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                Rp 0</p>
-            </div>
-
-            <div
-              style="background: #f8fafc; border-radius: 16px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid #f1f5f9;">
-              <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 1; min-width: 0;">
-                <span class="material-symbols-outlined"
-                  style="color: #059669; font-size: 20px; flex-shrink: 0;">qr_code_scanner</span>
-                <span
-                  style="font-size: 12px; font-weight: 700; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Saldo
-                  QRIS Merchant</span>
-              </div>
-              <p id="profile-qris-balance"
-                style="font-size: 15px; font-weight: 800; color: #0f172a; margin: 0; flex-shrink: 0;">Rp 0</p>
+            <div>
+              <p id="profile-main-balance" style="font-size: 24px; font-weight: 800; color: #7B2D8E; margin: 0; letter-spacing: -0.4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                Rp 0
+              </p>
             </div>
 
             <!-- QR Code My Profile Button -->
-            <button onclick="showMyQRModal()"
-              style="margin-top: 16px; width: 100%; padding: 12px; background: linear-gradient(135deg, #7B2D8E, #a855f7); border: none; border-radius: 14px; color: white; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(123,45,142,0.25); transition: opacity 0.2s;" onmousedown="this.style.opacity='0.85'" onmouseup="this.style.opacity='1'">
+            <button onclick="showMyQRModal()" style="margin-top: 14px; width: 100%; padding: 11px; background: linear-gradient(135deg, #7B2D8E, #9B4DB8); border: none; border-radius: 12px; color: white; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(123,45,142,0.2); transition: opacity 0.2s;">
               <span class="material-symbols-outlined" style="font-size: 18px;">qr_code_2</span>
               QR Code Saya
             </button>
@@ -4046,53 +4015,48 @@
         </section>
 
         <!-- Menu Content -->
-        <div style="margin-top: 130px; padding: 0 20px; display: flex; flex-direction: column; gap: 24px;">
+        <div style="margin-top: 90px; padding: 0 16px; display: flex; flex-direction: column; gap: 18px;">
           <!-- Pengaturan Akun -->
           <section>
-            <h3 style="font-size: 18px; font-weight: 600; color: #191c1e; margin-bottom: 12px; padding: 0 4px;">
-              PENGATURAN AKUN</h3>
-            <div
-              style="background: white; border-radius: 24px; overflow: hidden; box-shadow: 0 8px 20px rgba(123, 45, 142, 0.08);">
-              <!-- Item 1 -->
-              <div
-                style="padding: 16px; display: flex; align-items: center; gap: 16px; cursor: pointer; border-bottom: 1px solid #f2f4f6;"
-                onclick="openEditProfileScreen()">
-                <div
-                  style="width: 40px; height: 40px; border-radius: 12px; background: #eff6ff; display: flex; align-items: center; justify-content: center; color: #2563eb;">
-                  <span class="material-symbols-outlined">person_edit</span>
+            <h3 style="font-size: 11px; font-weight: 800; color: #64748b; letter-spacing: 0.8px; margin-bottom: 8px; padding: 0 4px; text-transform: uppercase;">
+              PENGATURAN AKUN
+            </h3>
+            <div style="background: #ffffff; border-radius: 18px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.04);">
+              <!-- Item 1: Informasi Pribadi -->
+              <div style="padding: 13px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9;" onclick="openEditProfileScreen()">
+                <div style="width: 36px; height: 36px; border-radius: 10px; background: #eff6ff; display: flex; align-items: center; justify-content: center; color: #2563eb; flex-shrink: 0;">
+                  <span class="material-symbols-outlined" style="font-size: 18px;">person_edit</span>
                 </div>
-                <div style="flex: 1;">
-                  <p style="font-size: 16px; font-weight: 600; color: #191c1e; margin: 0;">Informasi Pribadi</p>
-                  <p style="font-size: 14px; color: #4a4455; margin: 0;">Ubah nama, email & kontak</p>
+                <div style="flex: 1; min-width: 0;">
+                  <p style="font-size: 13.5px; font-weight: 700; color: #0f172a; margin: 0 0 2px;">Informasi Pribadi</p>
+                  <p style="font-size: 11.5px; color: #64748b; margin: 0;">Ubah nama, email &amp; kontak</p>
                 </div>
-                <span class="material-symbols-outlined" style="color: #ccc3d7;">chevron_right</span>
+                <span class="material-symbols-outlined" style="color: #cbd5e1; font-size: 18px;">chevron_right</span>
               </div>
               <!-- Item 2: Keamanan & PIN -->
-              <div style="padding: 16px; display: flex; align-items: center; gap: 16px; cursor: pointer; border-bottom: 1px solid #f2f4f6;"
-                onclick="openChangePasswordScreen()">
-                <div
-                  style="width: 40px; height: 40px; border-radius: 12px; background: #eff6ff; display: flex; align-items: center; justify-content: center; color: #2563eb;">
-                  <span class="material-symbols-outlined">verified_user</span>
+              <div style="padding: 13px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9;" onclick="openChangePasswordScreen()">
+                <div style="width: 36px; height: 36px; border-radius: 10px; background: #eff6ff; display: flex; align-items: center; justify-content: center; color: #2563eb; flex-shrink: 0;">
+                  <span class="material-symbols-outlined" style="font-size: 18px;">verified_user</span>
                 </div>
-                <div style="flex: 1;">
-                  <p style="font-size: 16px; font-weight: 600; color: #191c1e; margin: 0;">Keamanan &amp; PIN</p>
-                  <p style="font-size: 14px; color: #4a4455; margin: 0;">Ganti password dan akses</p>
+                <div style="flex: 1; min-width: 0;">
+                  <p style="font-size: 13.5px; font-weight: 700; color: #0f172a; margin: 0 0 2px;">Keamanan &amp; PIN</p>
+                  <p style="font-size: 11.5px; color: #64748b; margin: 0;">Ganti password dan akses</p>
                 </div>
-                <span class="material-symbols-outlined" style="color: #ccc3d7;">chevron_right</span>
+                <span class="material-symbols-outlined" style="color: #cbd5e1; font-size: 18px;">chevron_right</span>
               </div>
               <!-- Item 3: Akses Sidik Jari / Biometrik -->
-              <div style="padding: 16px; display: flex; align-items: center; gap: 16px;">
-                <div style="width: 40px; height: 40px; border-radius: 12px; background: rgba(72,0,178,0.1); display: flex; align-items: center; justify-content: center; color: #4800b2;">
-                  <span class="material-symbols-outlined">fingerprint</span>
+              <div style="padding: 13px 14px; display: flex; align-items: center; gap: 12px;">
+                <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(123, 45, 142, 0.08); display: flex; align-items: center; justify-content: center; color: #7B2D8E; flex-shrink: 0;">
+                  <span class="material-symbols-outlined" style="font-size: 18px;">fingerprint</span>
                 </div>
-                <div style="flex: 1;">
-                  <p style="font-size: 16px; font-weight: 600; color: #191c1e; margin: 0;">Sidik Jari / Biometrik</p>
-                  <p style="font-size: 13px; color: #4a4455; margin: 0;">Masuk &amp; Transaksi Cepat</p>
+                <div style="flex: 1; min-width: 0;">
+                  <p style="font-size: 13.5px; font-weight: 700; color: #0f172a; margin: 0 0 2px;">Sidik Jari / Biometrik</p>
+                  <p style="font-size: 11.5px; color: #64748b; margin: 0;">Masuk &amp; Transaksi Cepat</p>
                 </div>
-                <label style="position: relative; width: 46px; height: 26px; display: inline-block; flex-shrink: 0;">
+                <label style="position: relative; width: 44px; height: 24px; display: inline-block; flex-shrink: 0;">
                   <input type="checkbox" id="toggle-biometric-setting" onchange="toggleBiometricSetting(this.checked)" style="opacity: 0; width: 0; height: 0;" checked>
-                  <span id="biometric-toggle-track" style="position: absolute; cursor: pointer; inset: 0; background-color: #4800b2; transition: .3s; border-radius: 26px;"></span>
-                  <span id="biometric-toggle-thumb" style="position: absolute; content: ''; height: 20px; width: 20px; left: 23px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.15);"></span>
+                  <span id="biometric-toggle-track" style="position: absolute; cursor: pointer; inset: 0; background-color: #7B2D8E; transition: .3s; border-radius: 24px;"></span>
+                  <span id="biometric-toggle-thumb" style="position: absolute; content: ''; height: 18px; width: 18px; left: 22px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.15);"></span>
                 </label>
               </div>
             </div>
@@ -4100,84 +4064,69 @@
 
           <!-- Bantuan & Info -->
           <section>
-            <h3 style="font-size: 18px; font-weight: 600; color: #191c1e; margin-bottom: 12px; padding: 0 4px;">BANTUAN
-              & INFO</h3>
-            <div
-              style="background: white; border-radius: 24px; overflow: hidden; box-shadow: 0 8px 20px rgba(123, 45, 142, 0.08);">
+            <h3 style="font-size: 11px; font-weight: 800; color: #64748b; letter-spacing: 0.8px; margin-bottom: 8px; padding: 0 4px; text-transform: uppercase;">
+              BANTUAN &amp; INFO
+            </h3>
+            <div style="background: #ffffff; border-radius: 18px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.04);">
               <!-- Item 1: CS -->
-              <div
-                style="padding: 16px; display: flex; align-items: center; gap: 16px; cursor: pointer; border-bottom: 1px solid #f2f4f6;"
-                onclick="window.open('https://wa.me/6285199605580?text=Halo%20Admin%20noxastore%20wallet%2C%20saya%20butuh%20bantuan.', '_blank')">
-                <div
-                  style="width: 40px; height: 40px; border-radius: 12px; background: #f0fdf4; display: flex; align-items: center; justify-content: center; color: #16a34a;">
-                  <span class="material-symbols-outlined">support_agent</span>
+              <div style="padding: 13px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9;" onclick="window.open('https://wa.me/6285199605580?text=Halo%20Admin%20noxastore%20wallet%2C%20saya%20butuh%20bantuan.', '_blank')">
+                <div style="width: 36px; height: 36px; border-radius: 10px; background: #f0fdf4; display: flex; align-items: center; justify-content: center; color: #16a34a; flex-shrink: 0;">
+                  <span class="material-symbols-outlined" style="font-size: 18px;">support_agent</span>
                 </div>
-                <div style="flex: 1;">
-                  <p style="font-size: 16px; font-weight: 600; color: #191c1e; margin: 0;">Customer Service</p>
-                  <p style="font-size: 14px; color: #4a4455; margin: 0;">+62 851-9960-5580</p>
+                <div style="flex: 1; min-width: 0;">
+                  <p style="font-size: 13.5px; font-weight: 700; color: #0f172a; margin: 0 0 2px;">Customer Service</p>
+                  <p style="font-size: 11.5px; color: #64748b; margin: 0;">+62 851-9960-5580</p>
                 </div>
-                <span class="material-symbols-outlined" style="color: #ccc3d7;">chevron_right</span>
+                <span class="material-symbols-outlined" style="color: #cbd5e1; font-size: 18px;">chevron_right</span>
               </div>
               <!-- Item 2: Join Komunitas -->
-              <div
-                style="padding: 16px; display: flex; align-items: center; gap: 16px; cursor: pointer; border-bottom: 1px solid #f2f4f6;"
-                onclick="window.open('https://chat.whatsapp.com/Ea2f1OiVk4m3d0B8Wt85oB', '_blank')">
-                <div
-                  style="width: 40px; height: 40px; border-radius: 12px; background: #f0fdf4; display: flex; align-items: center; justify-content: center; color: #16a34a;">
-                  <span class="material-symbols-outlined">group</span>
+              <div style="padding: 13px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9;" onclick="window.open('https://chat.whatsapp.com/Ea2f1OiVk4m3d0B8Wt85oB', '_blank')">
+                <div style="width: 36px; height: 36px; border-radius: 10px; background: #f0fdf4; display: flex; align-items: center; justify-content: center; color: #16a34a; flex-shrink: 0;">
+                  <span class="material-symbols-outlined" style="font-size: 18px;">group</span>
                 </div>
-                <div style="flex: 1;">
-                  <p style="font-size: 16px; font-weight: 600; color: #191c1e; margin: 0;">Join Komunitas</p>
-                  <p style="font-size: 14px; color: #4a4455; margin: 0;">Gabung grup WhatsApp noxastore wallet</p>
+                <div style="flex: 1; min-width: 0;">
+                  <p style="font-size: 13.5px; font-weight: 700; color: #0f172a; margin: 0 0 2px;">Join Komunitas</p>
+                  <p style="font-size: 11.5px; color: #64748b; margin: 0;">Gabung grup WhatsApp noxastore wallet</p>
                 </div>
-                <span class="material-symbols-outlined" style="color: #ccc3d7;">chevron_right</span>
+                <span class="material-symbols-outlined" style="color: #cbd5e1; font-size: 18px;">chevron_right</span>
               </div>
               <!-- Item 3: Tentang Aplikasi -->
-              <div
-                style="padding: 16px; display: flex; align-items: center; gap: 16px; cursor: pointer; border-bottom: 1px solid #f2f4f6;"
-                onclick="showNotification('noxastore wallet v1.0.0 — Platform QRIS Merchant Cerdas')">
-                <div
-                  style="width: 40px; height: 40px; border-radius: 12px; background: #eff6ff; display: flex; align-items: center; justify-content: center; color: #2563eb;">
-                  <span class="material-symbols-outlined">info</span>
+              <div style="padding: 13px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9;" onclick="showNotification('noxastore wallet v1.0.0 — Platform Digital Cerdas')">
+                <div style="width: 36px; height: 36px; border-radius: 10px; background: #eff6ff; display: flex; align-items: center; justify-content: center; color: #2563eb; flex-shrink: 0;">
+                  <span class="material-symbols-outlined" style="font-size: 18px;">info</span>
                 </div>
-                <div style="flex: 1;">
-                  <p style="font-size: 16px; font-weight: 600; color: #191c1e; margin: 0;">Tentang noxastore wallet</p>
-                  <p style="font-size: 14px; color: #4a4455; margin: 0;">Versi 1.0.0 (Stable Build)</p>
+                <div style="flex: 1; min-width: 0;">
+                  <p style="font-size: 13.5px; font-weight: 700; color: #0f172a; margin: 0 0 2px;">Tentang noxastore wallet</p>
+                  <p style="font-size: 11.5px; color: #64748b; margin: 0;">Versi 1.0.0 (Stable Build)</p>
                 </div>
-                <span class="material-symbols-outlined" style="color: #ccc3d7;">chevron_right</span>
+                <span class="material-symbols-outlined" style="color: #cbd5e1; font-size: 18px;">chevron_right</span>
               </div>
               <!-- Item 4: Cek Update Aplikasi -->
-              <div style="padding: 16px; display: flex; align-items: center; gap: 16px; cursor: pointer;"
-                onclick="checkAppUpdate(this)">
-                <div
-                  style="width: 40px; height: 40px; border-radius: 12px; background: #eff6ff; display: flex; align-items: center; justify-content: center; color: #2563eb;">
-                  <span class="material-symbols-outlined">system_update</span>
+              <div style="padding: 13px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer;" onclick="checkAppUpdate(this)">
+                <div style="width: 36px; height: 36px; border-radius: 10px; background: #eff6ff; display: flex; align-items: center; justify-content: center; color: #2563eb; flex-shrink: 0;">
+                  <span class="material-symbols-outlined" style="font-size: 18px;">system_update</span>
                 </div>
-                <div style="flex: 1;">
-                  <p style="font-size: 16px; font-weight: 600; color: #191c1e; margin: 0;">Cek Update Aplikasi</p>
-                  <p id="app-update-status" style="font-size: 14px; color: #4a4455; margin: 0;">Ketuk untuk memeriksa
-                    versi</p>
+                <div style="flex: 1; min-width: 0;">
+                  <p style="font-size: 13.5px; font-weight: 700; color: #0f172a; margin: 0 0 2px;">Cek Update Aplikasi</p>
+                  <p id="app-update-status" style="font-size: 11.5px; color: #64748b; margin: 0;">Ketuk untuk memeriksa versi</p>
                 </div>
-                <span class="material-symbols-outlined" style="color: #ccc3d7;">chevron_right</span>
+                <span class="material-symbols-outlined" style="color: #cbd5e1; font-size: 18px;">chevron_right</span>
               </div>
             </div>
           </section>
 
-
-
           <!-- Back to Admin Button (Only if admin token exists) -->
-          <button id="back-to-admin-btn" onclick="goToAdminPanel()"
-            style="display: none; width: 100%; align-items: center; justify-content: center; gap: 8px; padding: 16px; color: white; font-size: 18px; font-weight: 700; background: linear-gradient(135deg, var(--primary), var(--secondary)); border: none; border-radius: 16px; cursor: pointer; margin-bottom: 8px; box-shadow: 0 4px 12px rgba(123, 45, 142,0.2);">
-            <span class="material-symbols-outlined">shield</span>
+          <button id="back-to-admin-btn" onclick="goToAdminPanel()" style="display: none; width: 100%; align-items: center; justify-content: center; gap: 8px; padding: 12px; color: white; font-size: 14px; font-weight: 700; background: linear-gradient(135deg, var(--primary), var(--secondary)); border: none; border-radius: 14px; cursor: pointer; box-shadow: 0 4px 12px rgba(123, 45, 142,0.2);">
+            <span class="material-symbols-outlined" style="font-size: 18px;">shield</span>
             Kembali ke Admin
           </button>
 
           <!-- Logout Button -->
-          <button onclick="logout()"
-            style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 16px; color: #ba1a1a; font-size: 18px; font-weight: 600; background: transparent; border: none; border-radius: 16px; cursor: pointer; margin-bottom: 16px;">
-            <span class="material-symbols-outlined">logout</span>
+          <button onclick="logout()" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; color: #dc2626; font-size: 13.5px; font-weight: 700; background: #fef2f2; border: 1px solid #fecaca; border-radius: 14px; cursor: pointer; margin-bottom: 24px; transition: background 0.2s;">
+            <span class="material-symbols-outlined" style="font-size: 18px;">logout</span>
             Keluar Akun
           </button>
+        </div> </button>
 
           <!-- Footer Small Text -->
           <div style="text-align: center; padding: 16px 0;">
@@ -5333,6 +5282,44 @@
         <button class="modal-close" onclick="closeQRModal()">
           <span class="material-symbols-outlined">close</span>
         </button>
+      </div>
+    </div>
+
+    <!-- Receipt Download & Preview Modal Overlay -->
+    <div id="receipt-download-modal" class="modal-overlay" onclick="closeReceiptDownloadModal(event)" style="z-index: 10000;">
+      <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 380px; width: 92%; max-height: 90vh; overflow-y: auto; padding: 20px; text-align: center; border-radius: 28px; background: #ffffff;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <h3 style="font-size: 16px; font-weight: 800; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 6px;">
+            <span class="material-symbols-outlined" style="color: #7B2D8E;">verified</span> Struk Siap Disimpan
+          </h3>
+          <button onclick="closeReceiptDownloadModal()" style="background: none; border: none; font-size: 20px; color: #64748b; cursor: pointer; display: flex; align-items: center;">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <p style="font-size: 11.5px; color: #64748b; margin-bottom: 12px; line-height: 1.4;">
+          Gambar struk telah berhasil dibuat. Klik tombol di bawah atau <strong>tekan lama gambar</strong> untuk menyimpan ke galeri HP.
+        </p>
+
+        <!-- Preview Image Container -->
+        <div style="border: 2px solid rgba(123, 45, 142, 0.15); border-radius: 18px; padding: 6px; background: #fafafa; margin-bottom: 16px; overflow: hidden;">
+          <img id="receipt-preview-img" src="" alt="Struk Digital NoxaPay" style="width: 100%; height: auto; border-radius: 12px; display: block; box-shadow: 0 4px 12px rgba(0,0,0,0.08);" />
+        </div>
+
+        <!-- Download & Share Action Buttons -->
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <a id="receipt-direct-download-btn" download="Struk_NoxaPay.png" href="#" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #7B2D8E, #9B4DB8); color: white; border: none; border-radius: 16px; font-weight: 800; font-size: 14px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 6px 18px rgba(123,45,142,0.25);">
+            <span class="material-symbols-outlined" style="font-size: 20px;">download</span> Unduh Ke Galeri
+          </a>
+
+          <button onclick="shareReceiptFromPreviewModal()" style="width: 100%; padding: 12px; background: #25D366; color: white; border: none; border-radius: 16px; font-weight: 800; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <svg style="width: 18px; height: 18px; fill: currentColor;" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg> Bagikan ke WhatsApp
+          </button>
+        </div>
+
+        <div style="margin-top: 12px; padding: 8px 10px; background: rgba(123, 45, 142, 0.04); border-radius: 10px; font-size: 10.5px; color: #475569; line-height: 1.4;">
+          💡 <strong>Petunjuk Simpan Manual:</strong> Jika file tidak tersimpan otomatis, sentuh &amp; tahan (tekan lama) pada gambar di atas lalu pilih <strong>"Simpan Gambar"</strong> / <strong>"Download Gambar"</strong>.
+        </div>
       </div>
     </div>
 
@@ -10690,6 +10677,67 @@
         document.getElementById('screen-trx-detail').classList.remove('active');
       }
 
+      let _lastGeneratedReceiptDataUrl = null;
+      let _lastGeneratedReceiptFileName = 'Struk_NoxaPay.png';
+      let _lastGeneratedReceiptBlobUrl = null;
+
+      function openReceiptDownloadModal(dataUrl, fileName, blobUrl = null) {
+        _lastGeneratedReceiptDataUrl = dataUrl;
+        _lastGeneratedReceiptFileName = fileName || 'Struk_NoxaPay.png';
+        _lastGeneratedReceiptBlobUrl = blobUrl;
+
+        const previewImg = document.getElementById('receipt-preview-img');
+        const directBtn = document.getElementById('receipt-direct-download-btn');
+        const modal = document.getElementById('receipt-download-modal');
+
+        if (previewImg) previewImg.src = dataUrl;
+        if (directBtn) {
+          directBtn.href = blobUrl || dataUrl;
+          directBtn.download = _lastGeneratedReceiptFileName;
+          directBtn.target = '_blank';
+        }
+        if (modal) modal.classList.add('active');
+      }
+
+      function closeReceiptDownloadModal(e) {
+        if (e && e.target && e.target.id !== 'receipt-download-modal') return;
+        const modal = document.getElementById('receipt-download-modal');
+        if (modal) modal.classList.remove('active');
+      }
+
+      async function shareReceiptFromPreviewModal() {
+        if (!_lastGeneratedReceiptDataUrl) return;
+        
+        const captionText = currentPrintTx ? `*STRUK DIGITAL NOXAPAY*\n\n` +
+          `• *Merchant / Service*: ${currentPrintTx.merchant || currentPrintTx.product_name || 'NoxaPay'}\n` +
+          `• *Nominal*: ${formatRupiah(currentPrintTx.amount || 0)}\n` +
+          `• *Status*: ${currentPrintTx.status || 'BERHASIL'}\n` +
+          `• *ID Transaksi*: ${currentPrintTx.transactionId || currentPrintTx.id || '-'}\n\n` +
+          `*NoxariaNet Wallet — Transaksi Enkripsi Sah*` : 'Struk Digital NoxaPay';
+
+        const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(captionText)}`;
+
+        try {
+          if (navigator.share && _lastGeneratedReceiptDataUrl.startsWith('data:image')) {
+            const res = await fetch(_lastGeneratedReceiptDataUrl);
+            const blob = await res.blob();
+            const file = new File([blob], _lastGeneratedReceiptFileName, { type: 'image/png' });
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+              await navigator.share({
+                files: [file],
+                title: 'Struk Transaksi NoxaPay',
+                text: captionText
+              });
+              return;
+            }
+          }
+        } catch(e) {
+          if (e.name === 'AbortError') return;
+        }
+
+        window.open(waUrl, '_blank');
+      }
+
       async function downloadReceiptImage() {
         if (!currentPrintTx) return;
         const card = document.getElementById('trx-receipt-card');
@@ -10699,7 +10747,7 @@
         const originalHTML = btn ? btn.innerHTML : '';
         if (btn) {
           btn.disabled = true;
-          btn.innerHTML = '<span class="material-symbols-outlined" style="animation: spin 1s linear infinite;">sync</span> Mengunduh...';
+          btn.innerHTML = '<span class="material-symbols-outlined" style="animation: spin 1s linear infinite;">sync</span> Memproses Struk...';
         }
 
         try {
@@ -10717,15 +10765,18 @@
           const dataUrl = canvas.toDataURL('image/png');
           const fileName = `Struk_NoxaPay_${currentPrintTx.id || 'TRX'}.png`;
 
-          // Try native bridges to download/save image if running inside WebView wrappers
+          // Generate Blob URL for native binary download trigger
+          let blobUrl = null;
+          try {
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
+            if (blob) blobUrl = URL.createObjectURL(blob);
+          } catch(e) {}
+
+          // Try native Android bridges first
           let nativeSaved = false;
           const nativeBridges = [
-            window.AndroidBridge,
-            window.Android,
-            window.JSBridge,
-            window.NativeBridge,
-            window.AndroidNative,
-            window.NoxaBridge
+            window.AndroidBridge, window.Android, window.JSBridge,
+            window.NativeBridge, window.AndroidNative, window.NoxaBridge
           ];
           const saveMethods = [
             'saveImage', 'downloadImage', 'saveBase64', 'shareBase64',
@@ -10745,30 +10796,26 @@
             if (nativeSaved) break;
           }
 
-          if (!nativeSaved) {
-            try {
-              const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.download = fileName;
-              a.href = url;
-              a.click();
-              setTimeout(() => URL.revokeObjectURL(url), 100);
-              showNotification('✅ Gambar struk berhasil diunduh!');
-            } catch(downloadErr) {
-              // Sandbox WebView fallback - opens in a new tab/window so user can long-press and save to gallery
-              const newWindow = window.open();
-              if (newWindow) {
-                newWindow.document.write(`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:#f8fafc;font-family:sans-serif;padding:20px;box-sizing:border-box;"><p style="font-weight:bold;color:#334155;text-align:center;margin-bottom:15px;">Tekan lama gambar di bawah lalu klik "Simpan Gambar" untuk menyimpan ke galeri:</p><img src="${dataUrl}" style="max-width:100%;height:auto;box-shadow:0 10px 30px rgba(0,0,0,0.15);border-radius:12px;" /></div>`);
-                showNotification('ℹ️ Silakan tekan lama pada gambar untuk menyimpan ke galeri.');
-              } else {
-                showNotification('❌ Unduhan gagal. Mohon izinkan jendela pop-up.');
-              }
-            }
-          }
+          // Open the receipt download & preview modal so the user gets direct access to image preview & download
+          openReceiptDownloadModal(dataUrl, fileName, blobUrl);
+
+          // Also attempt programmatic download link trigger via Blob URL / Data URL
+          try {
+            const a = document.createElement('a');
+            a.download = fileName;
+            a.href = blobUrl || dataUrl;
+            a.target = '_blank';
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+              if (document.body.contains(a)) document.body.removeChild(a);
+            }, 1000);
+          } catch(e) {}
+
+          showNotification(nativeSaved ? '✅ Gambar struk tersimpan ke galeri!' : '✅ Struk siap diunduh & disimpan!');
         } catch (err) {
           console.error('[Download Struk Error]', err);
-          showNotification('❌ Gagal mengunduh struk: ' + err.message);
+          showNotification('❌ Gagal memproses struk: ' + err.message);
         } finally {
           if (btn) {
             btn.disabled = false;
