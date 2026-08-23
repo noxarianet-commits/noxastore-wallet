@@ -4023,21 +4023,7 @@
                 </div>
                 <span class="material-symbols-outlined" style="color: #cbd5e1; font-size: 18px;">chevron_right</span>
               </div>
-              <!-- Item 3: Akses Sidik Jari / Biometrik -->
-              <div style="padding: 13px 14px; display: flex; align-items: center; gap: 12px;">
-                <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(123, 45, 142, 0.08); display: flex; align-items: center; justify-content: center; color: #7B2D8E; flex-shrink: 0;">
-                  <span class="material-symbols-outlined" style="font-size: 18px;">fingerprint</span>
-                </div>
-                <div style="flex: 1; min-width: 0;">
-                  <p style="font-size: 13.5px; font-weight: 700; color: #0f172a; margin: 0 0 2px;">Sidik Jari / Biometrik</p>
-                  <p style="font-size: 11.5px; color: #64748b; margin: 0;">Masuk &amp; Transaksi Cepat</p>
-                </div>
-                <label style="position: relative; width: 44px; height: 24px; display: inline-block; flex-shrink: 0;">
-                  <input type="checkbox" id="toggle-biometric-setting" onchange="toggleBiometricSetting(this.checked)" style="opacity: 0; width: 0; height: 0;" checked>
-                  <span id="biometric-toggle-track" style="position: absolute; cursor: pointer; inset: 0; background-color: #7B2D8E; transition: .3s; border-radius: 24px;"></span>
-                  <span id="biometric-toggle-thumb" style="position: absolute; content: ''; height: 18px; width: 18px; left: 22px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.15);"></span>
-                </label>
-              </div>
+
             </div>
           </section>
 
@@ -6783,6 +6769,7 @@
       // Loader interval text simulation
       let loaderInterval = null;
       function openGameListScreen() {
+        pushNavigationState('game-list');
         const username = localStorage.getItem('noxaUsername');
         if (!username) {
           const setupModal = document.getElementById('setup-modal');
@@ -6806,6 +6793,7 @@
       }
 
       function openEwalletListScreen() {
+        pushNavigationState('ewallet-list');
         const username = localStorage.getItem('noxaUsername');
         if (!username) {
           const setupModal = document.getElementById('setup-modal');
@@ -7339,8 +7327,7 @@
       window.onBiometricResult = window.onBiometricAuthResult;
 
       async function triggerBiometricAuth(context) {
-        if (!isBiometricEnabled) {
-          showNotification('⚠️ Akses Sidik Jari dinonaktifkan di Pengaturan.');
+        if (context === 'transaction' || !isBiometricEnabled) {
           return false;
         }
 
@@ -8140,6 +8127,7 @@
       var _qrScannerMode = 'standalone'; // 'standalone' | 'transfer'
 
       function openTransferScreen() {
+        pushNavigationState('transfer');
         const screen = document.getElementById('screen-transfer');
         if (!screen) return;
         // Populate current balance
@@ -8480,7 +8468,7 @@
       }
 
       function openTopUpScreen() {
-
+        pushNavigationState('topup');
         const screen = document.getElementById('screen-topup');
         if (!screen) return;
 
@@ -10260,13 +10248,20 @@
       }
 
       function openPostCheckoutStatus(tx) {
+        pushNavigationState('post-checkout');
         _currentPostCheckoutTx = tx;
         const screen = document.getElementById('screen-post-checkout-status');
         if (!screen) return;
 
         const status = String(tx.status || 'BERHASIL').toUpperCase();
         const merchantName = tx.merchant || tx.product_name || 'Produk NoxaPay';
-        const isEwallet = (tx.type === 'EWALLET') || (tx.category === 'E-Money') || (tx.category === 'E-Wallet') || merchantName.toLowerCase().includes('top up') || merchantName.toLowerCase().includes('ewallet');
+
+        // Categorize transaction types
+        const isEwallet = (tx.type === 'EWALLET') || (tx.category === 'E-Money') || (tx.category === 'E-Wallet') || (tx.type === 'TOPUP_EWALLET') || merchantName.toLowerCase().includes('top up e-wallet') || merchantName.toLowerCase().includes('ewallet');
+        const isInternalTx = (tx.type === 'TRANSFER') || (tx.type === 'DEPOSIT') || (tx.type === 'TOPUP') || (tx.type === 'RECEIVE') || (tx.category === 'Deposit') || (tx.category === 'Transfer') || (tx.category === 'QRIS Deposit') || merchantName.toLowerCase().includes('deposit') || merchantName.toLowerCase().includes('transfer saldo') || merchantName.toLowerCase().includes('top up saldo');
+
+        // Only show product box for SekaliPay provider products (PPOB, Voucher, PLN, Aplikasi Premium, Top Up Game)
+        const isSekalipayProduct = !isEwallet && !isInternalTx;
 
         // 1. Status Card UI
         const iconContainer = document.getElementById('post-checkout-status-icon');
@@ -10278,8 +10273,8 @@
             iconContainer.style.background = 'linear-gradient(135deg, #10b981, #059669)';
             iconContainer.innerHTML = '<span class="material-symbols-outlined" style="font-size: 36px; color: white;">check_circle</span>';
           }
-          if (titleEl) titleEl.innerText = isEwallet ? 'Top Up E-Wallet Berhasil!' : 'Transaksi Berhasil!';
-          if (descEl) descEl.innerText = isEwallet ? 'Saldo e-wallet telah berhasil dikirim ke akun tujuan.' : 'Produk telah berhasil diproses. Detail akun / lisensi dapat disalin di bawah.';
+          if (titleEl) titleEl.innerText = isEwallet ? 'Top Up E-Wallet Berhasil!' : (isInternalTx ? 'Transaksi Berhasil!' : 'Pembelian Berhasil!');
+          if (descEl) descEl.innerText = isEwallet ? 'Saldo e-wallet telah berhasil dikirim ke akun tujuan.' : (isInternalTx ? 'Transaksi internal telah berhasil diproses.' : 'Produk telah berhasil diproses. Detail akun / lisensi dapat disalin di bawah.');
         } else if (status === 'DIPROSES' || status === 'PENDING' || status === 'PROCESSING') {
           if (iconContainer) {
             iconContainer.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
@@ -10315,10 +10310,9 @@
           if (urlMatch) _postCheckoutLinkUrl = urlMatch[0];
         }
 
-        // Show product box for non-ewallet or if product details exist
-        if (prodBox) prodBox.style.display = isEwallet ? 'none' : 'block';
-
-        if (snVal && String(snVal).trim() !== '' && !String(snVal).toLowerCase().includes('gagal') && !String(snVal).toLowerCase().includes('error')) {
+        if (!isSekalipayProduct) {
+          if (prodBox) prodBox.style.display = 'none';
+        } else if (snVal && String(snVal).trim() !== '' && !String(snVal).toLowerCase().includes('gagal') && !String(snVal).toLowerCase().includes('error')) {
           if (prodContent) {
             if (_postCheckoutLinkUrl) {
               prodContent.innerHTML = `<div style="color: #2563eb; margin-bottom: 6px; font-size: 11px; font-weight: 800;">LINK APLIKASI PREMIUM:</div><a href="${_postCheckoutLinkUrl}" target="_blank" style="color: #7B2D8E; text-decoration: underline; font-weight: 800; word-break: break-all;">${snVal}</a>`;
@@ -10331,16 +10325,15 @@
             badgeEl.style.background = '#ecfdf5';
             badgeEl.style.color = '#059669';
           }
-          if (btnCopyCode) {
-            btnCopyCode.style.display = 'flex';
-          }
+          if (btnCopyCode) btnCopyCode.style.display = 'flex';
           if (_postCheckoutLinkUrl && btnOpenLink) {
             btnOpenLink.style.display = 'flex';
           } else if (btnOpenLink) {
             btnOpenLink.style.display = 'none';
           }
+          if (prodBox) prodBox.style.display = 'block';
         } else if (status === 'BERHASIL' || status === 'PAID') {
-          if (prodContent) prodContent.innerText = '✅ Transaksi Berhasil! Produk Aplikasi Premium telah aktif.';
+          if (prodContent) prodContent.innerText = '✅ Transaksi Berhasil! Produk SekaliPay telah aktif.';
           if (badgeEl) {
             badgeEl.innerText = 'BERHASIL';
             badgeEl.style.background = '#ecfdf5';
@@ -10348,6 +10341,7 @@
           }
           if (btnCopyCode) btnCopyCode.style.display = 'none';
           if (btnOpenLink) btnOpenLink.style.display = 'none';
+          if (prodBox) prodBox.style.display = 'block';
         } else if (status === 'DIPROSES' || status === 'PENDING' || status === 'PROCESSING') {
           if (prodContent) prodContent.innerHTML = '<span style="color:#d97706; font-size: 13px;">⏳ Detail Akun / Link Lisensi sedang dikirim oleh provider SekaliPay...</span>';
           if (badgeEl) {
@@ -10357,6 +10351,7 @@
           }
           if (btnCopyCode) btnCopyCode.style.display = 'none';
           if (btnOpenLink) btnOpenLink.style.display = 'none';
+          if (prodBox) prodBox.style.display = 'block';
         } else {
           if (prodBox) prodBox.style.display = 'none';
         }
@@ -10386,7 +10381,7 @@
         setTextIfExists('post-checkout-time', timeStr);
 
         // Auto Poll status from server if pending or if SN is not yet retrieved
-        if ((status === 'DIPROSES' || status === 'PENDING' || status === 'PROCESSING' || !snVal) && (tx.id || tx.ref_id)) {
+        if (isSekalipayProduct && (status === 'DIPROSES' || status === 'PENDING' || status === 'PROCESSING' || !snVal) && (tx.id || tx.ref_id)) {
           pollTransactionStatusRealtime(tx.id || tx.ref_id);
         }
 
@@ -11484,6 +11479,7 @@
       let _ppobRetryInterval = null;
 
       function openPPOBScreen(category, brand, title) {
+        pushNavigationState('ppob');
         if (_ppobRetryInterval) {
           clearInterval(_ppobRetryInterval);
           _ppobRetryInterval = null;
@@ -12311,9 +12307,7 @@
           <button class="pin-key-btn" ontouchstart="" onclick="pinOverlayPress(7)">7</button>
           <button class="pin-key-btn" ontouchstart="" onclick="pinOverlayPress(8)">8</button>
           <button class="pin-key-btn" ontouchstart="" onclick="pinOverlayPress(9)">9</button>
-          <button class="pin-key-btn pin-key-action" ontouchstart="" onclick="triggerBiometricAuth('transaction')" title="Gunakan Sidik Jari" style="display:flex;align-items:center;justify-content:center;background:rgba(72,0,178,0.08);border:1px solid rgba(72,0,178,0.2);color:#4800b2;">
-            <span class="material-symbols-outlined" style="font-size:28px;">fingerprint</span>
-          </button>
+          <div style="visibility:hidden;"></div>
           <button class="pin-key-btn" ontouchstart="" onclick="pinOverlayPress(0)">0</button>
           <button class="pin-key-btn pin-key-action" ontouchstart="" onclick="pinOverlayBackspace()">
             <span class="material-symbols-outlined" style="font-size:28px;color:#64748b;">backspace</span>
@@ -12345,11 +12339,7 @@
         var overlay = document.getElementById('pin-entry-overlay');
         if (overlay) overlay.style.display = 'flex';
 
-        if (typeof isBiometricEnabled !== 'undefined' && isBiometricEnabled) {
-          setTimeout(function() {
-            triggerBiometricAuth('transaction');
-          }, 300);
-        }
+
       }
 
       function closePinOverlay() {
@@ -12545,6 +12535,96 @@
           setTimeout(closePinOverlay, 1500);
         }
       }
+
+      // ============================================================
+      // NATIVE PHONE HARDWARE BACK BUTTON NAVIGATION HANDLER
+      // ============================================================
+      function pushNavigationState(screenName) {
+        try {
+          history.pushState({ screen: screenName, timestamp: Date.now() }, '');
+        } catch(e) {}
+      }
+
+      window.addEventListener('popstate', function(event) {
+        // 1. Close active modals / screens in stack order
+        const postCheckoutScreen = document.getElementById('screen-post-checkout-status');
+        if (postCheckoutScreen && postCheckoutScreen.style.display !== 'none' && postCheckoutScreen.classList.contains('active')) {
+          closePostCheckoutStatus();
+          return;
+        }
+
+        const trxDetailScreen = document.getElementById('screen-trx-detail');
+        if (trxDetailScreen && trxDetailScreen.style.display !== 'none' && trxDetailScreen.classList.contains('active')) {
+          closeTrxDetail();
+          return;
+        }
+
+        const ppobCheckoutModal = document.getElementById('ppob-checkout-modal');
+        if (ppobCheckoutModal && ppobCheckoutModal.style.display !== 'none' && ppobCheckoutModal.style.display !== '') {
+          closePPOBCheckout();
+          return;
+        }
+
+        const ppobScreen = document.getElementById('screen-ppob');
+        if (ppobScreen && ppobScreen.style.display !== 'none' && ppobScreen.classList.contains('active')) {
+          closePPOBScreen();
+          return;
+        }
+
+        const gameListScreen = document.getElementById('screen-game-list');
+        if (gameListScreen && gameListScreen.style.display !== 'none' && gameListScreen.classList.contains('active')) {
+          closeGameListScreen();
+          return;
+        }
+
+        const ewalletDanaScreen = document.getElementById('screen-ewallet-dana');
+        if (ewalletDanaScreen && ewalletDanaScreen.style.display !== 'none' && ewalletDanaScreen.classList.contains('active')) {
+          closeEwalletDanaScreen();
+          return;
+        }
+
+        const ewalletListScreen = document.getElementById('screen-ewallet-list');
+        if (ewalletListScreen && ewalletListScreen.style.display !== 'none' && ewalletListScreen.classList.contains('active')) {
+          closeEwalletListScreen();
+          return;
+        }
+
+        const topupScreen = document.getElementById('screen-topup');
+        if (topupScreen && topupScreen.style.display !== 'none' && topupScreen.classList.contains('active')) {
+          closeTopUpModal();
+          return;
+        }
+
+        const transferScreen = document.getElementById('screen-transfer');
+        if (transferScreen && transferScreen.style.display !== 'none') {
+          closeTransferScreen();
+          return;
+        }
+
+        const myQrModal = document.getElementById('modal-my-qr');
+        if (myQrModal && myQrModal.style.display !== 'none') {
+          closeMyQRModal();
+          return;
+        }
+
+        const pinOverlay = document.getElementById('pin-entry-overlay');
+        if (pinOverlay && pinOverlay.style.display !== 'none') {
+          closePinOverlay();
+          return;
+        }
+
+        const qrScannerScreen = document.getElementById('qr-scanner-screen');
+        if (qrScannerScreen && qrScannerScreen.style.display !== 'none') {
+          closeQRScannerScreen();
+          return;
+        }
+
+        // 2. If no modal is open, return to Home tab if on sub-tabs
+        if (typeof currentTab !== 'undefined' && currentTab !== 'home') {
+          switchTab('home');
+          return;
+        }
+      });
     </script>
 
   </div>
