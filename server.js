@@ -1198,7 +1198,7 @@ app.get('/api/ppob/products', requireAuth, async (req, res) => {
       formatted.sort((a, b) => a.price - b.price);
       return res.json({ status: true, data: formatted });
     }
-    return res.json({ status: true, data: [], msg: 'Daftar produk sedang dimuat dari SekaliPay.' });
+    return res.json({ status: true, data: [], msg: 'Daftar produk sedang dimuat dari server.' });
   } catch (err) {
     res.status(500).json({ status: false, msg: err.message });
   }

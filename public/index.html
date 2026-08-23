@@ -643,6 +643,41 @@
       /* Height grows naturally with content + safe area */
     }
 
+    /* Floating Center FAB Scan Button */
+    .nav-fab-scan {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      padding: 0 2px;
+      margin-top: -20px;
+      position: relative;
+      z-index: 105;
+      transition: transform 0.2s ease;
+    }
+    .nav-fab-scan:active {
+      transform: scale(0.92);
+    }
+    .nav-fab-icon-wrapper {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #7B2D8E 0%, #a855f7 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 20px rgba(123, 45, 142, 0.45), 0 0 0 4px rgba(255, 255, 255, 0.95);
+      transition: all 0.25s ease;
+    }
+    .nav-fab-scan:hover .nav-fab-icon-wrapper {
+      transform: scale(1.06);
+      box-shadow: 0 8px 24px rgba(123, 45, 142, 0.55), 0 0 0 4px rgba(255, 255, 255, 1);
+    }
+
     .nav-item {
       display: flex;
       flex-direction: column;
@@ -1583,21 +1618,28 @@
 
     /* Merchant Screen Full Overlay */
     .full-screen-panel {
-      position: absolute;
+      position: fixed;
       top: 0;
       left: 0;
       right: 0;
       bottom: 0;
       background-color: #F8FAFC;
       z-index: 300;
-      display: none;
+      display: flex;
       flex-direction: column;
-      animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      transform: translateX(100%);
+      opacity: 0;
+      visibility: hidden;
+      transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.28s step-end;
       overflow-y: auto;
+      will-change: transform, opacity;
     }
 
     .full-screen-panel.active {
-      display: flex;
+      transform: translateX(0);
+      opacity: 1;
+      visibility: visible;
+      transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s step-start;
     }
 
     /* Automatically add top safe-area-inset padding to any full screen panel's header bar */
@@ -3665,11 +3707,11 @@
                 </div>
                 <span class="qa-label">Transfer</span>
               </button>
-              <button class="quick-action-btn" onclick="openQRScannerScreen()">
+              <button class="quick-action-btn" onclick="openMutasiScreen()">
                 <div class="qa-icon" style="background: linear-gradient(135deg, #2563eb, #3b82f6); box-shadow: 0 3px 8px rgba(37,99,235,0.25);">
-                  <span class="material-symbols-outlined">qr_code_scanner</span>
+                  <span class="material-symbols-outlined">receipt_long</span>
                 </div>
-                <span class="qa-label">Pindai</span>
+                <span class="qa-label">Mutasi Saldo</span>
               </button>
             </div>
           </div>
@@ -4114,6 +4156,14 @@
         <label>Informasi</label>
       </button>
 
+      <!-- Center FAB Pindai QR Button (M-Banking / E-Wallet Style) -->
+      <button class="nav-fab-scan" onclick="openQRScannerScreen()" id="nav-btn-scan" title="Pindai QR Code">
+        <div class="nav-fab-icon-wrapper">
+          <span class="material-symbols-outlined" style="font-size: 26px; color: white;">qr_code_scanner</span>
+        </div>
+        <label style="font-size: 11px; font-weight: 800; color: #7B2D8E; margin-top: 2px;">Pindai</label>
+      </button>
+
       <button class="nav-item" onclick="switchTab('history', this); markHistoryRead()" id="nav-btn-history">
         <span class="nav-badge-dot" id="badge-history"></span>
         <span class="material-symbols-outlined">history</span>
@@ -4124,6 +4174,45 @@
         <label>Profil</label>
       </button>
     </nav>
+
+    <!-- ========================================== -->
+    <!-- MUTASI SALDO FULL-SCREEN PANEL            -->
+    <!-- ========================================== -->
+    <div id="screen-mutasi" class="full-screen-panel" style="background: #f8fafc; display: none;">
+      <div style="background: linear-gradient(135deg, #2563eb, #3b82f6); padding: 18px 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; position: sticky; top: 0; z-index: 20;">
+        <button onclick="closeMutasiScreen()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+          <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
+        </button>
+        <div>
+          <h3 style="color: white; font-size: 17px; font-weight: 700; margin: 0;">Mutasi Saldo</h3>
+          <p style="color: rgba(255,255,255,0.8); font-size: 12px; margin: 0;">Rincian Pemasukan, Pengeluaran & Biaya Admin</p>
+        </div>
+      </div>
+      <div style="padding: 20px 16px; display: flex; flex-direction: column; gap: 16px;">
+        <!-- Card Saldo Mutasi -->
+        <div style="background: white; border-radius: 20px; padding: 18px 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <p style="font-size: 11px; font-weight: 700; color: #64748b; margin: 0 0 2px; text-transform: uppercase; letter-spacing: 0.5px;">Saldo Akun Saat Ini</p>
+            <h4 id="mutasi-current-balance" style="font-size: 20px; font-weight: 800; color: #2563eb; margin: 0;">Rp 0</h4>
+          </div>
+          <div style="width: 44px; height: 44px; border-radius: 14px; background: #eff6ff; display: flex; align-items: center; justify-content: center; color: #2563eb;">
+            <span class="material-symbols-outlined" style="font-size: 24px;">account_balance_wallet</span>
+          </div>
+        </div>
+
+        <!-- Filter Buttons -->
+        <div style="display: flex; gap: 8px;">
+          <button class="filter-tab active" onclick="filterMutasi('semua', this)" style="flex: 1; padding: 10px; font-size: 12px; font-weight: 700;">Semua</button>
+          <button class="filter-tab" onclick="filterMutasi('kredit', this)" style="flex: 1; padding: 10px; font-size: 12px; font-weight: 700; color: #059669;">+ Masuk</button>
+          <button class="filter-tab" onclick="filterMutasi('debit', this)" style="flex: 1; padding: 10px; font-size: 12px; font-weight: 700; color: #dc2626;">- Keluar</button>
+        </div>
+
+        <!-- Mutasi List Container -->
+        <div id="mutasi-list-container" style="display: flex; flex-direction: column; gap: 10px;">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+    </div>
 
     <!-- OCR Dynamic Loader Screen Overlay -->
     <div id="ocr-loader" class="ocr-loader-container">
@@ -4203,16 +4292,12 @@
 
         <!-- Recipient field -->
         <div style="background: white; border-radius: 16px; padding: 16px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
-          <label style="font-size: 12px; font-weight: 700; color: #64748b; display: block; margin-bottom: 8px;">Penerima</label>
+          <label style="font-size: 12px; font-weight: 700; color: #64748b; display: block; margin-bottom: 8px;">Penerima (Nomor HP / Username / User ID)</label>
           <div style="display: flex; gap: 10px; align-items: center;">
-            <input id="transfer-target" type="text" placeholder="Username / No. HP / User ID"
+            <input id="transfer-target" type="text" placeholder="Masukkan Nomor HP / Username Penerima"
               style="flex: 1; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; font-size: 14px; font-weight: 500; outline: none; color: #1e293b; background: #f8fafc; transition: border 0.2s;"
               oninput="onTransferTargetInput(this.value)"
               onfocus="this.style.border='1.5px solid #a855f7'" onblur="this.style.border='1.5px solid #e2e8f0'" />
-            <button onclick="openQRScannerForTransfer()" title="Pindai QR Code"
-              style="background: linear-gradient(135deg, #2563eb, #3b82f6); border: none; border-radius: 10px; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; box-shadow: 0 3px 8px rgba(37,99,235,0.3); transition: opacity 0.2s;" onmousedown="this.style.opacity='0.8'" onmouseup="this.style.opacity='1'">
-              <span class="material-symbols-outlined" style="color: white; font-size: 22px;">qr_code_scanner</span>
-            </button>
           </div>
           <p id="transfer-recipient-name" style="font-size: 12px; color: #059669; font-weight: 600; margin: 6px 0 0 2px; display: none;"></p>
         </div>
@@ -4350,6 +4435,10 @@
                 <div class="struk-row" id="receipt-account-name-row" style="display: none;">
                   <span class="label">Atas Nama</span>
                   <span class="value" id="receipt-account-name">-</span>
+                </div>
+                <div class="struk-row" id="receipt-note-row" style="display: none;">
+                  <span class="label">Catatan Transfer</span>
+                  <span class="value" id="receipt-note" style="font-weight: 700; color: #7B2D8E; font-style: italic;">-</span>
                 </div>
               </div>
 
@@ -4507,6 +4596,11 @@
           <div id="post-checkout-accname-row" style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #f1f5f9; font-size: 13px;">
             <span style="color: #64748b;">Atas Nama (Pemilik Akun)</span>
             <strong id="post-checkout-accname" style="color: #7B2D8E; font-weight: 800;">-</strong>
+          </div>
+
+          <div id="post-checkout-note-row" style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #f1f5f9; font-size: 13px; display: none;">
+            <span style="color: #64748b;">Catatan Transfer</span>
+            <strong id="post-checkout-note" style="color: #7B2D8E; font-weight: 700; font-style: italic;">-</strong>
           </div>
 
           <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #f1f5f9; font-size: 13px;">
@@ -4879,7 +4973,7 @@
         </button>
         <div>
           <h2 style="font-size: 16px; font-weight: 800; margin: 0; color: #ffffff;">Top Up e-Wallet</h2>
-          <p style="font-size: 11px; opacity: 0.9; margin: 0; color: rgba(255,255,255,0.85);">Pilih layanan dompet digital SekaliPay</p>
+          <p style="font-size: 11px; opacity: 0.9; margin: 0; color: rgba(255,255,255,0.85);">Pilih layanan dompet digital e-Wallet</p>
         </div>
       </div>
 
@@ -10018,6 +10112,11 @@
         }
 
         const badgeClass = getStatusBadgeClass(tx.status);
+        let noteSub = '';
+        if (tx.note && tx.note !== '-' && !tx.note.startsWith('Transfer saldo ke') && !tx.note.startsWith('Terima saldo dari')) {
+          noteSub = `<span style="display: block; font-size: 11px; color: #7B2D8E; font-weight: 700; font-style: italic; margin-top: 2px;">💬 "${tx.note}"</span>`;
+        }
+
         return `
         <div class="left-col">
           <div class="icon-wrapper ${info.iconClass}">
@@ -10025,6 +10124,7 @@
           </div>
           <div class="tx-details">
             <h5>${info.title}</h5>
+            ${noteSub}
             <p>${fullDate}${fullTime ? ' • ' + fullTime : ''}</p>
           </div>
         </div>
@@ -10198,8 +10298,8 @@
           .replace(/ditolak oleh sekalipay/gi, 'Ditolak oleh sistem')
           .replace(/api sekalipay/gi, 'sistem')
           .replace(/sekalipay ppob/gi, 'Produk PPOB')
-          .replace(/sekalipay/gi, 'sistem provider')
           .replace(/provider sekalipay/gi, 'sistem provider')
+          .replace(/sekalipay/gi, 'sistem provider')
           .replace(/ditolak oleh provider/gi, 'Ditolak oleh sistem')
           .trim();
       }
@@ -10333,7 +10433,7 @@
           }
           if (prodBox) prodBox.style.display = 'block';
         } else if (status === 'BERHASIL' || status === 'PAID') {
-          if (prodContent) prodContent.innerText = '✅ Transaksi Berhasil! Produk SekaliPay telah aktif.';
+          if (prodContent) prodContent.innerText = '✅ Transaksi Berhasil! Produk telah aktif.';
           if (badgeEl) {
             badgeEl.innerText = 'BERHASIL';
             badgeEl.style.background = '#ecfdf5';
@@ -10343,7 +10443,7 @@
           if (btnOpenLink) btnOpenLink.style.display = 'none';
           if (prodBox) prodBox.style.display = 'block';
         } else if (status === 'DIPROSES' || status === 'PENDING' || status === 'PROCESSING') {
-          if (prodContent) prodContent.innerHTML = '<span style="color:#d97706; font-size: 13px;">⏳ Detail Akun / Link Lisensi sedang dikirim oleh provider SekaliPay...</span>';
+          if (prodContent) prodContent.innerHTML = '<span style="color:#d97706; font-size: 13px;">⏳ Detail Akun / Link Lisensi sedang diproses oleh sistem...</span>';
           if (badgeEl) {
             badgeEl.innerText = 'DIPROSES';
             badgeEl.style.background = '#fef3c7';
@@ -10371,6 +10471,16 @@
 
         const priceVal = tx.amount || tx.price || 0;
         setTextIfExists('post-checkout-price', formatRupiah(priceVal));
+
+        const transferNoteVal = tx.note || tx.description || '';
+        const noteRow = document.getElementById('post-checkout-note-row');
+        if (transferNoteVal && transferNoteVal !== '-' && !transferNoteVal.startsWith('Transfer saldo ke') && !transferNoteVal.startsWith('Terima saldo dari')) {
+          setTextIfExists('post-checkout-note', transferNoteVal);
+          if (noteRow) noteRow.style.display = 'flex';
+        } else {
+          if (noteRow) noteRow.style.display = 'none';
+        }
+
         setTextIfExists('post-checkout-txid', tx.id || tx.ref_id || '-');
 
         let timeStr = '-';
@@ -10436,6 +10546,16 @@
           if (accRow) accRow.style.display = 'block';
         } else {
           if (accRow) accRow.style.display = 'none';
+        }
+
+        // Populate Catatan Transfer
+        const receiptNoteVal = tx.note || tx.description || '';
+        const rNoteRow = document.getElementById('receipt-note-row');
+        if (receiptNoteVal && receiptNoteVal !== '-' && !receiptNoteVal.startsWith('Transfer saldo ke') && !receiptNoteVal.startsWith('Terima saldo dari')) {
+          setTextIfExists('receipt-note', `"${receiptNoteVal}"`);
+          if (rNoteRow) rNoteRow.style.display = 'block';
+        } else {
+          if (rNoteRow) rNoteRow.style.display = 'none';
         }
 
         // Populate SN / Voucher / Detail Produk / Akun Lisensi Premium
@@ -12537,6 +12657,112 @@
       }
 
       // ============================================================
+      // MUTASI SALDO SCREEN MODULE
+      // ============================================================
+      let currentMutasiFilter = 'semua';
+
+      function openMutasiScreen() {
+        pushNavigationState('mutasi');
+        const screen = document.getElementById('screen-mutasi');
+        if (!screen) return;
+        const balEl = document.getElementById('home-balance-text');
+        const mutasiBalEl = document.getElementById('mutasi-current-balance');
+        if (balEl && mutasiBalEl) mutasiBalEl.innerText = balEl.innerText;
+
+        renderMutasiList();
+        screen.style.display = 'flex';
+        void screen.offsetWidth;
+        screen.classList.add('active');
+      }
+
+      function closeMutasiScreen() {
+        const screen = document.getElementById('screen-mutasi');
+        if (!screen) return;
+        screen.classList.remove('active');
+        setTimeout(() => { screen.style.display = 'none'; }, 200);
+      }
+
+      function filterMutasi(type, btn) {
+        currentMutasiFilter = type;
+        if (btn && btn.parentElement) {
+          btn.parentElement.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+        }
+        renderMutasiList();
+      }
+
+      function renderMutasiList() {
+        const container = document.getElementById('mutasi-list-container');
+        if (!container) return;
+        container.innerHTML = '';
+
+        let list = transactionHistory || [];
+        if (currentMutasiFilter === 'kredit') {
+          list = list.filter(tx => (tx.type === 'DEPOSIT' || tx.type === 'RECEIVE' || (tx.category && tx.category.includes('Deposit')) || (tx.merchant && tx.merchant.includes('Terima'))));
+        } else if (currentMutasiFilter === 'debit') {
+          list = list.filter(tx => !(tx.type === 'DEPOSIT' || tx.type === 'RECEIVE' || (tx.category && tx.category.includes('Deposit')) || (tx.merchant && tx.merchant.includes('Terima'))));
+        }
+
+        if (list.length === 0) {
+          container.innerHTML = `
+            <div style="background: white; border-radius: 16px; padding: 32px 20px; text-align: center; color: #64748b; border: 1px solid #e2e8f0;">
+              <span class="material-symbols-outlined" style="font-size: 40px; color: #cbd5e1; margin-bottom: 8px;">receipt_long</span>
+              <p style="font-size: 13px; font-weight: 700; margin: 0;">Belum ada mutasi transaksi</p>
+            </div>
+          `;
+          return;
+        }
+
+        list.forEach(tx => {
+          const info = getTxDisplayInfo(tx);
+          const isMinus = info.prefix === '-';
+          const fee = Number(tx.adminFee || tx.markup || 0);
+
+          const card = document.createElement('div');
+          card.style.cssText = 'background: white; border-radius: 16px; padding: 14px 16px; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.03); cursor: pointer; display: flex; flex-direction: column; gap: 8px;';
+          card.onclick = () => openPostCheckoutStatus(tx);
+
+          let feeBadge = '';
+          if (fee > 0) {
+            feeBadge = `<span style="font-size: 10px; font-weight: 700; color: #7B2D8E; background: #f3e8ff; padding: 2px 8px; border-radius: 12px;">Admin Fee: ${formatRupiah(fee)}</span>`;
+          }
+
+          let noteSub = '';
+          if (tx.note && tx.note !== '-' && !tx.note.startsWith('Transfer saldo ke') && !tx.note.startsWith('Terima saldo dari')) {
+            noteSub = `<span style="display: block; font-size: 11px; color: #7B2D8E; font-weight: 700; font-style: italic; margin-top: 2px;">💬 "${tx.note}"</span>`;
+          }
+
+          let dateStr = tx.date || '-';
+          if (tx.createdAt) {
+            try {
+              const d = new Date(tx.createdAt);
+              dateStr = d.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+            } catch(e) {}
+          }
+
+          card.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 36px; height: 36px; border-radius: 10px; background: ${isMinus ? '#fef2f2' : '#ecfdf5'}; color: ${isMinus ? '#dc2626' : '#059669'}; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                  <span class="material-symbols-outlined" style="font-size: 20px;">${info.icon}</span>
+                </div>
+                <div>
+                  <h5 style="font-size: 13px; font-weight: 800; color: #0f172a; margin: 0 0 2px;">${info.title}</h5>
+                  ${noteSub}
+                  <p style="font-size: 11px; color: #64748b; margin: 2px 0 0;">${dateStr}</p>
+                </div>
+              </div>
+              <div style="text-align: right;">
+                <p style="font-size: 14px; font-weight: 800; color: ${isMinus ? '#dc2626' : '#059669'}; margin: 0 0 2px;">${info.prefix}${formatRupiah(tx.amount)}</p>
+                ${feeBadge}
+              </div>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      }
+
+      // ============================================================
       // NATIVE PHONE HARDWARE BACK BUTTON NAVIGATION HANDLER
       // ============================================================
       function pushNavigationState(screenName) {
@@ -12547,6 +12773,11 @@
 
       window.addEventListener('popstate', function(event) {
         // 1. Close active modals / screens in stack order
+        const mutasiScreen = document.getElementById('screen-mutasi');
+        if (mutasiScreen && mutasiScreen.style.display !== 'none' && mutasiScreen.classList.contains('active')) {
+          closeMutasiScreen();
+          return;
+        }
         const postCheckoutScreen = document.getElementById('screen-post-checkout-status');
         if (postCheckoutScreen && postCheckoutScreen.style.display !== 'none' && postCheckoutScreen.classList.contains('active')) {
           closePostCheckoutStatus();
