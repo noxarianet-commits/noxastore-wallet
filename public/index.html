@@ -4477,16 +4477,28 @@
         </div>
 
         <!-- Section A: Dedicated Product Display Box (For PPOB / Premium Apps / Token / Voucher) -->
-        <div id="post-checkout-product-box-container" style="background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; display: none;">
-          <div style="font-size: 11px; font-weight: 800; color: #7B2D8E; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
-            <span class="material-symbols-outlined" style="font-size: 18px;">inventory_2</span> PRODUK / KODE VOUCHER / TOKEN SN
+        <div id="post-checkout-product-box-container" style="background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1.5px solid #a855f7; display: block;">
+          <div style="font-size: 11px; font-weight: 800; color: #7B2D8E; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+            <span style="display: flex; align-items: center; gap: 6px;">
+              <span class="material-symbols-outlined" style="font-size: 18px; color: #7B2D8E;">verified</span> DETAIL PRODUK / AKUN / LISENSI
+            </span>
+            <span id="post-checkout-product-badge" style="font-size: 10px; font-weight: 800; color: #059669; background: #ecfdf5; padding: 2px 8px; border-radius: 20px;">AKTIF</span>
           </div>
-          <div id="post-checkout-product-content" style="background: #f8fafc; border: 1.5px dashed #cbd5e1; border-radius: 14px; padding: 14px; text-align: center; margin-bottom: 12px; word-break: break-all; font-family: monospace; font-size: 15px; font-weight: 800; color: #0f172a;">
+
+          <!-- Product Content Box -->
+          <div id="post-checkout-product-content" style="background: #f8fafc; border: 1.5px dashed #a855f7; border-radius: 14px; padding: 14px; text-align: center; margin-bottom: 12px; word-break: break-all; font-family: 'Plus Jakarta Sans', monospace; font-size: 14px; font-weight: 800; color: #0f172a; line-height: 1.5;">
             -
           </div>
-          <button onclick="copyPostCheckoutProduct()" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #7B2D8E, #9B4DB8); color: white; border: none; border-radius: 14px; font-weight: 800; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(123,45,142,0.25);">
-            <span class="material-symbols-outlined" style="font-size: 18px;">content_copy</span> SALIN PRODUK / KODE
-          </button>
+
+          <!-- Action Buttons Container (Buka Link + Salin) -->
+          <div id="post-checkout-product-actions" style="display: flex; flex-direction: column; gap: 8px;">
+            <button id="btn-open-premium-link" onclick="openPostCheckoutLink()" style="display: none; width: 100%; padding: 13px; background: linear-gradient(135deg, #2563eb, #3b82f6); color: white; border: none; border-radius: 14px; font-weight: 800; font-size: 13.5px; cursor: pointer; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(37,99,235,0.25);">
+              <span class="material-symbols-outlined" style="font-size: 20px;">open_in_new</span> BUKA LINK APLIKASI PREMIUM
+            </button>
+            <button id="btn-copy-premium-code" onclick="copyPostCheckoutProduct()" style="width: 100%; padding: 13px; background: linear-gradient(135deg, #7B2D8E, #9B4DB8); color: white; border: none; border-radius: 14px; font-weight: 800; font-size: 13.5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(123,45,142,0.25);">
+              <span class="material-symbols-outlined" style="font-size: 20px;">content_copy</span> SALIN PRODUK / KODE LISENSI
+            </button>
+          </div>
         </div>
 
         <!-- Section B: Transaction Info Card -->
@@ -4809,7 +4821,7 @@
               style="margin-right: 8px; width: 16px; height: 16px; border: 2px solid #e2e8f0; border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite;">
             </div> Memuat produk...
           </div>
-          <div id="ppob-products-list" style="display: flex; flex-direction: column; gap: 10px;">
+          <div id="ppob-products-list" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
             <!-- Dynamic product cards -->
           </div>
         </div>
@@ -10137,7 +10149,7 @@
             const itemDiv = document.createElement('div');
             itemDiv.className = 'transaction-item';
 
-            itemDiv.onclick = () => openTrxDetail(tx);
+            itemDiv.onclick = () => openPostCheckoutStatus(tx);
             itemDiv.style.cursor = 'pointer';
             itemDiv.innerHTML = buildTransactionItemHtml(tx);
             listDiv.appendChild(itemDiv);
@@ -10210,6 +10222,43 @@
         copyText(snVal.innerText, 'Detail Akun / Kode Lisensi / SN');
       }
 
+      let _postCheckoutLinkUrl = null;
+
+      function openPostCheckoutLink() {
+        if (_postCheckoutLinkUrl) {
+          window.open(_postCheckoutLinkUrl, '_blank');
+        } else {
+          showNotification('⚠️ Link produk tidak tersedia.');
+        }
+      }
+
+      function copyPostCheckoutProduct() {
+        if (!_currentPostCheckoutTx) return;
+        let snVal = _currentPostCheckoutTx.product_license || _currentPostCheckoutTx.license || _currentPostCheckoutTx.sn || _currentPostCheckoutTx.voucher || _currentPostCheckoutTx.serialNumber || _currentPostCheckoutTx.serial_number || _currentPostCheckoutTx.seller_note || _currentPostCheckoutTx.note || '';
+        snVal = sanitizeErrorMessage(snVal);
+        if (!snVal || snVal === '-') return showNotification('⚠️ Detail produk belum tersedia.');
+        copyText(snVal, 'Detail Akun / Lisensi / Link');
+      }
+
+      function pollTransactionStatusRealtime(txId) {
+        if (!txId) return;
+        fetch(`/api/ppob/check-status/${txId}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.success && data.status) {
+              if (_currentPostCheckoutTx && (_currentPostCheckoutTx.id === txId || _currentPostCheckoutTx.ref_id === txId)) {
+                _currentPostCheckoutTx.status = data.status;
+                if (data.sn) {
+                  _currentPostCheckoutTx.sn = data.sn;
+                  _currentPostCheckoutTx.product_license = data.sn;
+                }
+                openPostCheckoutStatus(_currentPostCheckoutTx);
+              }
+            }
+          })
+          .catch(() => {});
+      }
+
       function openPostCheckoutStatus(tx) {
         _currentPostCheckoutTx = tx;
         const screen = document.getElementById('screen-post-checkout-status');
@@ -10248,15 +10297,66 @@
           if (descEl) descEl.innerText = sanitizeErrorMessage(errNote);
         }
 
-        // 2. Product SN / Voucher / Credentials / License Display Box
-        let snVal = tx.product_license || tx.license || tx.sn || tx.voucher || tx.serialNumber || tx.note || '';
+        // 2. Product SN / Voucher / Credentials / License / Link Display Box
+        let snVal = tx.product_license || tx.license || tx.sn || tx.voucher || tx.serialNumber || tx.serial_number || tx.seller_note || '';
+        if (!snVal && tx.note && looksLikeCredential(tx.note)) snVal = tx.note;
         snVal = sanitizeErrorMessage(snVal);
+
         const prodBox = document.getElementById('post-checkout-product-box-container');
         const prodContent = document.getElementById('post-checkout-product-content');
+        const btnOpenLink = document.getElementById('btn-open-premium-link');
+        const btnCopyCode = document.getElementById('btn-copy-premium-code');
+        const badgeEl = document.getElementById('post-checkout-product-badge');
+
+        // URL detection inside snVal
+        _postCheckoutLinkUrl = null;
+        if (snVal) {
+          const urlMatch = snVal.match(/https?:\/\/[^\s"']+/i);
+          if (urlMatch) _postCheckoutLinkUrl = urlMatch[0];
+        }
+
+        // Show product box for non-ewallet or if product details exist
+        if (prodBox) prodBox.style.display = isEwallet ? 'none' : 'block';
 
         if (snVal && String(snVal).trim() !== '' && !String(snVal).toLowerCase().includes('gagal') && !String(snVal).toLowerCase().includes('error')) {
-          if (prodContent) prodContent.innerText = snVal;
-          if (prodBox) prodBox.style.display = 'block';
+          if (prodContent) {
+            if (_postCheckoutLinkUrl) {
+              prodContent.innerHTML = `<div style="color: #2563eb; margin-bottom: 6px; font-size: 11px; font-weight: 800;">LINK APLIKASI PREMIUM:</div><a href="${_postCheckoutLinkUrl}" target="_blank" style="color: #7B2D8E; text-decoration: underline; font-weight: 800; word-break: break-all;">${snVal}</a>`;
+            } else {
+              prodContent.innerText = snVal;
+            }
+          }
+          if (badgeEl) {
+            badgeEl.innerText = 'SELESAI';
+            badgeEl.style.background = '#ecfdf5';
+            badgeEl.style.color = '#059669';
+          }
+          if (btnCopyCode) {
+            btnCopyCode.style.display = 'flex';
+          }
+          if (_postCheckoutLinkUrl && btnOpenLink) {
+            btnOpenLink.style.display = 'flex';
+          } else if (btnOpenLink) {
+            btnOpenLink.style.display = 'none';
+          }
+        } else if (status === 'BERHASIL' || status === 'PAID') {
+          if (prodContent) prodContent.innerText = '✅ Transaksi Berhasil! Produk Aplikasi Premium telah aktif.';
+          if (badgeEl) {
+            badgeEl.innerText = 'BERHASIL';
+            badgeEl.style.background = '#ecfdf5';
+            badgeEl.style.color = '#059669';
+          }
+          if (btnCopyCode) btnCopyCode.style.display = 'none';
+          if (btnOpenLink) btnOpenLink.style.display = 'none';
+        } else if (status === 'DIPROSES' || status === 'PENDING' || status === 'PROCESSING') {
+          if (prodContent) prodContent.innerHTML = '<span style="color:#d97706; font-size: 13px;">⏳ Detail Akun / Link Lisensi sedang dikirim oleh provider SekaliPay...</span>';
+          if (badgeEl) {
+            badgeEl.innerText = 'DIPROSES';
+            badgeEl.style.background = '#fef3c7';
+            badgeEl.style.color = '#d97706';
+          }
+          if (btnCopyCode) btnCopyCode.style.display = 'none';
+          if (btnOpenLink) btnOpenLink.style.display = 'none';
         } else {
           if (prodBox) prodBox.style.display = 'none';
         }
@@ -10284,6 +10384,11 @@
           timeStr = d.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
         }
         setTextIfExists('post-checkout-time', timeStr);
+
+        // Auto Poll status from server if pending or if SN is not yet retrieved
+        if ((status === 'DIPROSES' || status === 'PENDING' || status === 'PROCESSING' || !snVal) && (tx.id || tx.ref_id)) {
+          pollTransactionStatusRealtime(tx.id || tx.ref_id);
+        }
 
         screen.style.display = 'flex';
         void screen.offsetWidth;
@@ -11551,45 +11656,40 @@
           if (result.status && Array.isArray(result.data) && result.data.length > 0) {
             result.data.forEach(p => {
               const card = document.createElement('div');
-              card.style.cssText = 'background: #ffffff; border-radius: 16px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; border: 1.5px solid #e2e8f0; cursor: pointer; transition: all 0.25s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.02); margin-bottom: 8px;';
+              card.style.cssText = 'background: #ffffff; border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; justify-content: space-between; gap: 8px; border: 1.5px solid #e2e8f0; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.02); min-height: 82px; box-sizing: border-box;';
               card.onmouseover = () => {
                 card.style.borderColor = 'var(--primary)';
-                card.style.boxShadow = '0 6px 16px rgba(123, 45, 142, 0.08)';
-                card.style.transform = 'translateY(-1px)';
+                card.style.boxShadow = '0 6px 14px rgba(123, 45, 142, 0.1)';
+                card.style.transform = 'translateY(-1.5px)';
               };
               card.onmouseout = () => {
                 card.style.borderColor = '#e2e8f0';
-                card.style.boxShadow = '0 2px 8px rgba(0,0,0,0.02)';
+                card.style.boxShadow = '0 2px 6px rgba(0,0,0,0.02)';
                 card.style.transform = 'none';
               };
 
               card.onclick = () => openPPOBCheckout(p);
 
-              const details = document.createElement('div');
-              details.style.cssText = 'display: flex; flex-direction: column; gap: 4px; flex: 1; padding-right: 12px;';
-
               const name = document.createElement('div');
               name.innerText = p.product_name;
-              name.style.cssText = 'font-weight: 700; font-size: 14px; color: #0f172a; line-height: 1.35; font-family: "Plus Jakarta Sans", "Inter", sans-serif;';
+              name.style.cssText = 'font-weight: 700; font-size: 11.5px; color: #0f172a; line-height: 1.3; font-family: "Plus Jakarta Sans", "Inter", sans-serif; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;';
 
-              details.appendChild(name);
-
-              const priceContainer = document.createElement('div');
-              priceContainer.style.cssText = 'display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0;';
+              const footer = document.createElement('div');
+              footer.style.cssText = 'display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-top: auto; border-top: 1px dashed #f1f5f9; padding-top: 6px;';
 
               const price = document.createElement('div');
               price.innerText = `Rp ${p.price.toLocaleString('id-ID')}`;
-              price.style.cssText = 'font-weight: 800; font-size: 15px; color: #7B2D8E; letter-spacing: -0.3px; font-family: "Outfit", "Plus Jakarta Sans", sans-serif;';
+              price.style.cssText = 'font-weight: 800; font-size: 13px; color: #7B2D8E; letter-spacing: -0.3px; font-family: "Outfit", "Plus Jakarta Sans", sans-serif;';
 
               const buyBtnLabel = document.createElement('div');
-              buyBtnLabel.innerHTML = 'Beli <span class="material-symbols-outlined" style="font-size:12px;vertical-align:middle;">chevron_right</span>';
-              buyBtnLabel.style.cssText = 'font-size: 10px; font-weight: 700; color: #059669; background: #ecfdf5; padding: 2px 8px; border-radius: 12px; display: inline-flex; align-items: center; gap: 2px;';
+              buyBtnLabel.innerHTML = 'Beli';
+              buyBtnLabel.style.cssText = 'font-size: 9.5px; font-weight: 800; color: #059669; background: #ecfdf5; border: 1px solid rgba(5,150,105,0.15); padding: 2px 8px; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.3px;';
 
-              priceContainer.appendChild(price);
-              priceContainer.appendChild(buyBtnLabel);
+              footer.appendChild(price);
+              footer.appendChild(buyBtnLabel);
 
-              card.appendChild(details);
-              card.appendChild(priceContainer);
+              card.appendChild(name);
+              card.appendChild(footer);
               list.appendChild(card);
             });
           } else {

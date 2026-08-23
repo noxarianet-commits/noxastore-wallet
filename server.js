@@ -1704,7 +1704,7 @@ function sanitizeErrorMessage(msg) {
     .trim();
 }
 
-// Helper to extract product license / credentials / account details / SN from SekaliPay API response
+// Helper to extract product license / credentials / account details / SN / link from SekaliPay API response
 function extractSekalipayLicenseOrSN(data) {
   if (!data) return '';
   const getCleanVal = (val) => {
@@ -1714,12 +1714,17 @@ function extractSekalipayLicenseOrSN(data) {
     return sanitizeErrorMessage(str);
   };
 
+  // Direct fields
   if (getCleanVal(data.product_license)) return getCleanVal(data.product_license);
   if (getCleanVal(data.license)) return getCleanVal(data.license);
   if (getCleanVal(data.account_details)) return getCleanVal(data.account_details);
   if (getCleanVal(data.account)) return getCleanVal(data.account);
   if (getCleanVal(data.credentials)) return getCleanVal(data.credentials);
+  if (getCleanVal(data.sn)) return getCleanVal(data.sn);
+  if (getCleanVal(data.serial_number)) return getCleanVal(data.serial_number);
+  if (getCleanVal(data.voucher)) return getCleanVal(data.voucher);
 
+  // Nested arrays: items
   if (Array.isArray(data.items) && data.items.length > 0) {
     for (const itm of data.items) {
       if (getCleanVal(itm.product_license)) return getCleanVal(itm.product_license);
@@ -1728,20 +1733,44 @@ function extractSekalipayLicenseOrSN(data) {
       if (getCleanVal(itm.seller_note)) return getCleanVal(itm.seller_note);
       if (itm.h2h_results && getCleanVal(itm.h2h_results.sn)) return getCleanVal(itm.h2h_results.sn);
       if (getCleanVal(itm.sn)) return getCleanVal(itm.sn);
+      if (getCleanVal(itm.serial_number)) return getCleanVal(itm.serial_number);
     }
   }
+
+  // Nested arrays: carts
+  if (Array.isArray(data.carts) && data.carts.length > 0) {
+    for (const c of data.carts) {
+      if (getCleanVal(c.product_license)) return getCleanVal(c.product_license);
+      if (getCleanVal(c.license)) return getCleanVal(c.license);
+      if (getCleanVal(c.account_details)) return getCleanVal(c.account_details);
+      if (getCleanVal(c.seller_note)) return getCleanVal(c.seller_note);
+      if (getCleanVal(c.sn)) return getCleanVal(c.sn);
+      if (getCleanVal(c.serial_number)) return getCleanVal(c.serial_number);
+      if (getCleanVal(c.note)) return getCleanVal(c.note);
+    }
+  }
+
+  // Nested object: item or order
   if (data.item) {
     if (getCleanVal(data.item.product_license)) return getCleanVal(data.item.product_license);
     if (getCleanVal(data.item.license)) return getCleanVal(data.item.license);
     if (getCleanVal(data.item.seller_note)) return getCleanVal(data.item.seller_note);
     if (getCleanVal(data.item.sn)) return getCleanVal(data.item.sn);
+    if (getCleanVal(data.item.serial_number)) return getCleanVal(data.item.serial_number);
   }
-  if (getCleanVal(data.sn)) return getCleanVal(data.sn);
-  if (getCleanVal(data.serial_number)) return getCleanVal(data.serial_number);
-  if (getCleanVal(data.voucher)) return getCleanVal(data.voucher);
+
+  if (data.order) {
+    if (getCleanVal(data.order.product_license)) return getCleanVal(data.order.product_license);
+    if (getCleanVal(data.order.license)) return getCleanVal(data.order.license);
+    if (getCleanVal(data.order.sn)) return getCleanVal(data.order.sn);
+    if (getCleanVal(data.order.serial_number)) return getCleanVal(data.order.serial_number);
+    if (getCleanVal(data.order.note)) return getCleanVal(data.order.note);
+  }
+
   if (data.h2h_results && getCleanVal(data.h2h_results.sn)) return getCleanVal(data.h2h_results.sn);
   if (getCleanVal(data.seller_note)) return getCleanVal(data.seller_note);
   if (getCleanVal(data.note)) return getCleanVal(data.note);
+
   return '';
 }
 
@@ -1773,36 +1802,32 @@ async function handlePpobCheckout(req, res) {
     return res.status(400).json({
       success: false,
       status: false,
-      error: 'PIN transaksi tidak valid. Silakan periksa kembali PIN Anda.',
-      msg: 'PIN transaksi tidak valid.'
+      error: 'PIN transaksi salah.',
+      msg: 'PIN transaksi salah.'
     });
   }
 
   try {
     const itemsResult = await sekalipayService.getItems();
-    if (!itemsResult || !Array.isArray(itemsResult.data)) {
-      return res.status(400).json({
-        success: false,
-        status: false,
-        error: 'Layanan produk PPOB SekaliPay sedang gangguan / tidak dapat terhubung.',
-        msg: 'Layanan SekaliPay sedang gangguan.'
-      });
-    }
+    let items = (itemsResult && Array.isArray(itemsResult.data)) ? itemsResult.data : [];
 
-    const cleanId = String(product_id || sku || '').replace(/^SKL-/, '');
-    const item = itemsResult.data.find(i => String(i.id) === cleanId || `SKL-${i.id}` === sku);
+    let item = items.find(i => String(i.id) === String(product_id) || i.sku === sku || `SKL-${i.id}` === sku);
+    if (!item && product_id) {
+      const cleanId = String(product_id).replace(/^SKL-/, '');
+      item = items.find(i => String(i.id) === cleanId);
+    }
 
     if (!item) {
       return res.status(404).json({
         success: false,
         status: false,
-        error: 'Produk PPOB tidak ditemukan atau sedang tidak aktif.',
+        error: 'Produk tidak ditemukan atau sedang gangguan.',
         msg: 'Produk tidak ditemukan.'
       });
     }
 
-    const itemSku = `SKL-${item.id}`;
     const visMap = await db.getPpobVisibilityMap();
+    const itemSku = `SKL-${item.id}`;
     const vis = visMap[itemSku] || visMap[String(item.id)];
     const markup = vis ? Math.max(0, Math.ceil(Number(vis.markup) || 0)) : 0;
     const basePrice = Math.ceil(Number(item.price) || 0);
@@ -1831,8 +1856,6 @@ async function handlePpobCheckout(req, res) {
       orderResult = { success: false, message: apiErr.message };
     }
 
-
-
     const isOrderSuccess = orderResult && (orderResult.success || orderResult.status === true || orderResult.httpCode === 200 || orderResult.data);
     const serialNumber = extractSekalipayLicenseOrSN(orderResult.data) || extractSekalipayLicenseOrSN(orderResult) || '';
     const accountName = req.body.account_name || req.body.customer_name || orderResult.data?.customer_name || orderResult.data?.account_name || '';
@@ -1851,7 +1874,7 @@ async function handlePpobCheckout(req, res) {
         account_name: accountName,
         price: totalPrice,
         amount: totalPrice,
-        status: 'PROCESSING',
+        status: 'BERHASIL',
         sn: serialNumber,
         product_license: serialNumber,
         note: serialNumber,
