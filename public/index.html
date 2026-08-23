@@ -2970,91 +2970,366 @@
         /* Hide action buttons */
       }
 
-    /* ===== ANIMASI CENTANG (CHECKMARK) DANA STYLE ===== */
-    .check-wrapper {
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      }
+    }
+
+    /* ===== PREMIUM ANIMASI CENTANG (CHECKMARK) & SPARKLES ===== */
+    .check-container {
+      position: relative;
+      width: 100px;
+      height: 100px;
       margin: 0 auto 12px;
-      width: 100px;
-      height: 100px;
-      position: relative;
     }
 
-    .circle-bg {
+    .ripple-ring {
       position: absolute;
-      width: 100px;
-      height: 100px;
+      inset: -8px;
       border-radius: 50%;
-      background: #e6f9ed;
-      opacity: 0.4;
-      transform: scale(0.8);
-      animation: pulseCircle 0.8s cubic-bezier(0.2, 0.9, 0.4, 1) forwards;
+      border: 2px solid rgba(123, 45, 142, 0.15);
+      animation: rippleRing 2.4s cubic-bezier(0.2, 0.9, 0.4, 1) infinite;
+      pointer-events: none;
     }
-    .circle-bg-failed {
-      background: #fee2e2;
+    .ripple-ring:nth-child(2) {
+      inset: -18px;
+      border-color: rgba(123, 45, 142, 0.08);
+      animation-delay: 0.6s;
     }
-    .circle-bg-process {
-      background: #fef3c7;
+    .ripple-ring:nth-child(3) {
+      inset: -28px;
+      border-color: rgba(123, 45, 142, 0.04);
+      animation-delay: 1.2s;
+    }
+    .ripple-ring-failed {
+      border-color: rgba(239, 68, 68, 0.15) !important;
+    }
+    .ripple-ring-failed:nth-child(2) {
+      border-color: rgba(239, 68, 68, 0.08) !important;
+    }
+    .ripple-ring-failed:nth-child(3) {
+      border-color: rgba(239, 68, 68, 0.04) !important;
+    }
+    .ripple-ring-process {
+      border-color: rgba(245, 158, 11, 0.15) !important;
+    }
+    .ripple-ring-process:nth-child(2) {
+      border-color: rgba(245, 158, 11, 0.08) !important;
+    }
+    .ripple-ring-process:nth-child(3) {
+      border-color: rgba(245, 158, 11, 0.04) !important;
     }
 
-    @keyframes pulseCircle {
-      0% { transform: scale(0.6); opacity: 0.1; }
-      80% { transform: scale(1.1); opacity: 0.5; }
-      100% { transform: scale(1); opacity: 0.4; }
+    @keyframes rippleRing {
+      0% {
+        transform: scale(0.6);
+        opacity: 0.7;
+      }
+      100% {
+        transform: scale(1.4);
+        opacity: 0;
+      }
     }
 
-    .checkmark-svg {
-      width: 84px;
-      height: 84px;
-      display: block;
-      position: relative;
-      z-index: 2;
-      filter: drop-shadow(0 6px 12px rgba(0, 180, 80, 0.25));
+    .circle-solid {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: radial-gradient(circle at 40% 35%, #9B4DB8, #7B2D8E);
+      box-shadow: 0 0 30px rgba(123, 45, 142, 0.25);
+      transform: scale(0.2);
+      animation: popCircle 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.4) forwards;
     }
-    .checkmark-svg-failed {
-      filter: drop-shadow(0 6px 12px rgba(220, 38, 38, 0.25));
+    .circle-solid-failed {
+      background: radial-gradient(circle at 40% 35%, #ef4444, #dc2626) !important;
+      box-shadow: 0 0 30px rgba(239, 68, 68, 0.25) !important;
     }
-    .checkmark-svg-process {
-      filter: drop-shadow(0 6px 12px rgba(217, 119, 6, 0.25));
-    }
-
-    .checkmark-circle {
-      fill: #00c853;
-      transform-origin: center;
-      animation: popCircle 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-      opacity: 0;
-    }
-    .checkmark-circle-failed {
-      fill: #ef4444;
-    }
-    .checkmark-circle-process {
-      fill: #f59e0b;
+    .circle-solid-process {
+      background: radial-gradient(circle at 40% 35%, #f59e0b, #d97706) !important;
+      box-shadow: 0 0 30px rgba(245, 158, 11, 0.25) !important;
     }
 
     @keyframes popCircle {
-      0% { transform: scale(0.2); opacity: 0; }
-      70% { transform: scale(1.1); opacity: 1; }
-      100% { transform: scale(1); opacity: 1; }
+      0% {
+        transform: scale(0.2);
+        opacity: 0;
+      }
+      65% {
+        transform: scale(1.12);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
     }
 
-    .checkmark-path {
+    .checkmark-svg {
+      position: absolute;
+      inset: 18%;
+      width: 64%;
+      height: 64%;
+      z-index: 5;
+      filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15));
+    }
+    .checkmark-svg path {
       fill: none;
       stroke: #ffffff;
       stroke-width: 8;
       stroke-linecap: round;
       stroke-linejoin: round;
-      stroke-dasharray: 70;
-      stroke-dashoffset: 70;
-      animation: drawCheck 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.2) forwards;
+      stroke-dasharray: 80;
+      stroke-dashoffset: 80;
+      animation: drawCheck 0.65s cubic-bezier(0.2, 0.9, 0.3, 1.2) forwards;
       animation-delay: 0.25s;
-      filter: drop-shadow(0 2px 4px rgba(0, 80, 30, 0.2));
     }
 
     @keyframes drawCheck {
-      0% { stroke-dashoffset: 70; }
-      100% { stroke-dashoffset: 0; }
+      0% {
+        stroke-dashoffset: 80;
+      }
+      100% {
+        stroke-dashoffset: 0;
+      }
     }
+
+    /* Sparkles */
+    .sparkle {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: radial-gradient(circle, #f5d0ff, #7B2D8E);
+      border-radius: 50%;
+      box-shadow: 0 0 10px rgba(123, 45, 142, 0.6);
+      opacity: 0;
+      animation: sparkleBurst 1s ease-out forwards;
+      pointer-events: none;
+    }
+    .sparkle-failed {
+      background: radial-gradient(circle, #ffe4e6, #ef4444) !important;
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.6) !important;
+    }
+    .sparkle-process {
+      background: radial-gradient(circle, #fef3c7, #f59e0b) !important;
+      box-shadow: 0 0 10px rgba(245, 158, 11, 0.6) !important;
+    }
+
+    .sparkle:nth-child(5) {
+      top: 2%;
+      left: 10%;
+      animation-delay: 0.4s;
+    }
+    .sparkle:nth-child(6) {
+      top: -2%;
+      right: 16%;
+      animation-delay: 0.55s;
+      width: 8px;
+      height: 8px;
+    }
+    .sparkle:nth-child(7) {
+      bottom: 8%;
+      left: 4%;
+      animation-delay: 0.7s;
+    }
+    .sparkle:nth-child(8) {
+      bottom: 2%;
+      right: 6%;
+      animation-delay: 0.85s;
+      width: 9px;
+      height: 9px;
+    }
+    .sparkle:nth-child(9) {
+      top: 28%;
+      right: -4%;
+      animation-delay: 0.5s;
+      width: 4px;
+      height: 4px;
+    }
+    .sparkle:nth-child(10) {
+      top: 58%;
+      left: -6%;
+      animation-delay: 0.75s;
+    }
+
+    @keyframes sparkleBurst {
+      0% {
+        transform: scale(0) rotate(0deg);
+        opacity: 1;
+      }
+      70% {
+        transform: scale(2.8) rotate(200deg);
+        opacity: 0.8;
+      }
+      100% {
+        transform: scale(2) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    /* Watermark Grid */
+    .watermark-grid {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      grid-template-rows: repeat(8, 1fr);
+      gap: 2px;
+      pointer-events: none;
+      z-index: 0;
+      user-select: none;
+      opacity: 0.35;
+      padding: 4px;
+    }
+    .watermark-item {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 8px;
+      font-weight: 700;
+      color: rgba(123, 45, 142, 0.035);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transform: rotate(var(--rot, -12deg));
+      font-family: 'Inter', sans-serif;
+      white-space: nowrap;
+      animation: watermarkFloat 6s ease-in-out infinite alternate;
+      animation-delay: var(--delay, 0s);
+    }
+    .watermark-item:nth-child(odd) {
+      --rot: 8deg;
+      --delay: 0.5s;
+      color: rgba(123, 45, 142, 0.025);
+    }
+    .watermark-item:nth-child(3n) {
+      --rot: -5deg;
+      --delay: 1s;
+      color: rgba(123, 45, 142, 0.02);
+    }
+    .watermark-item:nth-child(5n) {
+      --rot: 15deg;
+      --delay: 0.3s;
+      color: rgba(123, 45, 142, 0.03);
+    }
+    .watermark-item:nth-child(7n) {
+      --rot: -20deg;
+      --delay: 1.5s;
+      color: rgba(123, 45, 142, 0.025);
+    }
+    @keyframes watermarkFloat {
+      0% {
+        opacity: 0.2;
+        transform: rotate(var(--rot, -12deg)) scale(0.85);
+      }
+      100% {
+        opacity: 0.7;
+        transform: rotate(var(--rot, -12deg)) scale(1.1);
+      }
+    }
+
+    /* Struk Premium styles */
+    .struk-box {
+      background: rgba(123, 45, 142, 0.02);
+      border: 1px solid rgba(123, 45, 142, 0.08);
+      border-radius: 20px;
+      padding: 16px 18px;
+      margin: 8px 0 16px;
+      backdrop-filter: blur(4px);
+      position: relative;
+      z-index: 2;
+    }
+
+    .struk-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(123, 45, 142, 0.06);
+      margin-bottom: 10px;
+    }
+    .struk-header .date {
+      font-size: 11px;
+      color: #64748b;
+      font-weight: 500;
+    }
+    .struk-header .status-badge {
+      font-size: 11px;
+      font-weight: 700;
+      color: #7B2D8E;
+      background: rgba(123, 45, 142, 0.08);
+      padding: 3px 10px;
+      border-radius: 30px;
+      border: 1px solid rgba(123, 45, 142, 0.15);
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .struk-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      font-size: 12.5px;
+      color: #334155;
+      border-bottom: 1px solid rgba(123, 45, 142, 0.03);
+    }
+    .struk-row:last-child {
+      border-bottom: none;
+    }
+    .struk-row .label {
+      font-weight: 500;
+      color: #64748b;
+    }
+    .struk-row .value {
+      font-weight: 700;
+      color: #0f172a;
+      text-align: right;
+      word-break: break-all;
+    }
+    .struk-row .value.amount {
+      font-size: 19px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #9B4DB8, #7B2D8E);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .struk-row .value.success {
+      color: #7B2D8E;
+    }
+    .struk-row .value.id-text {
+      font-weight: 600;
+      color: #64748b;
+      font-size: 11px;
+      font-family: monospace;
+    }
+
+    .struk-divider {
+      border: none;
+      border-top: 1.5px dashed rgba(123, 45, 142, 0.12);
+      margin: 12px 0 10px;
+    }
+
+    .struk-detail {
+      margin-top: 4px;
+    }
+    .struk-detail .struk-row {
+      padding: 6px 0;
+    }
+    .struk-detail .struk-row .label {
+      color: #64748b;
+      font-size: 11.5px;
+    }
+    .struk-detail .struk-row .value {
+      font-size: 12.5px;
+    }
+
+    .struk-footer {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(123, 45, 142, 0.06);
+      font-size: 9.5px;
+      color: #64748b;
+      text-align: center;
+      letter-spacing: 0.5px;
+      font-weight: 600;
     }
 
     /* Responsive Desktop & Widescreen Styling */
@@ -4109,146 +4384,124 @@
         </div>
       </div>
 
-      <div style="padding: 16px; overflow-y: auto; flex: 1; background-image: url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'150\' height=\'100\' viewBox=\'0 0 150 100\'%3E%3Ctext x=\'50%25\' y=\'50%25\' font-family=\'Inter, sans-serif\' font-size=\'14\' fill=\'%236d23f9\' fill-opacity=\'0.04\' text-anchor=\'middle\' transform=\'rotate(-30 75 50)\'%3ENoxaPay%3C/text%3E%3C/svg%3E'); background-repeat: repeat;">
-
-        <!-- Dynamic Status Animation & Branding Header -->
-        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 8px; text-align: center; margin-bottom: 16px;">
-          <div id="receipt-status-animation-container"></div>
-          <div>
-            <h1 id="receipt-branding-title" style="font-size: 24px; font-weight: 800; color: #0b1a2b; margin: 0; letter-spacing: -0.3px;">Pembayaran Berhasil</h1>
-            <p id="receipt-success-subtitle" style="font-size: 13px; font-weight: 600; color: #00c853; text-transform: uppercase; letter-spacing: 0.5px; margin: 4px 0 0;">TRANSAKSI SELESAI • DANA DITERIMA</p>
-          </div>
-        </div>
+      <div style="padding: 16px; overflow-y: auto; flex: 1; background-image: url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'150\' height=\'100\' viewBox=\'0 0 150 100\'%3E%3Ctext x=\'50%25\' y=\'50%25\' font-family=\'Inter, sans-serif\' font-size=\'14\' fill=\'%237B2D8E\' fill-opacity=\'0.03\' text-anchor=\'middle\' transform=\'rotate(-30 75 50)\'%3ENoxaPay%3C/text%3E%3C/svg%3E'); background-repeat: repeat;">
 
         <!-- MAIN RECEIPT CARD (Target Capturing html2canvas) -->
-        <div id="trx-receipt-card" style="background: #ffffff; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); overflow: visible; display: flex; flex-direction: column; position: relative; border: 1px solid #e1e3e4; margin-bottom: 20px;">
+        <div id="trx-receipt-card" style="background: #ffffff; border-radius: 36px; box-shadow: 0 20px 60px rgba(123,45,142,0.06); overflow: hidden; display: flex; flex-direction: column; position: relative; border: 1px solid rgba(123,45,142,0.08); margin-bottom: 20px; padding: 24px 20px 24px;">
 
-          <!-- Watermark Overlay -->
-          <div style="position: absolute; inset: 0; pointer-events: none; opacity: 0.03; background-image: repeating-linear-gradient(45deg, #4800b2 0, #4800b2 1px, transparent 0, transparent 10px); background-size: 16px 16px; border-radius: 20px;"></div>
+          <!-- WATERMARK "Noxarianet" -->
+          <div class="watermark-grid" id="watermarkGrid"></div>
 
-          <!-- Total Amount Header -->
-          <div style="background: linear-gradient(135deg, #4800b2, #6d23f9); padding: 20px 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; position: relative; border-radius: 20px 20px 0 0;">
-            <p id="receipt-amount-label" style="font-size: 11px; font-weight: 600; opacity: 0.85; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 4px;">TOTAL NOMINAL DIBAYAR</p>
-            <div id="receipt-amount" style="font-size: 32px; font-weight: 900; letter-spacing: -0.02em; word-break: break-word;">Rp 0</div>
-            <div id="receipt-status-badge" style="display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; background: rgba(255,255,255,0.2); color: white; font-size: 11px; font-weight: 800; padding: 4px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.3);">
-              <span class="material-symbols-outlined" style="font-size: 14px;">check_circle</span> BERHASIL
-            </div>
-          </div>
+          <div class="card-content" style="position: relative; z-index: 2; width: 100%;">
 
-          <!-- Receipt Details Section -->
-          <div style="padding: 18px 16px 12px; display: flex; flex-direction: column; gap: 0;">
-            <h3 style="font-size: 11px; font-weight: 800; color: #7b7589; margin: 0 0 12px; text-transform: uppercase; letter-spacing: 1px;">Detail Transaksi</h3>
+            <!-- ANIMASI CENTANG / STATUS -->
+            <div class="check-container" id="receipt-status-animation-container"></div>
 
-            <!-- Waktu & Tanggal — 2 baris agar responsif -->
-            <div style="padding: 10px 0; border-bottom: 1px solid #f1f0f5;">
-              <span style="font-size: 12px; color: #7b7589; font-weight: 500; display: block; margin-bottom: 3px;">Waktu &amp; Tanggal Transaksi</span>
-              <span id="receipt-date-time" style="font-size: 13px; color: #191c1d; font-weight: 700; display: block; word-break: break-word;">-</span>
-            </div>
+            <h1 class="title" id="receipt-branding-title" style="font-size: 24px; font-weight: 800; color: #0f172a; text-align: center; margin-top: 6px; letter-spacing: -0.3px;">Pembayaran Berhasil</h1>
+            <p class="sub" id="receipt-success-subtitle" style="font-size: 13px; font-weight: 600; color: #64748b; text-align: center; margin: 4px 0 12px; text-transform: uppercase; letter-spacing: 0.5px;">Transaksi selesai · dana telah diterima</p>
 
-            <!-- Penerima / Merchant -->
-            <div style="padding: 10px 0; border-bottom: 1px solid #f1f0f5;">
-              <span style="font-size: 12px; color: #7b7589; font-weight: 500; display: block; margin-bottom: 3px;">Penerima / Merchant</span>
-              <span id="receipt-merchant" style="font-size: 13px; color: #191c1d; font-weight: 700; display: block; word-break: break-word; text-transform: uppercase;">-</span>
-            </div>
-
-            <!-- Nomor Tujuan / Target -->
-            <div id="receipt-target-row" style="padding: 10px 0; border-bottom: 1px solid #f1f0f5; display: none;">
-              <span style="font-size: 12px; color: #7b7589; font-weight: 500; display: block; margin-bottom: 3px;">Nomor Tujuan / ID Pelanggan</span>
-              <span id="receipt-target" style="font-size: 13px; color: #191c1d; font-weight: 700; display: block; word-break: break-word;">-</span>
-            </div>
-
-            <!-- Atas Nama / Pemilik Akun -->
-            <div id="receipt-account-name-row" style="padding: 10px 0; border-bottom: 1px solid #f1f0f5; display: none;">
-              <span style="font-size: 12px; color: #7b7589; font-weight: 500; display: block; margin-bottom: 3px;">Atas Nama / Pemilik Akun</span>
-              <span id="receipt-account-name" style="font-size: 13px; color: #059669; font-weight: 800; display: block; word-break: break-word;">-</span>
-            </div>
-
-            <!-- Serial Number / Voucher / Detail Produk / Akun Premium -->
-            <div id="receipt-sn-container" style="padding: 12px 14px; background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 14px; margin: 10px 0; display: none;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                <span style="font-size: 11px; font-weight: 800; color: #166534; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 4px;">
-                  <span class="material-symbols-outlined" style="font-size: 16px; color: #16a34a;">key</span> Detail Akun / Kode Lisensi / SN
+            <!-- STRUK SEPERTI DANA -->
+            <div class="struk-box">
+              <!-- Header -->
+              <div class="struk-header">
+                <span class="date" id="receipt-date-time">-</span>
+                <span class="status-badge" id="receipt-status-badge">
+                  <span class="material-symbols-outlined" style="font-size: 13px;">check_circle</span> BERHASIL
                 </span>
-                <button onclick="copyReceiptSN()" style="background: #16a34a; border: none; color: white; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px;">
-                  <span class="material-symbols-outlined" style="font-size: 14px;">content_copy</span> Salin
-                </button>
               </div>
-              <div id="receipt-sn-value" style="background: #ffffff; border: 1px solid #bbf7d0; border-radius: 8px; padding: 8px 10px; font-family: monospace; font-size: 12px; font-weight: 700; color: #14532d; word-break: break-all; -webkit-user-select: all; user-select: all;">-</div>
-            </div>
 
-            <!-- Metode Pembayaran -->
-            <div style="padding: 10px 0; border-bottom: 1px solid #f1f0f5;">
-              <span style="font-size: 12px; color: #7b7589; font-weight: 500; display: block; margin-bottom: 3px;">Metode Pembayaran</span>
-              <div style="display: flex; align-items: center; gap: 5px;">
-                <span class="material-symbols-outlined" style="font-size: 16px; color: #4800b2;">account_balance_wallet</span>
-                <span id="receipt-method" style="font-size: 13px; color: #4800b2; font-weight: 700;">NoxaPay Wallet</span>
+              <!-- Baris utama -->
+              <div class="struk-row">
+                <span class="label">Jumlah Total</span>
+                <span class="value amount" id="receipt-amount">Rp 0</span>
               </div>
-            </div>
-
-            <!-- ID Transaksi Sistem -->
-            <div style="padding: 10px 0; border-bottom: 1px solid #f1f0f5;">
-              <span style="font-size: 12px; color: #7b7589; font-weight: 500; display: block; margin-bottom: 3px;">ID Transaksi Sistem</span>
-              <span id="receipt-txid" style="font-size: 11px; color: #4800b2; font-family: monospace; font-weight: 700; display: block; word-break: break-all;">-</span>
-            </div>
-
-            <!-- Order ID -->
-            <div style="padding: 10px 0;">
-              <span style="font-size: 12px; color: #7b7589; font-weight: 500; display: block; margin-bottom: 3px;">Order ID</span>
-              <span id="receipt-orderid" style="font-size: 11px; color: #191c1d; font-family: monospace; font-weight: 700; display: block; word-break: break-all;">-</span>
-            </div>
-          </div>
-
-          <!-- Tear Cutouts Line Effect -->
-          <div style="position: relative; display: flex; align-items: center; margin: 0; padding: 0 1px; overflow: visible;">
-            <div style="position: absolute; left: -12px; width: 24px; height: 24px; background: #f8f9fa; border-radius: 50%; z-index: 2;"></div>
-            <div style="flex-grow: 1; border-top: 2px dashed #e2ddf0;"></div>
-            <div style="position: absolute; right: -12px; width: 24px; height: 24px; background: #f8f9fa; border-radius: 50%; z-index: 2;"></div>
-          </div>
-
-          <!-- Order Summary Section -->
-          <div style="padding: 16px 16px 16px; display: flex; flex-direction: column; gap: 10px;">
-            <h3 style="font-size: 11px; font-weight: 800; color: #7b7589; margin: 0; text-transform: uppercase; letter-spacing: 1px;">Ringkasan Biaya</h3>
-
-            <div style="background: #f7f5ff; border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px; border: 1px solid #ede9fb;">
-              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; gap: 8px;">
-                <span style="color: #7b7589; white-space: nowrap;">Subtotal Nominal</span>
-                <span id="receipt-subtotal" style="font-weight: 700; color: #191c1d; white-space: nowrap;">Rp 0</span>
+              <div class="struk-row">
+                <span class="label">Metode Pembayaran</span>
+                <span class="value" id="receipt-method">NoxaPay Wallet</span>
               </div>
-              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; gap: 8px;">
-                <span style="color: #7b7589; white-space: nowrap;">Biaya Layanan / Admin</span>
-                <span id="receipt-fee" style="font-weight: 700; color: #191c1d; white-space: nowrap;">Rp 0</span>
+              <div class="struk-row">
+                <span class="label">ID Transaksi</span>
+                <span class="value id-text" id="receipt-txid">-</span>
               </div>
-              <div style="border-top: 1.5px dashed #cbc3d9; padding-top: 10px; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-                <span style="font-size: 14px; font-weight: 800; color: #191c1d; white-space: nowrap;">Total Pembayaran</span>
-                <span id="receipt-total-final" style="font-size: 17px; font-weight: 900; color: #4800b2; white-space: nowrap;">Rp 0</span>
-              </div>
-            </div>
-          </div>
 
-          <!-- Dynamic Status Alert Box (Gagal / Diproses) -->
-          <div id="receipt-status-alert-container" style="padding: 0 16px 14px; display: none;"></div>
+              <hr class="struk-divider" />
 
-          <!-- Security Stamp & Legal Warning -->
-          <div style="padding: 0 16px 18px; display: flex; flex-direction: column; gap: 10px; position: relative;">
-            <div style="display: flex; align-items: center; gap: 12px; background: #f7f5ff; padding: 12px; border-radius: 12px; border: 1px solid #ede9fb;">
-              <div style="background: radial-gradient(circle, #fef08a 0%, #eab308 50%, #ca8a04 100%); border: 2px solid #a16207; box-shadow: 0 4px 10px rgba(161,98,7,0.2); width: 54px; height: 54px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; transform: rotate(-8deg); flex-shrink: 0;">
-                <span style="font-size: 5px; font-weight: 900; color: #78350f; text-align: center; line-height: 1.1;">NOXAPAY<br>OFFICIAL<br>SEAL</span>
-                <span class="material-symbols-outlined" style="font-size: 12px; color: #78350f; margin-top: 1px;">verified</span>
+              <!-- Detail Penerima -->
+              <div class="struk-detail">
+                <div class="struk-row">
+                  <span class="label">Penerima</span>
+                  <span class="value" id="receipt-merchant">-</span>
+                </div>
+                <div class="struk-row" id="receipt-target-row" style="display: none;">
+                  <span class="label">No. Tujuan / ID</span>
+                  <span class="value" id="receipt-target">-</span>
+                </div>
+                <div class="struk-row" id="receipt-account-name-row" style="display: none;">
+                  <span class="label">Atas Nama</span>
+                  <span class="value" id="receipt-account-name">-</span>
+                </div>
               </div>
-              <div style="flex: 1; min-width: 0;">
-                <p style="font-size: 9px; font-weight: 800; color: #1e1b4b; margin: 0 0 4px; text-transform: uppercase; letter-spacing: 0.5px;">Security Encrypted &amp; Verified</p>
-                <p id="receipt-hash" style="font-size: 8px; color: #4800b2; font-family: monospace; font-weight: 700; margin: 0; word-break: break-all; line-height: 1.4;">SEC: NXW-VERIFIED</p>
-              </div>
-            </div>
 
-            <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 10px 12px;">
+              <!-- Detail Lisensi / SN (Dapat disalin) -->
+              <div id="receipt-sn-container" style="padding: 12px 14px; background: rgba(123, 45, 142, 0.03); border: 1.5px solid rgba(123, 45, 142, 0.15); border-radius: 14px; margin: 10px 0; display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <span style="font-size: 11px; font-weight: 800; color: #7B2D8E; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 4px;">
+                    <span class="material-symbols-outlined" style="font-size: 16px; color: #7B2D8E;">key</span> Detail Lisensi / SN
+                  </span>
+                  <button onclick="copyReceiptSN()" style="background: #7B2D8E; border: none; color: white; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                    <span class="material-symbols-outlined" style="font-size: 14px;">content_copy</span> Salin
+                  </button>
+                </div>
+                <div id="receipt-sn-value" style="background: #ffffff; border: 1px solid rgba(123, 45, 142, 0.12); border-radius: 8px; padding: 8px 10px; font-family: monospace; font-size: 12px; font-weight: 700; color: #7B2D8E; word-break: break-all; -webkit-user-select: all; user-select: all;">-</div>
+              </div>
+
+              <hr class="struk-divider" />
+
+              <!-- Ringkasan Biaya -->
+              <div class="struk-detail">
+                <div class="struk-row">
+                  <span class="label">Subtotal</span>
+                  <span class="value" id="receipt-subtotal">Rp 0</span>
+                </div>
+                <div class="struk-row">
+                  <span class="label">Biaya Admin</span>
+                  <span class="value" id="receipt-fee">Rp 0</span>
+                </div>
+                <div class="struk-row">
+                  <span class="label">Total Bayar</span>
+                  <span class="value" id="receipt-total-final" style="color: #7B2D8E; font-weight: 800;">Rp 0</span>
+                </div>
+              </div>
+
+              <hr class="struk-divider" />
+
+              <!-- Detail Transaksi Tambahan (ID Order dll) -->
+              <div class="struk-detail">
+                <div class="struk-row">
+                  <span class="label">ID Order</span>
+                  <span class="value id-text" id="receipt-orderid">-</span>
+                </div>
+                <div class="struk-row">
+                  <span class="label">Kode Keamanan</span>
+                  <span class="value id-text" id="receipt-hash">SEC: NXW-VERIFIED</span>
+                </div>
+              </div>
+
+              <!-- Footer struk -->
+              <div class="struk-footer">
+                <span>Transaksi Aman • NoxaPay Encrypted verified</span>
+              </div>
+            </div> <!-- end struk-box -->
+
+            <!-- Legal Warning -->
+            <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 10px 12px;">
               <p style="font-size: 8.5px; color: #b91c1c; line-height: 1.5; text-align: justify; margin: 0; font-weight: 500;">
                 <strong>⚠ PERINGATAN HUKUM:</strong> Struk digital ini diterbitkan secara sah dan terekam dalam sistem NoxaPay. Pemalsuan atau manipulasi dokumen elektronik ini merupakan Tindakan Kriminal berdasarkan <strong>Pasal 35 UU ITE</strong>.
               </p>
             </div>
-          </div>
 
-        </div>
+          </div> <!-- end card-content -->
+        </div> <!-- end trx-receipt-card -->
 
         <!-- Check Status Button (if pending) -->
         <button id="receipt-check-status-btn" onclick="manualCheckStatus()"
@@ -4256,16 +4509,22 @@
           <span class="material-symbols-outlined">sync</span> Cek Status Transaksi
         </button>
 
-        <!-- ACTION BUTTONS (SHARE ONLY — NO SAVE/PDF) -->
+        <!-- ACTION BUTTONS -->
         <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px;">
           <!-- Share ke WhatsApp Direct Button -->
           <button id="share-wa-btn" onclick="shareReceiptToWA()" style="width: 100%; padding: 16px; background: #25D366; color: white; border: none; border-radius: 16px; font-weight: 800; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 8px 20px rgba(37,211,102,0.3);">
             <svg style="width: 22px; height: 22px; fill: currentColor; flex-shrink: 0;" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
-            Bagikan Struk ke WhatsApp
+            Bagikan ke WhatsApp
+          </button>
+
+          <!-- Download Struk Button -->
+          <button id="download-receipt-btn" onclick="downloadReceiptImage()" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #7B2D8E, #9B4DB8); color: white; border: none; border-radius: 16px; font-weight: 800; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 8px 20px rgba(123,45,142,0.2);">
+            <span class="material-symbols-outlined" style="font-size: 20px;">download</span>
+            Unduh Gambar Struk
           </button>
 
           <!-- General Share Button -->
-          <button onclick="shareReceiptGeneral()" style="width: 100%; padding: 14px; background: rgba(72,0,178,0.08); color: #4800b2; border: 1.5px solid rgba(72,0,178,0.25); border-radius: 16px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+          <button onclick="shareReceiptGeneral()" style="width: 100%; padding: 14px; background: rgba(123,45,142,0.08); color: #7B2D8E; border: 1.5px solid rgba(123,45,142,0.25); border-radius: 16px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
             <span class="material-symbols-outlined" style="font-size: 20px;">share</span>
             Bagikan ke Media Lain
           </button>
@@ -9649,8 +9908,28 @@
 
       function buildTransactionItemHtml(tx) {
         const info = getTxDisplayInfo(tx);
-        const fullDate = tx.date || '-';
-        const fullTime = tx.time || '-';
+        let fullDate = tx.date || '-';
+        let fullTime = tx.time || '';
+
+        // If transaction date is missing but createdAt timestamp exists, parse and format it dynamically
+        if ((!tx.date || tx.date === '-') && tx.createdAt) {
+          try {
+            const d = new Date(tx.createdAt);
+            const wib = new Date(d.getTime() + 7 * 60 * 60 * 1000);
+            const pad2 = n => String(n).padStart(2, '0');
+            const bulanIndo = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+            fullDate = `${pad2(wib.getUTCDate())} ${bulanIndo[wib.getUTCMonth()]} ${wib.getUTCFullYear()}`;
+            fullTime = `${pad2(wib.getUTCHours())}:${pad2(wib.getUTCMinutes())} WIB`;
+          } catch (e) {
+            console.warn('[History Date Formatting Error]', e);
+          }
+        } else if (fullTime && fullTime !== '-') {
+          // Normalize time suffix
+          if (!fullTime.includes('WIB') && !fullTime.includes('WIT') && !fullTime.includes('WITA')) {
+            fullTime = fullTime + ' WIB';
+          }
+        }
+
         const badgeClass = getStatusBadgeClass(tx.status);
         return `
         <div class="left-col">
@@ -9659,7 +9938,7 @@
           </div>
           <div class="tx-details">
             <h5>${info.title}</h5>
-            <p>${fullDate} • ${fullTime}</p>
+            <p>${fullDate}${fullTime ? ' • ' + fullTime : ''}</p>
           </div>
         </div>
         <div class="right-col">
@@ -9727,7 +10006,7 @@
           // Standardize monthly header names based on transaction dates
           // Date example: "24 Okt 2023" -> We extract "Okt 2023" or fallback to month of transaction date
           let monthHeader = 'Klaim Terbaru';
-          if (tx.date) {
+          if (tx.date && tx.date !== '-') {
             const dateParts = tx.date.split(' ');
             if (dateParts.length >= 3) {
               monthHeader = dateParts.slice(1).join(' '); // returns "Okt 2023"
@@ -9740,6 +10019,13 @@
                 monthHeader = `${months[monthIndex]} ${datePartsSlash[2]}`;
               }
             }
+          } else if (tx.createdAt) {
+            try {
+              const d = new Date(tx.createdAt);
+              const wib = new Date(d.getTime() + 7 * 60 * 60 * 1000);
+              const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+              monthHeader = `${months[wib.getUTCMonth()]} ${wib.getUTCFullYear()}`;
+            } catch (e) {}
           }
 
           if (!monthsMap[monthHeader]) {
@@ -9981,16 +10267,23 @@
           if (snBox) snBox.style.display = 'none';
         }
 
-        // Format waktu transaksi (WIB)
+        // Format waktu transaksi (WIB Asia/Jakarta)
         let txDateStr = '-';
         let txTimeStr = '';
         const pad2 = n => String(n).padStart(2, '0');
         const bulanIndo = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
         if (tx.createdAt) {
-          const d = new Date(tx.createdAt);
-          const wib = new Date(d.getTime() + 7 * 60 * 60 * 1000);
-          txDateStr = `${pad2(wib.getUTCDate())} ${bulanIndo[wib.getUTCMonth()]} ${wib.getUTCFullYear()}`;
-          txTimeStr = `${pad2(wib.getUTCHours())}:${pad2(wib.getUTCMinutes())}:${pad2(wib.getUTCSeconds())} WIB`;
+          try {
+            const d = new Date(tx.createdAt);
+            const optionsDate = { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Jakarta' };
+            const optionsTime = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'Asia/Jakarta' };
+            txDateStr = new Intl.DateTimeFormat('id-ID', optionsDate).format(d);
+            txTimeStr = new Intl.DateTimeFormat('id-ID', optionsTime).format(d) + ' WIB';
+          } catch(e) {
+            const d = new Date(tx.createdAt);
+            txDateStr = `${pad2(d.getDate())} ${bulanIndo[d.getMonth()]} ${d.getFullYear()}`;
+            txTimeStr = `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())} WIB`;
+          }
         } else if (tx.date || tx.time) {
           txDateStr = tx.date || '-';
           txTimeStr = tx.time ? (tx.time.includes('WIB') ? tx.time : tx.time + ' WIB') : '';
@@ -10045,8 +10338,39 @@
         // Start real-time clock in header
         startReceiptClock();
 
+        // Generate watermark grid
+        generateReceiptWatermark();
+
         document.getElementById('screen-trx-detail').classList.add('active');
       }
+
+      // Generate watermark grid programmatically to fit container dimensions
+      function generateReceiptWatermark() {
+        const grid = document.getElementById('watermarkGrid');
+        if (!grid) return;
+        const text = 'Noxarianet';
+        
+        let cols = 8, rows = 8;
+        if (window.innerWidth <= 480) { cols = 6; rows = 6; }
+        if (window.innerWidth <= 380) { cols = 4; rows = 6; }
+
+        const total = cols * rows;
+        grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+        grid.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+
+        grid.innerHTML = '';
+        for (let i = 0; i < total; i++) {
+          const span = document.createElement('span');
+          span.className = 'watermark-item';
+          span.textContent = text;
+          grid.appendChild(span);
+        }
+      }
+
+      // Add window resize support for watermark
+      window.addEventListener('resize', function() {
+        generateReceiptWatermark();
+      });
 
       function updateReceiptStatusBadge(status, txData = null) {
         const badge = document.getElementById('receipt-status-badge');
@@ -10062,35 +10386,47 @@
         if (normalized === 'BERHASIL' || normalized === 'PAID') {
           if (animContainer) {
             animContainer.innerHTML = `
-              <div class="check-wrapper">
-                <div class="circle-bg"></div>
-                <svg class="checkmark-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle class="checkmark-circle" cx="50" cy="50" r="42" />
-                  <path class="checkmark-path" d="M32 52 L44 64 L70 34" stroke="white" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </div>
+              <div class="ripple-ring"></div>
+              <div class="ripple-ring"></div>
+              <div class="ripple-ring"></div>
+              <div class="circle-solid"></div>
+              <div class="sparkle"></div>
+              <div class="sparkle"></div>
+              <div class="sparkle"></div>
+              <div class="sparkle"></div>
+              <div class="sparkle"></div>
+              <div class="sparkle"></div>
+              <svg class="checkmark-svg" viewBox="0 0 100 100" fill="none">
+                <path d="M28 52 L44 68 L74 32" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
             `;
           }
           if (brandingTitle) brandingTitle.innerText = 'Pembayaran Berhasil';
           if (subTitle) {
             subTitle.innerText = 'TRANSAKSI SELESAI • DANA DITERIMA';
-            subTitle.style.color = '#00c853';
+            subTitle.style.color = '#64748b';
           }
-          badge.style.background = 'rgba(255,255,255,0.2)';
-          badge.style.color = '#ffffff';
-          badge.style.borderColor = 'rgba(255,255,255,0.3)';
-          badge.innerHTML = '<span class="material-symbols-outlined" style="font-size: 14px;">check_circle</span> BERHASIL';
+          badge.style.background = 'rgba(123, 45, 142, 0.08)';
+          badge.style.color = '#7B2D8E';
+          badge.style.borderColor = 'rgba(123, 45, 142, 0.15)';
+          badge.innerHTML = '<span class="material-symbols-outlined" style="font-size: 13px;">check_circle</span> BERHASIL';
           if (alertBox) alertBox.style.display = 'none';
         } else if (normalized === 'GAGAL' || normalized === 'FAILED') {
           if (animContainer) {
             animContainer.innerHTML = `
-              <div class="check-wrapper">
-                <div class="circle-bg circle-bg-failed"></div>
-                <svg class="checkmark-svg checkmark-svg-failed" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle class="checkmark-circle checkmark-circle-failed" cx="50" cy="50" r="42" />
-                  <path class="checkmark-path" d="M34 34 L66 66 M66 34 L34 66" stroke="white" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </div>
+              <div class="ripple-ring ripple-ring-failed"></div>
+              <div class="ripple-ring ripple-ring-failed"></div>
+              <div class="ripple-ring ripple-ring-failed"></div>
+              <div class="circle-solid circle-solid-failed"></div>
+              <div class="sparkle sparkle-failed"></div>
+              <div class="sparkle sparkle-failed"></div>
+              <div class="sparkle sparkle-failed"></div>
+              <div class="sparkle sparkle-failed"></div>
+              <div class="sparkle sparkle-failed"></div>
+              <div class="sparkle sparkle-failed"></div>
+              <svg class="checkmark-svg" viewBox="0 0 100 100" fill="none">
+                <path d="M34 34 L66 66 M66 34 L34 66" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
             `;
           }
           if (brandingTitle) brandingTitle.innerText = 'Pembayaran Gagal';
@@ -10098,10 +10434,10 @@
             subTitle.innerText = 'TRANSAKSI DIBATALKAN / GAGAL';
             subTitle.style.color = '#ef4444';
           }
-          badge.style.background = 'rgba(239, 68, 68, 0.2)';
-          badge.style.color = '#ffffff';
-          badge.style.borderColor = 'rgba(239, 68, 68, 0.4)';
-          badge.innerHTML = '<span class="material-symbols-outlined" style="font-size: 14px;">cancel</span> GAGAL';
+          badge.style.background = 'rgba(239, 68, 68, 0.08)';
+          badge.style.color = '#ef4444';
+          badge.style.borderColor = 'rgba(239, 68, 68, 0.15)';
+          badge.innerHTML = '<span class="material-symbols-outlined" style="font-size: 13px;">cancel</span> GAGAL';
 
           if (alertBox) {
             const failReason = tx.failureReason || tx.apiMessage || tx.description || 'Transaksi dibatalkan atau ditolak oleh provider.';
@@ -10118,13 +10454,19 @@
         } else {
           if (animContainer) {
             animContainer.innerHTML = `
-              <div class="check-wrapper">
-                <div class="circle-bg circle-bg-process"></div>
-                <svg class="checkmark-svg checkmark-svg-process" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle class="checkmark-circle checkmark-circle-process" cx="50" cy="50" r="42" />
-                  <path class="checkmark-path" d="M50 26 V50 L66 60" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </div>
+              <div class="ripple-ring ripple-ring-process"></div>
+              <div class="ripple-ring ripple-ring-process"></div>
+              <div class="ripple-ring ripple-ring-process"></div>
+              <div class="circle-solid circle-solid-process"></div>
+              <div class="sparkle sparkle-process"></div>
+              <div class="sparkle sparkle-process"></div>
+              <div class="sparkle sparkle-process"></div>
+              <div class="sparkle sparkle-process"></div>
+              <div class="sparkle sparkle-process"></div>
+              <div class="sparkle sparkle-process"></div>
+              <svg class="checkmark-svg" viewBox="0 0 100 100" fill="none">
+                <path d="M50 26 V50 L66 60" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
             `;
           }
           if (brandingTitle) brandingTitle.innerText = 'Pesanan Sedang Diproses';
@@ -10132,10 +10474,10 @@
             subTitle.innerText = 'MOHON TUNGGU • PROSES OTOMATIS';
             subTitle.style.color = '#f59e0b';
           }
-          badge.style.background = 'rgba(245, 158, 11, 0.2)';
-          badge.style.color = '#ffffff';
-          badge.style.borderColor = 'rgba(245, 158, 11, 0.4)';
-          badge.innerHTML = '<span class="material-symbols-outlined" style="font-size: 14px; display: inline-block; animation: spin 2s linear infinite; vertical-align: middle; margin-right: 4px;">sync</span> DIPROSES';
+          badge.style.background = 'rgba(245, 158, 11, 0.08)';
+          badge.style.color = '#d97706';
+          badge.style.borderColor = 'rgba(245, 158, 11, 0.15)';
+          badge.innerHTML = '<span class="material-symbols-outlined" style="font-size: 13px; display: inline-block; animation: spin 2s linear infinite; vertical-align: middle; margin-right: 4px;">sync</span> DIPROSES';
 
           if (alertBox) {
             alertBox.style.display = 'block';
@@ -10147,6 +10489,7 @@
                 <div style="font-size: 12px; font-weight: 600; color: #873800; line-height: 1.4;">Transaksi Anda sedang diproses oleh provider. Halaman struk ini akan memperbarui status secara otomatis.</div>
               </div>
             `;
+          }
           }
         }
       }
@@ -10312,24 +10655,26 @@
         stopReceiptClock(); // clear any old interval
         const clockEl = document.getElementById('receipt-realtime-clock');
         const dateEl = document.getElementById('receipt-realtime-date');
-        const hariIndo = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
-        const bulanIndoFull = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
 
         function tick() {
-          // Tampilkan jam WIB (UTC+7)
-          const now = new Date();
-          const wib = new Date(now.getTime() + 7 * 60 * 60 * 1000);
-          const pad2 = n => String(n).padStart(2, '0');
-          const hh = pad2(wib.getUTCHours());
-          const mm = pad2(wib.getUTCMinutes());
-          const ss = pad2(wib.getUTCSeconds());
-          const hari = hariIndo[wib.getUTCDay()];
-          const tgl = pad2(wib.getUTCDate());
-          const bln = bulanIndoFull[wib.getUTCMonth()];
-          const thn = wib.getUTCFullYear();
-
-          if (clockEl) clockEl.textContent = `${hh}:${mm}:${ss} WIB`;
-          if (dateEl) dateEl.textContent = `${hari}, ${tgl} ${bln} ${thn}`;
+          try {
+            const now = new Date();
+            const optionsTime = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'Asia/Jakarta' };
+            const optionsDate = { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Jakarta' };
+            
+            if (clockEl) {
+              clockEl.textContent = new Intl.DateTimeFormat('id-ID', optionsTime).format(now) + ' WIB';
+            }
+            if (dateEl) {
+              let dateStr = new Intl.DateTimeFormat('id-ID', optionsDate).format(now);
+              dateStr = dateStr.replace(/\./g, ''); // Clean abbreviation periods e.g. "Sel." -> "Sel"
+              dateEl.textContent = dateStr;
+            }
+          } catch(e) {
+            const now = new Date();
+            const pad2 = n => String(n).padStart(2, '0');
+            if (clockEl) clockEl.textContent = `${pad2(now.getHours())}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())} WIB`;
+          }
         }
 
         tick(); // immediate first call
@@ -10346,6 +10691,79 @@
       function closeTrxDetail() {
         stopReceiptClock();
         document.getElementById('screen-trx-detail').classList.remove('active');
+      }
+
+      async function downloadReceiptImage() {
+        if (!currentPrintTx) return;
+        const card = document.getElementById('trx-receipt-card');
+        if (!card) return;
+
+        const btn = document.getElementById('download-receipt-btn');
+        const originalHTML = btn ? btn.innerHTML : '';
+        if (btn) {
+          btn.disabled = true;
+          btn.innerHTML = '<span class="material-symbols-outlined" style="animation: spin 1s linear infinite;">sync</span> Mengunduh...';
+        }
+
+        try {
+          const canvas = await html2canvas(card, {
+            scale: 3,
+            useCORS: true,
+            backgroundColor: '#ffffff',
+            logging: false,
+            scrollX: 0,
+            scrollY: -window.scrollY,
+            windowWidth: document.documentElement.clientWidth,
+            windowHeight: document.documentElement.clientHeight
+          });
+
+          const dataUrl = canvas.toDataURL('image/png');
+          const fileName = `Struk_NoxaPay_${currentPrintTx.id || 'TRX'}.png`;
+
+          // Try native bridges to download/save image if running inside WebView wrappers
+          let nativeSaved = false;
+          const nativeBridges = [
+            window.AndroidBridge,
+            window.Android,
+            window.JSBridge,
+            window.NativeBridge,
+            window.AndroidNative,
+            window.NoxaBridge
+          ];
+          for (const bridge of nativeBridges) {
+            if (!bridge) continue;
+            const saveMethods = ['saveImage', 'downloadImage', 'saveBase64', 'shareBase64'];
+            for (const m of saveMethods) {
+              if (typeof bridge[m] === 'function') {
+                try {
+                  bridge[m](dataUrl);
+                  nativeSaved = true;
+                  break;
+                } catch(e) {}
+              }
+            }
+            if (nativeSaved) break;
+          }
+
+          if (!nativeSaved) {
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.download = fileName;
+            a.href = url;
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 100);
+            showNotification('✅ Gambar struk berhasil diunduh!');
+          }
+        } catch (err) {
+          console.error('[Download Struk Error]', err);
+          showNotification('❌ Gagal mengunduh struk: ' + err.message);
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalHTML;
+          }
+        }
       }
 
       async function shareReceiptToWA() {
@@ -10365,7 +10783,11 @@
             scale: 3,
             useCORS: true,
             backgroundColor: '#ffffff',
-            logging: false
+            logging: false,
+            scrollX: 0,
+            scrollY: -window.scrollY, // Fix scroll shift bug in html2canvas (prevents grey/blank cutoffs)
+            windowWidth: document.documentElement.clientWidth,
+            windowHeight: document.documentElement.clientHeight
           });
 
           const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
@@ -10423,7 +10845,16 @@
         if (!card) return;
 
         try {
-          const canvas = await html2canvas(card, { scale: 3, useCORS: true, backgroundColor: '#ffffff', logging: false });
+          const canvas = await html2canvas(card, {
+            scale: 3,
+            useCORS: true,
+            backgroundColor: '#ffffff',
+            logging: false,
+            scrollX: 0,
+            scrollY: -window.scrollY, // Fix scroll shift bug in html2canvas
+            windowWidth: document.documentElement.clientWidth,
+            windowHeight: document.documentElement.clientHeight
+          });
           const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
           const file = new File([blob], `Struk_NoxaPay_${currentPrintTx.id || 'TRX'}.png`, { type: 'image/png' });
 
