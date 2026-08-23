@@ -2969,8 +2969,6 @@
         display: none !important;
         /* Hide action buttons */
       }
-
-      }
     }
 
     /* ===== PREMIUM ANIMASI CENTANG (CHECKMARK) & SPARKLES ===== */
@@ -10729,9 +10727,12 @@
             window.AndroidNative,
             window.NoxaBridge
           ];
+          const saveMethods = [
+            'saveImage', 'downloadImage', 'saveBase64', 'shareBase64',
+            'saveImageToGallery', 'downloadFile', 'downloadBase64', 'savePicture'
+          ];
           for (const bridge of nativeBridges) {
             if (!bridge) continue;
-            const saveMethods = ['saveImage', 'downloadImage', 'saveBase64', 'shareBase64'];
             for (const m of saveMethods) {
               if (typeof bridge[m] === 'function') {
                 try {
@@ -10745,14 +10746,25 @@
           }
 
           if (!nativeSaved) {
-            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.download = fileName;
-            a.href = url;
-            a.click();
-            setTimeout(() => URL.revokeObjectURL(url), 100);
-            showNotification('✅ Gambar struk berhasil diunduh!');
+            try {
+              const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.download = fileName;
+              a.href = url;
+              a.click();
+              setTimeout(() => URL.revokeObjectURL(url), 100);
+              showNotification('✅ Gambar struk berhasil diunduh!');
+            } catch(downloadErr) {
+              // Sandbox WebView fallback - opens in a new tab/window so user can long-press and save to gallery
+              const newWindow = window.open();
+              if (newWindow) {
+                newWindow.document.write(`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:#f8fafc;font-family:sans-serif;padding:20px;box-sizing:border-box;"><p style="font-weight:bold;color:#334155;text-align:center;margin-bottom:15px;">Tekan lama gambar di bawah lalu klik "Simpan Gambar" untuk menyimpan ke galeri:</p><img src="${dataUrl}" style="max-width:100%;height:auto;box-shadow:0 10px 30px rgba(0,0,0,0.15);border-radius:12px;" /></div>`);
+                showNotification('ℹ️ Silakan tekan lama pada gambar untuk menyimpan ke galeri.');
+              } else {
+                showNotification('❌ Unduhan gagal. Mohon izinkan jendela pop-up.');
+              }
+            }
           }
         } catch (err) {
           console.error('[Download Struk Error]', err);
