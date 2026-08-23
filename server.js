@@ -1107,40 +1107,71 @@ app.get('/api/ppob/products', requireAuth, async (req, res) => {
       }
 
       if (items.length > 0 && (category || brand)) {
-        let catKeywords = [catTarget];
-        if (catTarget.includes('pulsa')) catKeywords.push('pulsa', 'reguler', 'isi ulang');
-        else if (catTarget.includes('kuota') || catTarget.includes('data')) catKeywords.push('data', 'kuota', 'internet', 'paket');
-        else if (catTarget.includes('pln') || catTarget.includes('token') || catTarget.includes('listrik')) catKeywords.push('pln', 'token', 'listrik');
-        else if (catTarget.includes('game')) catKeywords.push('game', 'games', 'voucher', 'diamond', 'ml', 'ff', 'pubg');
-        else if (catTarget.includes('ewallet') || catTarget.includes('wallet') || catTarget.includes('e-wallet') || catTarget.includes('emoney') || catTarget.includes('e-money')) catKeywords.push('e-wallet', 'ewallet', 'wallet', 'dana', 'ovo', 'gopay', 'shopeepay', 'linkaja', 'isaku', 'doku', 'astrapay', 'kaspro', 'emoney', 'e-money');
-
-        let brandKeywords = [brandTarget];
-        if (brandTarget.includes('telkomsel') || brandTarget === 'tsel') brandKeywords.push('telkomsel', 'tsel', 'by.u', 'byu');
-        else if (brandTarget.includes('indosat') || brandTarget === 'isat' || brandTarget === 'im3') brandKeywords.push('indosat', 'isat', 'im3');
-        else if (brandTarget.includes('xl') || brandTarget.includes('axis')) brandKeywords.push('xl', 'axis');
-        else if (brandTarget.includes('smartfren') || brandTarget === 'sf') brandKeywords.push('smartfren', 'sf');
-        else if (brandTarget.includes('tri') || brandTarget === 'three' || brandTarget === '3') brandKeywords.push('tri', 'three', '3');
-        else if (brandTarget.includes('pln') || brandTarget.includes('listrik')) brandKeywords.push('pln', 'listrik', 'token');
-        else if (brandTarget.includes('mobile legends') || brandTarget.includes('ml')) brandKeywords.push('mobile legend', 'mlbb', 'ml');
-        else if (brandTarget.includes('free fire') || brandTarget.includes('ff')) brandKeywords.push('free fire', 'ff');
-
         let filtered = items.filter(i => {
           const itemCat = String(i.category || '').toLowerCase();
           const itemName = String(i.name || '').toLowerCase();
-          const itemText = `${itemCat} ${itemName}`;
-          const matchCat = !catTarget || catKeywords.some(kw => kw && itemText.includes(kw));
-          const matchBrand = !brandTarget || brandKeywords.some(kw => kw && itemText.includes(kw));
-          return matchCat && matchBrand;
+          const itemBrand = String(i.brand || '').toLowerCase();
+          const fullText = `${itemCat} ${itemName} ${itemBrand}`;
+
+          // Strict Category Filter
+          if (catTarget) {
+            if (catTarget === 'pulsa') {
+              if (fullText.includes('data') || fullText.includes('kuota') || fullText.includes('internet') || fullText.includes('sms') || fullText.includes('telp')) return false;
+              if (!fullText.includes('pulsa') && !fullText.includes('reguler') && !fullText.includes('isi ulang')) return false;
+            } else if (catTarget === 'sms & telp' || catTarget === 'sms' || catTarget === 'telp') {
+              if (!fullText.includes('sms') && !fullText.includes('telp') && !fullText.includes('nelpon') && !fullText.includes('telepon') && !fullText.includes('call')) return false;
+            } else if (catTarget === 'kuota' || catTarget === 'data') {
+              if (!fullText.includes('data') && !fullText.includes('kuota') && !fullText.includes('internet') && !fullText.includes('gb') && !fullText.includes('unlimited') && !fullText.includes('combo')) return false;
+            } else if (catTarget === 'token pln' || catTarget === 'pln') {
+              if (!fullText.includes('pln') && !fullText.includes('listrik') && !fullText.includes('token')) return false;
+            } else if (catTarget.includes('smm')) {
+              if (!isSMMItem(i)) return false;
+            } else if (catTarget.includes('aplikasi') || catTarget.includes('premium')) {
+              if (!fullText.includes('premium') && !fullText.includes('canva') && !fullText.includes('netflix') && !fullText.includes('chatgpt') && !fullText.includes('spotify') && !fullText.includes('ai') && !fullText.includes('app') && !fullText.includes('vidio') && !fullText.includes('wetv') && !fullText.includes('zoom')) return false;
+            }
+          }
+
+          // Strict Brand Filter
+          if (brandTarget) {
+            if (brandTarget === 'axis') {
+              if (!fullText.includes('axis')) return false;
+            } else if (brandTarget === 'indosat' || brandTarget === 'isat' || brandTarget === 'im3') {
+              if (!fullText.includes('indosat') && !fullText.includes('isat') && !fullText.includes('im3')) return false;
+            } else if (brandTarget === 'smartfren' || brandTarget === 'sf') {
+              if (!fullText.includes('smartfren') && !fullText.includes('sf')) return false;
+            } else if (brandTarget === 'telkomsel' || brandTarget === 'tsel') {
+              if (!fullText.includes('telkomsel') && !fullText.includes('tsel')) return false;
+            } else if (brandTarget === 'tri' || brandTarget === 'three' || brandTarget === '3') {
+              if (!fullText.includes('tri') && !fullText.includes('three') && !fullText.includes(' 3 ') && !fullText.endsWith(' 3')) return false;
+            } else if (brandTarget === 'xl') {
+              if (!fullText.includes('xl')) return false;
+            } else if (brandTarget === 'by.u' || brandTarget === 'byu') {
+              if (!fullText.includes('by.u') && !fullText.includes('byu')) return false;
+            } else if (brandTarget === 'mobile legends' || brandTarget === 'ml') {
+              if (!fullText.includes('mobile legend') && !fullText.includes('mlbb') && !fullText.includes('ml')) return false;
+            } else if (brandTarget === 'free fire' || brandTarget === 'ff') {
+              if (!fullText.includes('free fire') && !fullText.includes('ff')) return false;
+            } else if (brandTarget === 'pubg') {
+              if (!fullText.includes('pubg')) return false;
+            } else if (brandTarget === 'valorant') {
+              if (!fullText.includes('valorant')) return false;
+            } else if (brandTarget === 'genshin') {
+              if (!fullText.includes('genshin')) return false;
+            } else if (brandTarget === 'honor of kings' || brandTarget === 'hok') {
+              if (!fullText.includes('honor of kings') && !fullText.includes('hok')) return false;
+            } else if (brandTarget === 'call of duty' || brandTarget === 'codm') {
+              if (!fullText.includes('call of duty') && !fullText.includes('codm')) return false;
+            } else if (brandTarget === 'roblox') {
+              if (!fullText.includes('roblox') && !fullText.includes('robux')) return false;
+            } else {
+              if (!fullText.includes(brandTarget)) return false;
+            }
+          }
+
+          return true;
         });
 
-        if (filtered.length === 0 && catTarget) {
-          filtered = items.filter(i => {
-            const itemText = `${String(i.category || '').toLowerCase()} ${String(i.name || '').toLowerCase()}`;
-            return catKeywords.some(kw => kw && itemText.includes(kw));
-          });
-        }
-
-        if (filtered.length > 0) items = filtered;
+        items = filtered;
       }
 
       const formatted = items.map(item => {

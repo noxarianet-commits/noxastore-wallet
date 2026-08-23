@@ -3835,8 +3835,8 @@
                 style="font-size: 10px; font-weight: 700; color: #334155; text-align: center; line-height: 1.1;">By.U</span>
             </div>
 
-            <!-- Item 12 -->
-            <div onclick="openPPOBScreen('DIGITAL', '', 'Top Up Game')"
+            <!-- Item 12: Top Up Game Digital -->
+            <div onclick="openGameListScreen()"
               style="display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: transform 0.2s;"
               onmouseover="this.style.transform='scale(0.95)'" onmouseout="this.style.transform='scale(1)'">
               <div
@@ -3944,16 +3944,16 @@
         style="padding: 0; background-color: #f7f9fb; min-height: 100vh; padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));">
 
         <!-- Profile Header Section -->
-        <section style="background: linear-gradient(135deg, #7B2D8E 0%, #9B4DB8 100%); padding: max(44px, calc(env(safe-area-inset-top) + 14px)) 18px 68px; color: white; position: relative;">
+        <section style="background: linear-gradient(135deg, #7B2D8E 0%, #9B4DB8 100%); padding: max(48px, calc(env(safe-area-inset-top) + 16px)) 18px 115px; color: white; position: relative;">
           <div style="display: flex; align-items: center; gap: 14px;">
             <div style="position: relative; flex-shrink: 0;">
-              <div style="width: 50px; height: 50px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.35); background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
-                <span class="material-symbols-outlined" style="font-size: 28px; color: white;">person</span>
+              <div style="width: 52px; height: 52px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.35); background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+                <span class="material-symbols-outlined" style="font-size: 30px; color: white;">person</span>
               </div>
               <div style="position: absolute; bottom: 0; right: 0; background: #22c55e; border: 2px solid #7B2D8E; width: 14px; height: 14px; border-radius: 50%;"></div>
             </div>
             <div style="flex: 1; min-width: 0;">
-              <h2 id="profile-fullname" style="font-size: 16.5px; font-weight: 800; margin: 0 0 3px; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              <h2 id="profile-fullname" style="font-size: 17px; font-weight: 800; margin: 0 0 4px; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                 noxastore wallet
               </h2>
               <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
@@ -3966,7 +3966,7 @@
           </div>
 
           <!-- Floating Main Balance Card -->
-          <div style="position: absolute; bottom: 0; left: 16px; right: 16px; transform: translateY(50%); background: #ffffff; border-radius: 20px; padding: 16px 18px; box-shadow: 0 10px 30px rgba(123, 45, 142, 0.08); border: 1px solid rgba(123,45,142,0.06); z-index: 10;">
+          <div style="position: absolute; bottom: 0; left: 16px; right: 16px; transform: translateY(50%); background: #ffffff; border-radius: 20px; padding: 18px 20px; box-shadow: 0 10px 30px rgba(123, 45, 142, 0.08); border: 1px solid rgba(123,45,142,0.06); z-index: 10;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
               <div style="display: flex; align-items: center; gap: 6px;">
                 <div style="background: rgba(123, 45, 142, 0.08); width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
@@ -3986,7 +3986,7 @@
             </div>
 
             <!-- QR Code My Profile Button -->
-            <button onclick="showMyQRModal()" style="margin-top: 12px; width: 100%; padding: 10px; background: linear-gradient(135deg, #7B2D8E, #9B4DB8); border: none; border-radius: 12px; color: white; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(123,45,142,0.2); transition: opacity 0.2s;">
+            <button onclick="showMyQRModal()" style="margin-top: 12px; width: 100%; padding: 11px; background: linear-gradient(135deg, #7B2D8E, #9B4DB8); border: none; border-radius: 12px; color: white; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(123,45,142,0.2); transition: opacity 0.2s;">
               <span class="material-symbols-outlined" style="font-size: 18px;">qr_code_2</span>
               QR Code Saya
             </button>
@@ -3994,7 +3994,7 @@
         </section>
 
         <!-- Menu Content -->
-        <div style="margin-top: 54px; padding: 0 16px; display: flex; flex-direction: column; gap: 14px;">
+        <div style="margin-top: 85px; padding: 0 16px; display: flex; flex-direction: column; gap: 14px;">
           <!-- Pengaturan Akun -->
           <section>
             <h3 style="font-size: 11px; font-weight: 800; color: #64748b; letter-spacing: 0.8px; margin-bottom: 8px; padding: 0 4px; text-transform: uppercase;">
@@ -4889,16 +4889,6 @@
         <!-- Grid Container for Squircle E-Wallet App Icons (4 Columns) -->
         <div id="ewallet-brand-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px 10px;">
 
-          <!-- Topup Bebas Nominal -->
-          <div onclick="openEwalletDanaScreen()" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; text-align: center;">
-            <div style="width: 60px; height: 60px; border-radius: 20px; background: #ffffff; box-shadow: 0 4px 14px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.04); display: flex; align-items: center; justify-content: center; margin-bottom: 8px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='none'">
-              <div style="width: 38px; height: 38px; border-radius: 50%; background: #e0f2fe; border: 2px dashed #0284c7; display: flex; align-items: center; justify-content: center; color: #0284c7; font-weight: 900; font-size: 13px;">
-                Rp
-              </div>
-            </div>
-            <span style="font-size: 10.5px; font-weight: 700; color: #0f172a; line-height: 1.2;">Topup Bebas Nominal</span>
-          </div>
-
           <!-- ShopeePay -->
           <div onclick="openEwalletShopeePayScreen()" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; text-align: center;">
             <div style="width: 60px; height: 60px; border-radius: 20px; background: #ffffff; box-shadow: 0 4px 14px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.04); display: flex; align-items: center; justify-content: center; margin-bottom: 8px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='none'">
@@ -4967,6 +4957,106 @@
               </div>
             </div>
             <span style="font-size: 10.5px; font-weight: 700; color: #0f172a; line-height: 1.2;">AstraPay</span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Game Selection Screen (4-Column Squircle Grid Layout with Game Icons) -->
+    <div id="screen-game-list" class="full-screen-panel" style="display:none; position: fixed; inset: 0; background: #f8fafc; z-index: 1000; flex-direction: column;">
+      <div style="background: linear-gradient(135deg, #7B2D8E 0%, #9B4DB8 100%); padding: 16px; color: white; display: flex; align-items: center; gap: 14px; box-shadow: 0 4px 16px rgba(123,45,142,0.15);">
+        <button onclick="closeGameListScreen()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+          <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
+        </button>
+        <div>
+          <h2 style="font-size: 16px; font-weight: 800; margin: 0; color: #ffffff;">Top Up Game Digital</h2>
+          <p style="font-size: 11px; opacity: 0.9; margin: 0; color: rgba(255,255,255,0.85);">Pilih game favorit untuk beli voucher / diamond</p>
+        </div>
+      </div>
+
+      <div style="padding: 24px 16px; flex: 1; overflow-y: auto;">
+        <!-- Grid Container for Game Icons (4 Columns) -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px 10px;">
+
+          <!-- Mobile Legends -->
+          <div onclick="closeGameListScreen(); openPPOBScreen('DIGITAL', 'MOBILE LEGENDS', 'Mobile Legends');" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; text-align: center;">
+            <div style="width: 60px; height: 60px; border-radius: 20px; background: #ffffff; box-shadow: 0 4px 14px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.04); display: flex; align-items: center; justify-content: center; margin-bottom: 8px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='none'">
+              <div style="width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, #1e293b, #334155); display: flex; align-items: center; justify-content: center; color: #f59e0b; font-weight: 900; font-size: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+                MLBB
+              </div>
+            </div>
+            <span style="font-size: 10.5px; font-weight: 700; color: #0f172a; line-height: 1.2;">Mobile Legends</span>
+          </div>
+
+          <!-- Free Fire -->
+          <div onclick="closeGameListScreen(); openPPOBScreen('DIGITAL', 'FREE FIRE', 'Free Fire');" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; text-align: center;">
+            <div style="width: 60px; height: 60px; border-radius: 20px; background: #ffffff; box-shadow: 0 4px 14px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.04); display: flex; align-items: center; justify-content: center; margin-bottom: 8px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='none'">
+              <div style="width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, #ea580c, #f97316); display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-size: 14px; box-shadow: 0 2px 8px rgba(234,88,12,0.3);">
+                FF
+              </div>
+            </div>
+            <span style="font-size: 10.5px; font-weight: 700; color: #0f172a; line-height: 1.2;">Free Fire</span>
+          </div>
+
+          <!-- PUBG Mobile -->
+          <div onclick="closeGameListScreen(); openPPOBScreen('DIGITAL', 'PUBG', 'PUBG Mobile');" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; text-align: center;">
+            <div style="width: 60px; height: 60px; border-radius: 20px; background: #ffffff; box-shadow: 0 4px 14px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.04); display: flex; align-items: center; justify-content: center; margin-bottom: 8px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='none'">
+              <div style="width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, #d97706, #f59e0b); display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-size: 11px; box-shadow: 0 2px 8px rgba(217,119,6,0.3);">
+                PUBG
+              </div>
+            </div>
+            <span style="font-size: 10.5px; font-weight: 700; color: #0f172a; line-height: 1.2;">PUBG Mobile</span>
+          </div>
+
+          <!-- Valorant -->
+          <div onclick="closeGameListScreen(); openPPOBScreen('DIGITAL', 'VALORANT', 'Valorant');" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; text-align: center;">
+            <div style="width: 60px; height: 60px; border-radius: 20px; background: #ffffff; box-shadow: 0 4px 14px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.04); display: flex; align-items: center; justify-content: center; margin-bottom: 8px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='none'">
+              <div style="width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, #dc2626, #ef4444); display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-size: 13px; box-shadow: 0 2px 8px rgba(220,38,38,0.3);">
+                VLT
+              </div>
+            </div>
+            <span style="font-size: 10.5px; font-weight: 700; color: #0f172a; line-height: 1.2;">Valorant</span>
+          </div>
+
+          <!-- Genshin Impact -->
+          <div onclick="closeGameListScreen(); openPPOBScreen('DIGITAL', 'GENSHIN', 'Genshin Impact');" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; text-align: center;">
+            <div style="width: 60px; height: 60px; border-radius: 20px; background: #ffffff; box-shadow: 0 4px 14px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.04); display: flex; align-items: center; justify-content: center; margin-bottom: 8px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='none'">
+              <div style="width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, #2563eb, #3b82f6); display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-size: 12px; box-shadow: 0 2px 8px rgba(37,99,235,0.3);">
+                GEN
+              </div>
+            </div>
+            <span style="font-size: 10.5px; font-weight: 700; color: #0f172a; line-height: 1.2;">Genshin</span>
+          </div>
+
+          <!-- Honor of Kings -->
+          <div onclick="closeGameListScreen(); openPPOBScreen('DIGITAL', 'HONOR OF KINGS', 'Honor of Kings');" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; text-align: center;">
+            <div style="width: 60px; height: 60px; border-radius: 20px; background: #ffffff; box-shadow: 0 4px 14px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.04); display: flex; align-items: center; justify-content: center; margin-bottom: 8px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='none'">
+              <div style="width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, #ca8a04, #eab308); display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-size: 12px; box-shadow: 0 2px 8px rgba(202,138,4,0.3);">
+                HOK
+              </div>
+            </div>
+            <span style="font-size: 10.5px; font-weight: 700; color: #0f172a; line-height: 1.2;">HOK</span>
+          </div>
+
+          <!-- Call of Duty -->
+          <div onclick="closeGameListScreen(); openPPOBScreen('DIGITAL', 'CALL OF DUTY', 'Call of Duty');" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; text-align: center;">
+            <div style="width: 60px; height: 60px; border-radius: 20px; background: #ffffff; box-shadow: 0 4px 14px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.04); display: flex; align-items: center; justify-content: center; margin-bottom: 8px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='none'">
+              <div style="width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, #0f172a, #1e293b); display: flex; align-items: center; justify-content: center; color: #f97316; font-weight: 900; font-size: 11px; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                CODM
+              </div>
+            </div>
+            <span style="font-size: 10.5px; font-weight: 700; color: #0f172a; line-height: 1.2;">CODM</span>
+          </div>
+
+          <!-- Roblox -->
+          <div onclick="closeGameListScreen(); openPPOBScreen('DIGITAL', 'ROBLOX', 'Roblox');" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; text-align: center;">
+            <div style="width: 60px; height: 60px; border-radius: 20px; background: #ffffff; box-shadow: 0 4px 14px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.04); display: flex; align-items: center; justify-content: center; margin-bottom: 8px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='none'">
+              <div style="width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, #000000, #334155); display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-size: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                RBX
+              </div>
+            </div>
+            <span style="font-size: 10.5px; font-weight: 700; color: #0f172a; line-height: 1.2;">Roblox</span>
           </div>
 
         </div>
@@ -6680,6 +6770,29 @@
 
       // Loader interval text simulation
       let loaderInterval = null;
+      function openGameListScreen() {
+        const username = localStorage.getItem('noxaUsername');
+        if (!username) {
+          const setupModal = document.getElementById('setup-modal');
+          if (setupModal) setupModal.style.display = 'flex';
+          try { switchAuthTab('login'); } catch (e) { }
+          showNotification('🔒 Silakan masuk untuk melihat daftar Top Up Game.');
+          return;
+        }
+        const screen = document.getElementById('screen-game-list');
+        if (!screen) return;
+        screen.style.display = 'flex';
+        void screen.offsetWidth;
+        screen.classList.add('active');
+      }
+
+      function closeGameListScreen() {
+        const screen = document.getElementById('screen-game-list');
+        if (!screen) return;
+        screen.classList.remove('active');
+        setTimeout(() => { try { screen.style.display = 'none'; } catch (e) { } }, 250);
+      }
+
       function openEwalletListScreen() {
         const username = localStorage.getItem('noxaUsername');
         if (!username) {
