@@ -10813,29 +10813,30 @@
 
       function pollTransactionStatusRealtime(txId) {
         if (!txId) return;
+        const screen = document.getElementById('screen-post-checkout-status');
+        if (!screen || screen.style.display === 'none' || !screen.classList.contains('active')) return;
+
         fetch(`/api/ppob/check-status/${txId}`)
           .then(res => res.json())
           .then(data => {
+            const activeScreen = document.getElementById('screen-post-checkout-status');
+            if (!activeScreen || activeScreen.style.display === 'none' || !activeScreen.classList.contains('active')) return;
+            if (!_currentPostCheckoutTx || (_currentPostCheckoutTx.id !== txId && _currentPostCheckoutTx.ref_id !== txId)) return;
+
             if (data && data.success && data.status) {
-              if (_currentPostCheckoutTx && (_currentPostCheckoutTx.id === txId || _currentPostCheckoutTx.ref_id === txId)) {
-                _currentPostCheckoutTx.status = data.status;
-                if (data.sn) {
-                  _currentPostCheckoutTx.sn = data.sn;
-                  _currentPostCheckoutTx.product_license = data.sn;
-                }
-                openPostCheckoutStatus(_currentPostCheckoutTx);
+              _currentPostCheckoutTx.status = data.status;
+              if (data.sn) {
+                _currentPostCheckoutTx.sn = data.sn;
+                _currentPostCheckoutTx.product_license = data.sn;
               }
+              // Update in-place WITHOUT re-triggering openPostCheckoutStatus or pushNavigationState!
+              renderPostCheckoutContent(_currentPostCheckoutTx);
             }
           })
           .catch(() => {});
       }
 
-      function openPostCheckoutStatus(tx) {
-        pushNavigationState('post-checkout');
-        _currentPostCheckoutTx = tx;
-        const screen = document.getElementById('screen-post-checkout-status');
-        if (!screen) return;
-
+      function renderPostCheckoutContent(tx) {
         const status = String(tx.status || 'BERHASIL').toUpperCase();
         const merchantName = tx.merchant || tx.product_name || 'Produk NoxaPay';
 
@@ -10972,6 +10973,26 @@
           timeStr = d.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
         }
         setTextIfExists('post-checkout-time', timeStr);
+      }
+
+      function openPostCheckoutStatus(tx) {
+        const screen = document.getElementById('screen-post-checkout-status');
+        if (!screen) return;
+
+        // Push navigation state ONLY if the screen is not currently active
+        if (screen.style.display === 'none' || !screen.classList.contains('active')) {
+          pushNavigationState('post-checkout');
+        }
+
+        _currentPostCheckoutTx = tx;
+        renderPostCheckoutContent(tx);
+
+        const status = String(tx.status || 'BERHASIL').toUpperCase();
+        const merchantName = tx.merchant || tx.product_name || 'Produk NoxaPay';
+        const isEwallet = (tx.type === 'EWALLET') || (tx.category === 'E-Money') || (tx.category === 'E-Wallet') || (tx.type === 'TOPUP_EWALLET') || merchantName.toLowerCase().includes('top up e-wallet') || merchantName.toLowerCase().includes('ewallet');
+        const isInternalTx = (tx.type === 'TRANSFER') || (tx.type === 'DEPOSIT') || (tx.type === 'TOPUP') || (tx.type === 'RECEIVE') || (tx.category === 'Deposit') || (tx.category === 'Transfer') || (tx.category === 'QRIS Deposit') || merchantName.toLowerCase().includes('deposit') || merchantName.toLowerCase().includes('transfer saldo') || merchantName.toLowerCase().includes('top up saldo');
+        const isSekalipayProduct = !isEwallet && !isInternalTx;
+        let snVal = tx.product_license || tx.license || tx.sn || tx.voucher || tx.serialNumber || tx.serial_number || tx.seller_note || '';
 
         // Auto Poll status from server if pending or if SN is not yet retrieved
         if (isSekalipayProduct && (status === 'DIPROSES' || status === 'PENDING' || status === 'PROCESSING' || !snVal) && (tx.id || tx.ref_id)) {
@@ -10984,11 +11005,13 @@
       }
 
       function closePostCheckoutStatus() {
+        _currentPostCheckoutTx = null;
         const screen = document.getElementById('screen-post-checkout-status');
         if (!screen) return;
         screen.classList.remove('active');
-        setTimeout(() => { screen.style.display = 'none'; }, 200);
-        switchTab('home');
+        setTimeout(() => {
+          try { screen.style.display = 'none'; } catch(e) {}
+        }, 200);
       }
 
       function copyPostCheckoutProduct() {
