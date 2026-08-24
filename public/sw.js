@@ -8,16 +8,10 @@ self.addEventListener('activate', (event) => {
 });
 
 let lastPushTime = 0;
+let lastPushContent = '';
 
 // Push Notification Event Listener (FCM / Web Push / Android WebView Push)
 self.addEventListener('push', (event) => {
-  const now = Date.now();
-  if (now - lastPushTime < 4000) {
-    console.log('[SW Push] Rate limit active. Ignoring duplicate push notification.');
-    return;
-  }
-  lastPushTime = now;
-
   let data = { title: 'NoxariaNet Wallet', body: 'Pemberitahuan transaksi baru!' };
   if (event.data) {
     try {
@@ -26,6 +20,16 @@ self.addEventListener('push', (event) => {
       data.body = event.data.text();
     }
   }
+
+  const now = Date.now();
+  const contentKey = `${data.title || ''}:${data.body || ''}`;
+  if (now - lastPushTime < 5000 || contentKey === lastPushContent) {
+    console.log('[SW Push] Anti-spam active. Ignoring duplicate push notification.');
+    return;
+  }
+  lastPushTime = now;
+  lastPushContent = contentKey;
+  setTimeout(() => { if (lastPushContent === contentKey) lastPushContent = ''; }, 5000);
 
   const options = {
     body: data.body || 'Ada pembaruan status transaksi pada akun Anda.',

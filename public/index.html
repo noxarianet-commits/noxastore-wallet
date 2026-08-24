@@ -9979,8 +9979,21 @@
       }
 
       // Custom Toast Notification Banner
+      let lastToastMessage = '';
+      let lastToastTime = 0;
+
       function showNotification(message, type) {
         if (!message) return;
+
+        const now = Date.now();
+        const cleanKey = String(message).trim();
+        if (now - lastToastTime < 3500 && cleanKey === lastToastMessage) {
+          console.log('[Toast Anti-Spam] Suppressed duplicate toast notification:', message);
+          return;
+        }
+        lastToastTime = now;
+        lastToastMessage = cleanKey;
+        setTimeout(() => { if (lastToastMessage === cleanKey) lastToastMessage = ''; }, 3500);
 
         // Auto-detect type from emoji prefix or content if not explicitly provided
         if (!type) {
@@ -10302,11 +10315,20 @@
         if ((!tx.date || tx.date === '-') && tx.createdAt) {
           try {
             const d = new Date(tx.createdAt);
-            const wib = new Date(d.getTime() + 7 * 60 * 60 * 1000);
-            const pad2 = n => String(n).padStart(2, '0');
-            const bulanIndo = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
-            fullDate = `${pad2(wib.getUTCDate())} ${bulanIndo[wib.getUTCMonth()]} ${wib.getUTCFullYear()}`;
-            fullTime = `${pad2(wib.getUTCHours())}:${pad2(wib.getUTCMinutes())} WIB`;
+            const formatterDate = new Intl.DateTimeFormat('id-ID', {
+              timeZone: 'Asia/Jakarta',
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric'
+            });
+            const formatterTime = new Intl.DateTimeFormat('id-ID', {
+              timeZone: 'Asia/Jakarta',
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false
+            });
+            fullDate = formatterDate.format(d).replace(/\./g, '');
+            fullTime = formatterTime.format(d).replace(/\./g, ':') + ' WIB';
           } catch (e) {
             console.warn('[History Date Formatting Error]', e);
           }

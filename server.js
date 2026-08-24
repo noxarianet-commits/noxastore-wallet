@@ -211,6 +211,28 @@ app.get('/api/receipt/download/:id', (req, res) => {
 });
 
 const lastNotificationSent = new Map(); // username/target -> timestamp
+const recentBroadcastHashes = new Map(); // hash -> timestamp
+
+function isDuplicateBroadcast(event, data) {
+  const hashKey = `${event}:${data.targetUsername || 'all'}:${data.title || ''}:${data.body || ''}:${data.type || ''}:${data.amount || ''}`;
+  const now = Date.now();
+  const lastTime = recentBroadcastHashes.get(hashKey) || 0;
+  
+  if (now - lastTime < 5000) {
+    console.log(`[Anti-Spam] Dropped duplicate event broadcast: ${hashKey}`);
+    return true;
+  }
+  
+  recentBroadcastHashes.set(hashKey, now);
+  
+  // Housekeeping old hashes
+  if (recentBroadcastHashes.size > 200) {
+    for (const [k, t] of recentBroadcastHashes.entries()) {
+      if (now - t > 10000) recentBroadcastHashes.delete(k);
+    }
+  }
+  return false;
+}
 
 async function sendBackgroundWebPush(targetUsername, payload) {
   try {
@@ -218,8 +240,8 @@ async function sendBackgroundWebPush(targetUsername, payload) {
     const now = Date.now();
     const lastTime = lastNotificationSent.get(key) || 0;
     
-    // Prevent spamming push notifications: maximum 1 push per 4 seconds per user
-    if (now - lastTime < 4000) {
+    // Prevent spamming push notifications: maximum 1 push per 5 seconds per user
+    if (now - lastTime < 5000) {
       console.log(`[WebPush Rate Limit] Bypassing duplicate notification to ${targetUsername} to prevent spam.`);
       return;
     }
@@ -257,6 +279,10 @@ async function sendBackgroundWebPush(targetUsername, payload) {
 }
 
 function broadcastRealtimeEvent(event, data) {
+  if (isDuplicateBroadcast(event, data)) {
+    return;
+  }
+
   const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
   const targetLower = data.targetUsername ? String(data.targetUsername).toLowerCase() : 'all';
 
@@ -279,8 +305,6 @@ function broadcastRealtimeEvent(event, data) {
   }
 
   // Only send Web Push to users NOT currently connected via SSE.
-  // If the user is connected via SSE, the event was already delivered in-app.
-  // Web Push is reserved for users who are offline / app in background.
   const isTargetedEvent = data.targetUsername && data.targetUsername !== 'all';
   if (isTargetedEvent) {
     const targetKey = String(data.targetUsername).toLowerCase();
@@ -293,10 +317,8 @@ function broadcastRealtimeEvent(event, data) {
         tag: 'noxa-global-notif'
       });
     }
-    // If user was reached via SSE, skip web push entirely (they got it in-app)
   } else {
-    // Broadcast event (all users) — always send web push so offline users are notified
-    // Service worker on client side will suppress if app is in foreground
+    // Broadcast event (all users) — send web push so offline users are notified
     sendBackgroundWebPush('all', {
       title: data.title || 'NoxariaNet Wallet',
       body: data.body || 'Pemberitahuan transaksi baru!',
@@ -1527,14 +1549,14 @@ app.post('/admin/informations', requireAdminAuth, async (req, res) => {
   try {
     const { title, contentTitle, content, active } = req.body;
     const now = new Date();
-    const pad = n => String(n).padStart(2, '0');
+    const wib = db.getWibDateTime(now);
     const newInfo = {
       id: `INF-${Date.now()}`,
       title: title || 'Pengumuman',
       contentTitle: contentTitle || title || 'Info Terbaru',
       content: content || '',
-      date: `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()}`,
-      time: `${pad(now.getHours())}:${pad(now.getMinutes())}`,
+      date: wib.date,
+      time: wib.time,
       active: active !== false
     };
     await db.addInformation(newInfo);

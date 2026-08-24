@@ -95,14 +95,39 @@ function all(sql, params = []) {
 function getWibDateTime(dateInput = new Date()) {
   const d = new Date(dateInput);
   const validDate = isNaN(d.getTime()) ? new Date() : d;
-  const wibTime = new Date(validDate.getTime() + (7 * 60 * 60 * 1000));
-  const pad = n => String(n).padStart(2, '0');
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-  return {
-    date: `${pad(wibTime.getUTCDate())} ${months[wibTime.getUTCMonth()]} ${wibTime.getUTCFullYear()}`,
-    time: `${pad(wibTime.getUTCHours())}:${pad(wibTime.getUTCMinutes())}:${pad(wibTime.getUTCSeconds())} WIB`,
-    createdAt: validDate.toISOString()
-  };
+  
+  try {
+    const formatterDate = new Intl.DateTimeFormat('id-ID', {
+      timeZone: 'Asia/Jakarta',
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+    const formatterTime = new Intl.DateTimeFormat('id-ID', {
+      timeZone: 'Asia/Jakarta',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+
+    const dateStr = formatterDate.format(validDate).replace(/\./g, '');
+    const timeStr = formatterTime.format(validDate).replace(/\./g, ':') + ' WIB';
+
+    return {
+      date: dateStr,
+      time: timeStr,
+      createdAt: validDate.toISOString()
+    };
+  } catch (e) {
+    const pad = n => String(n).padStart(2, '0');
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    return {
+      date: `${pad(validDate.getDate())} ${months[validDate.getMonth()]} ${validDate.getFullYear()}`,
+      time: `${pad(validDate.getHours())}:${pad(validDate.getMinutes())}:${pad(validDate.getSeconds())} WIB`,
+      createdAt: validDate.toISOString()
+    };
+  }
 }
 
 async function initDb() {
