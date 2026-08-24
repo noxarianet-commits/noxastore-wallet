@@ -5328,11 +5328,6 @@
 
           <input type="hidden" id="dana-selected-nominal" value="0" />
         </div>
-
-        <button id="btn-submit-dana" onclick="openCheckoutModal()" disabled
-          style="width: 100%; margin-top: auto; padding: 14px; border-radius: 14px; border: none; background: #e2e8f0; color: #94a3b8; font-weight: 800; font-size: 14px; cursor: not-allowed; transition: all 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
-          Pilih Nominal Dulu
-        </button>
       </div>
     </div>
 
@@ -7293,14 +7288,7 @@
           }
         });
 
-        const submitBtn = document.getElementById('btn-submit-dana');
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.style.background = 'linear-gradient(135deg, #7B2D8E, #9B4DB8)';
-          submitBtn.style.color = 'white';
-          submitBtn.style.cursor = 'pointer';
-          submitBtn.innerText = 'Lanjut Konfirmasi — Rp ' + price.toLocaleString('id-ID');
-        }
+
 
         const phoneInput = document.getElementById('dana-withdraw-phone');
         const phone = phoneInput ? phoneInput.value.trim() : '';
@@ -7431,6 +7419,7 @@
         const errMsg = document.getElementById('pin-error-msg');
         if (errMsg) errMsg.style.display = 'none';
 
+        pushNavigationState('modal-checkout');
         document.getElementById('modal-checkout').style.display = 'flex';
         setTimeout(() => { const el = document.getElementById('pin-d1'); if (el) el.focus(); }, 120);
       }
@@ -9976,63 +9965,108 @@
       // ============================================================
       let _customAlertCallback = null;
 
+      function looksLikeCredential(str) {
+        if (!str) return false;
+        return /[@|]/.test(str) || str.includes('\n') || /^[a-z0-9._%+\-]+:[^\s]{4,}/i.test(str);
+      }
+
+      function sanitizeErrorMessage(msg) {
+        if (!msg) return '';
+        try {
+          let str = '';
+          if (typeof msg === 'string') {
+            str = msg;
+          } else if (msg instanceof Error) {
+            str = msg.message || String(msg);
+          } else {
+            try { str = JSON.stringify(msg); } catch(e) { str = String(msg); }
+          }
+          if (looksLikeCredential(str)) return str.trim();
+          return str
+            .replace(/ditolak oleh sekalipay/gi, 'Ditolak oleh sistem')
+            .replace(/api sekalipay/gi, 'sistem')
+            .replace(/sekalipay ppob/gi, 'Produk PPOB')
+            .replace(/provider sekalipay/gi, 'sistem provider')
+            .replace(/sekalipay/gi, 'sistem provider')
+            .replace(/ditolak oleh provider/gi, 'Ditolak oleh sistem')
+            .trim();
+        } catch (err) {
+          return String(msg || '');
+        }
+      }
+
       function showCustomAlert(title, message, type = 'error', buttonText = 'Mengerti', callback = null) {
-        _customAlertCallback = callback;
-        const modal = document.getElementById('app-custom-alert-modal');
-        const card = document.getElementById('custom-alert-card');
-        const iconBox = document.getElementById('custom-alert-icon-box');
-        const iconEl = document.getElementById('custom-alert-icon');
-        const titleEl = document.getElementById('custom-alert-title');
-        const msgEl = document.getElementById('custom-alert-message');
-        const btnEl = document.getElementById('custom-alert-btn');
+        try {
+          _customAlertCallback = callback;
+          const modal = document.getElementById('app-custom-alert-modal');
+          const card = document.getElementById('custom-alert-card');
+          const iconBox = document.getElementById('custom-alert-icon-box');
+          const iconEl = document.getElementById('custom-alert-icon');
+          const titleEl = document.getElementById('custom-alert-title');
+          const msgEl = document.getElementById('custom-alert-message');
+          const btnEl = document.getElementById('custom-alert-btn');
 
-        if (!modal || !card) {
-          if (callback) callback();
-          return;
+          if (!modal || !card) {
+            alert((title ? title + ': ' : '') + String(message || ''));
+            if (typeof callback === 'function') callback();
+            return;
+          }
+
+          let cleanText = '';
+          try {
+            cleanText = sanitizeErrorMessage(message);
+          } catch(e) {
+            cleanText = String(message || '');
+          }
+
+          if (titleEl) titleEl.innerText = title || 'Pemberitahuan';
+          if (msgEl) msgEl.innerText = cleanText || 'Terjadi kesalahan pada sistem.';
+          if (btnEl) btnEl.innerText = buttonText || 'Mengerti';
+
+          if (type === 'success') {
+            if (iconBox) {
+              iconBox.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+              iconBox.style.boxShadow = '0 10px 25px rgba(16, 185, 129, 0.25)';
+            }
+            if (iconEl) iconEl.innerText = 'check_circle';
+            if (btnEl) {
+              btnEl.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+              btnEl.style.boxShadow = '0 6px 18px rgba(16, 185, 129, 0.3)';
+            }
+          } else if (type === 'warning' || type === 'info') {
+            if (iconBox) {
+              iconBox.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
+              iconBox.style.boxShadow = '0 10px 25px rgba(245, 158, 11, 0.25)';
+            }
+            if (iconEl) iconEl.innerText = 'warning';
+            if (btnEl) {
+              btnEl.style.background = 'linear-gradient(135deg, #7B2D8E, #a855f7)';
+              btnEl.style.boxShadow = '0 6px 18px rgba(123, 45, 142, 0.3)';
+            }
+          } else {
+            if (iconBox) {
+              iconBox.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+              iconBox.style.boxShadow = '0 10px 25px rgba(239, 68, 68, 0.25)';
+            }
+            if (iconEl) iconEl.innerText = 'error';
+            if (btnEl) {
+              btnEl.style.background = 'linear-gradient(135deg, #7B2D8E, #a855f7)';
+              btnEl.style.boxShadow = '0 6px 18px rgba(123, 45, 142, 0.3)';
+            }
+          }
+
+          modal.style.display = 'flex';
+          requestAnimationFrame(() => {
+            if (card) {
+              card.style.opacity = '1';
+              card.style.transform = 'scale(1)';
+            }
+          });
+        } catch (globalErr) {
+          console.error('[Alert Safe Fallback]', globalErr);
+          try { alert(String(message || title || 'Pemberitahuan')); } catch(e) {}
+          if (typeof callback === 'function') callback();
         }
-
-        if (titleEl) titleEl.innerText = title || 'Pemberitahuan';
-        if (msgEl) msgEl.innerText = sanitizeErrorMessage(message || '');
-        if (btnEl) btnEl.innerText = buttonText || 'Mengerti';
-
-        if (type === 'success') {
-          if (iconBox) {
-            iconBox.style.background = 'linear-gradient(135deg, #10b981, #059669)';
-            iconBox.style.boxShadow = '0 10px 25px rgba(16, 185, 129, 0.25)';
-          }
-          if (iconEl) iconEl.innerText = 'check_circle';
-          if (btnEl) {
-            btnEl.style.background = 'linear-gradient(135deg, #10b981, #059669)';
-            btnEl.style.boxShadow = '0 6px 18px rgba(16, 185, 129, 0.3)';
-          }
-        } else if (type === 'warning' || type === 'info') {
-          if (iconBox) {
-            iconBox.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
-            iconBox.style.boxShadow = '0 10px 25px rgba(245, 158, 11, 0.25)';
-          }
-          if (iconEl) iconEl.innerText = 'warning';
-          if (btnEl) {
-            btnEl.style.background = 'linear-gradient(135deg, #7B2D8E, #a855f7)';
-            btnEl.style.boxShadow = '0 6px 18px rgba(123, 45, 142, 0.3)';
-          }
-        } else {
-          if (iconBox) {
-            iconBox.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
-            iconBox.style.boxShadow = '0 10px 25px rgba(239, 68, 68, 0.25)';
-          }
-          if (iconEl) iconEl.innerText = 'error';
-          if (btnEl) {
-            btnEl.style.background = 'linear-gradient(135deg, #7B2D8E, #a855f7)';
-            btnEl.style.boxShadow = '0 6px 18px rgba(123, 45, 142, 0.3)';
-          }
-        }
-
-        modal.style.display = 'flex';
-        requestAnimationFrame(() => {
-          card.style.opacity = '1';
-          card.style.transform = 'scale(1)';
-        });
-        // Alert remains open until user explicitly taps 'Mengerti' button (behaving like JS alert)
       }
 
       function closeCustomAlert() {
@@ -10058,66 +10092,70 @@
 
       function showNotification(message, type) {
         if (!message) return;
-
-        const now = Date.now();
-        const cleanKey = String(message).trim();
-        if (now - lastToastTime < 3500 && cleanKey === lastToastMessage) {
-          console.log('[Toast Anti-Spam] Suppressed duplicate toast notification:', message);
-          return;
-        }
-        lastToastTime = now;
-        lastToastMessage = cleanKey;
-        setTimeout(() => { if (lastToastMessage === cleanKey) lastToastMessage = ''; }, 3500);
-
-        // Auto-detect type from emoji prefix or content if not explicitly provided
-        if (!type) {
-          if (message.startsWith('❌') || message.startsWith('⚠️') || message.toLowerCase().includes('gagal') || message.toLowerCase().includes('salah')) {
-            type = 'error';
-          } else if (message.startsWith('✅')) {
-            type = 'success';
-          } else {
-            type = 'info';
+        try {
+          const strMsg = typeof message === 'string' ? message : (message.message || String(message));
+          const now = Date.now();
+          const cleanKey = strMsg.trim();
+          if (now - lastToastTime < 3500 && cleanKey === lastToastMessage) {
+            console.log('[Toast Anti-Spam] Suppressed duplicate toast notification:', strMsg);
+            return;
           }
-        }
+          lastToastTime = now;
+          lastToastMessage = cleanKey;
+          setTimeout(() => { if (lastToastMessage === cleanKey) lastToastMessage = ''; }, 3500);
 
-        // Trigger ultra-premium in-app alert modal for errors & warnings
-        if (type === 'error' || type === 'warning' || message.startsWith('❌') || message.startsWith('⚠️')) {
-          let cleanMsg = message.replace(/^[\u274c\u26a0\u2705\u26a1\u26a0️\s]+/, '').trim();
-          let alertTitle = (type === 'error' || message.startsWith('❌')) ? 'Pemberitahuan' : 'Pemberitahuan';
-          showCustomAlert(alertTitle, cleanMsg, type);
-        }
+          // Auto-detect type from emoji prefix or content if not explicitly provided
+          if (!type) {
+            if (strMsg.startsWith('❌') || strMsg.startsWith('⚠️') || strMsg.toLowerCase().includes('gagal') || strMsg.toLowerCase().includes('salah')) {
+              type = 'error';
+            } else if (strMsg.startsWith('✅')) {
+              type = 'success';
+            } else {
+              type = 'info';
+            }
+          }
 
-        const banner = document.getElementById('toast-banner');
-        const messageEl = document.getElementById('toast-message');
-        const iconEl = document.getElementById('toast-icon');
+          // Trigger ultra-premium in-app alert modal for errors & warnings
+          if (type === 'error' || type === 'warning' || strMsg.startsWith('❌') || strMsg.startsWith('⚠️')) {
+            let cleanMsg = strMsg.replace(/^[\u274c\u26a0\u2705\u26a1\u26a0️\s]+/, '').trim();
+            let alertTitle = (type === 'error' || strMsg.startsWith('❌')) ? 'Pemberitahuan' : 'Pemberitahuan';
+            showCustomAlert(alertTitle, cleanMsg, type);
+          }
 
-        const colors = {
-          success: '#059669',
-          error: '#DC2626',
-          warning: '#D97706',
-          info: '#9B4DB8'
-        };
-        const icons = {
-          success: 'check_circle',
-          error: 'error',
-          warning: 'warning',
-          info: 'info'
-        };
+          const banner = document.getElementById('toast-banner');
+          const messageEl = document.getElementById('toast-message');
+          const iconEl = document.getElementById('toast-icon');
 
-        if (iconEl) {
-          iconEl.innerText = icons[type] || 'info';
-          iconEl.style.color = colors[type] || colors.info;
-        }
-        if (banner) {
-          banner.style.background = type === 'error' ? '#1C1012' : type === 'success' ? '#0A1F15' : '#0F172A';
+          const colors = {
+            success: '#059669',
+            error: '#DC2626',
+            warning: '#D97706',
+            info: '#9B4DB8'
+          };
+          const icons = {
+            success: 'check_circle',
+            error: 'error',
+            warning: 'warning',
+            info: 'info'
+          };
 
-          if (messageEl) messageEl.innerText = message;
-          banner.style.top = '70px';
+          if (iconEl) {
+            iconEl.innerText = icons[type] || 'info';
+            iconEl.style.color = colors[type] || colors.info;
+          }
+          if (banner) {
+            banner.style.background = type === 'error' ? '#1C1012' : type === 'success' ? '#0A1F15' : '#0F172A';
 
-          clearTimeout(banner._hideTimer);
-          banner._hideTimer = setTimeout(() => {
-            banner.style.top = '-100px';
-          }, type === 'error' && message.length > 80 ? 3200 : 2200);
+            if (messageEl) messageEl.innerText = strMsg;
+            banner.style.top = '70px';
+
+            clearTimeout(banner._hideTimer);
+            banner._hideTimer = setTimeout(() => {
+              banner.style.top = '-100px';
+            }, type === 'error' && strMsg.length > 80 ? 3200 : 2200);
+          }
+        } catch (e) {
+          console.error('[Notification Error]', e);
         }
       }
 
@@ -12349,6 +12387,7 @@
 
         // Buka modal bottom-sheet
         const checkoutModal = document.getElementById('ppob-checkout-modal');
+        pushNavigationState('ppob-checkout');
         checkoutModal.style.display = 'flex';
         void checkoutModal.offsetWidth; // force reflow
         setTimeout(() => {
@@ -13288,19 +13327,19 @@
         }
 
         const mutasiScreen = document.getElementById('screen-mutasi');
-        if (mutasiScreen && mutasiScreen.style.display !== 'none' && mutasiScreen.classList.contains('active')) {
+        if (mutasiScreen && mutasiScreen.style.display !== 'none') {
           closeMutasiScreen();
           return;
         }
 
         const postCheckoutScreen = document.getElementById('screen-post-checkout-status');
-        if (postCheckoutScreen && postCheckoutScreen.style.display !== 'none' && postCheckoutScreen.classList.contains('active')) {
+        if (postCheckoutScreen && postCheckoutScreen.style.display !== 'none') {
           closePostCheckoutStatus();
           return;
         }
 
         const trxDetailScreen = document.getElementById('screen-trx-detail');
-        if (trxDetailScreen && trxDetailScreen.style.display !== 'none' && trxDetailScreen.classList.contains('active')) {
+        if (trxDetailScreen && trxDetailScreen.style.display !== 'none') {
           closeTrxDetail();
           return;
         }
@@ -13318,32 +13357,32 @@
         }
 
         const topupScreen = document.getElementById('screen-topup');
-        if (topupScreen && topupScreen.style.display !== 'none' && topupScreen.classList.contains('active')) {
+        if (topupScreen && topupScreen.style.display !== 'none') {
           closeTopUpModal();
           return;
         }
 
         const ewalletDanaScreen = document.getElementById('screen-ewallet-dana');
-        if (ewalletDanaScreen && ewalletDanaScreen.style.display !== 'none' && ewalletDanaScreen.classList.contains('active')) {
+        if (ewalletDanaScreen && ewalletDanaScreen.style.display !== 'none') {
           closeEwalletDanaScreen();
           return;
         }
 
         const ewalletListScreen = document.getElementById('screen-ewallet-list');
-        if (ewalletListScreen && ewalletListScreen.style.display !== 'none' && ewalletListScreen.classList.contains('active')) {
+        if (ewalletListScreen && ewalletListScreen.style.display !== 'none') {
           closeEwalletListScreen();
           return;
         }
 
-        const gameListScreen = document.getElementById('screen-game-list');
-        if (gameListScreen && gameListScreen.style.display !== 'none' && gameListScreen.classList.contains('active')) {
-          closeGameListScreen();
+        const ppobScreen = document.getElementById('screen-ppob');
+        if (ppobScreen && ppobScreen.style.display !== 'none') {
+          closePPOBScreen();
           return;
         }
 
-        const ppobScreen = document.getElementById('screen-ppob');
-        if (ppobScreen && ppobScreen.style.display !== 'none' && ppobScreen.classList.contains('active')) {
-          closePPOBScreen();
+        const gameListScreen = document.getElementById('screen-game-list');
+        if (gameListScreen && gameListScreen.style.display !== 'none') {
+          closeGameListScreen();
           return;
         }
 
