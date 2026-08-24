@@ -250,8 +250,8 @@
       display: flex;
       align-items: center;
       border: 1.5px solid #e2e8f0;
-      border-radius: 16px;
-      padding: 0 16px;
+      border-radius: 12px;
+      padding: 0 14px;
       background: #f8fafc;
       transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
       width: 100%;
@@ -260,13 +260,13 @@
     .auth-input-group:focus-within {
       border-color: #7B2D8E !important;
       background: #ffffff !important;
-      box-shadow: 0 0 0 4px rgba(123, 45, 142, 0.12), 0 2px 8px rgba(0, 0, 0, 0.04);
+      box-shadow: 0 0 0 3.5px rgba(123, 45, 142, 0.12), 0 2px 8px rgba(0, 0, 0, 0.04);
     }
 
     .auth-input-group span {
       font-size: 20px;
       color: #94a3b8;
-      margin-right: 12px;
+      margin-right: 10px;
       flex-shrink: 0;
       transition: color 0.2s ease;
     }
@@ -279,9 +279,9 @@
       flex: 1;
       border: none;
       outline: none;
-      padding: 15px 0;
+      padding: 11px 0;
       font-family: inherit;
-      font-size: 14px;
+      font-size: 13.5px;
       font-weight: 600;
       color: #0f172a;
       background: transparent;
@@ -4985,16 +4985,14 @@
 
       <div style="padding: 20px; display: flex; flex-direction: column; gap: 16px; flex: 1; overflow-y: auto;">
         <!-- Input Target -->
-        <div
-          style="background: white; border-radius: 16px; padding: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); display: flex; flex-direction: column; gap: 8px;">
-          <label id="ppob-target-label" style="font-size: 12px; font-weight: 700; color: #64748b;">Nomor Handphone / ID
-            Pelanggan</label>
-          <div style="position: relative; display: flex; align-items: center;">
-            <span class="material-symbols-outlined"
-              style="position: absolute; left: 12px; color: #94a3b8; font-size: 20px;">contact_phone</span>
-            <input type="text" id="ppob-target-input" placeholder="Masukkan nomor / ID tujuan"
-              style="width: 100%; padding: 14px 12px 14px 44px; border: 1.5px solid #e2e8f0; border-radius: 12px; font-family: inherit; font-size: 14px; font-weight: 600; outline: none; transition: border-color 0.2s;"
-              onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#e2e8f0'">
+        <div style="background: #ffffff; border-radius: 16px; padding: 14px 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); border: 1.5px solid #e2e8f0; display: flex; flex-direction: column; gap: 6px;">
+          <label id="ppob-target-label" style="font-size: 11.5px; font-weight: 700; color: #475569; letter-spacing: 0.2px; text-transform: uppercase;">Nomor Handphone / ID Pelanggan</label>
+          <div style="position: relative; display: flex; align-items: center; background: #f8fafc; border-radius: 12px; border: 1.5px solid #e2e8f0; transition: all 0.2s ease;">
+            <span class="material-symbols-outlined" style="position: absolute; left: 12px; color: #7B2D8E; font-size: 20px;">account_box</span>
+            <input type="text" id="ppob-target-input" placeholder="Masukkan nomor HP / ID Game..."
+              style="width: 100%; padding: 11px 14px 11px 40px; border: none; background: transparent; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13.5px; font-weight: 700; color: #0f172a; outline: none;"
+              onfocus="this.parentElement.style.borderColor='#7B2D8E'; this.parentElement.style.background='#ffffff'; this.parentElement.style.boxShadow='0 0 0 3.5px rgba(123, 45, 142, 0.12)';"
+              onblur="this.parentElement.style.borderColor='#e2e8f0'; this.parentElement.style.background='#f8fafc'; this.parentElement.style.boxShadow='none';" />
           </div>
         </div>
 
@@ -5289,22 +5287,22 @@
       </div>
       <div style="padding: 24px; display: flex; flex-direction: column; gap: 20px; flex: 1; overflow-y: auto;">
 
-        <div>
-          <label id="ewallet-withdraw-phone-label"
-            style="font-size: 12px; font-weight: 700; color: #64748b; margin-bottom: 8px; display: block;">NOMOR DANA TUJUAN</label>
-          <div
-            style="background: white; border-radius: 14px; padding: 12px 16px; display: flex; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.02); border: 1.5px solid #e2e8f0;">
-            <span class="material-symbols-outlined" style="color: #94a3b8; margin-right: 12px;">smartphone</span>
+        <div style="background: #ffffff; border-radius: 16px; padding: 14px 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); border: 1.5px solid #e2e8f0; display: flex; flex-direction: column; gap: 6px;">
+          <label id="ewallet-withdraw-phone-label" style="font-size: 11.5px; font-weight: 700; color: #475569; letter-spacing: 0.2px; text-transform: uppercase;">NOMOR DANA TUJUAN</label>
+          <div style="position: relative; display: flex; align-items: center; background: #f8fafc; border-radius: 12px; border: 1.5px solid #e2e8f0; transition: all 0.2s ease;">
+            <span class="material-symbols-outlined" style="position: absolute; left: 12px; color: #7B2D8E; font-size: 20px;">smartphone</span>
             <input type="tel" id="dana-withdraw-phone" placeholder="Contoh: 081234567890"
               oninput="lookupEwalletAccountName(this.value)"
-              style="border: none; outline: none; width: 100%; font-size: 14px; font-family: inherit; color: #0f172a;" />
+              style="width: 100%; padding: 11px 14px 11px 40px; border: none; background: transparent; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13.5px; font-weight: 700; color: #0f172a; outline: none;"
+              onfocus="this.parentElement.style.borderColor='#7B2D8E'; this.parentElement.style.background='#ffffff'; this.parentElement.style.boxShadow='0 0 0 3.5px rgba(123, 45, 142, 0.12)';"
+              onblur="this.parentElement.style.borderColor='#e2e8f0'; this.parentElement.style.background='#f8fafc'; this.parentElement.style.boxShadow='none';" />
           </div>
           <!-- Atas Nama Row -->
-          <div id="ewallet-accname-row" style="display:none; margin-top: 8px; background: rgba(123,45,142,0.05); border-radius: 10px; padding: 8px 14px; display: none; align-items: center; gap: 8px;">
+          <div id="ewallet-accname-row" style="display:none; margin-top: 6px; background: rgba(123,45,142,0.05); border-radius: 10px; padding: 8px 12px; align-items: center; gap: 8px;">
             <span class="material-symbols-outlined" style="font-size: 16px; color: #7B2D8E;">verified_user</span>
             <div>
-              <div style="font-size: 10px; color: #64748b; font-weight: 700;">ATAS NAMA</div>
-              <div id="ewallet-accname-text" style="font-size: 13px; font-weight: 800; color: #0f172a;">-</div>
+              <div style="font-size: 9.5px; color: #64748b; font-weight: 700; text-transform: uppercase;">ATAS NAMA</div>
+              <div id="ewallet-accname-text" style="font-size: 12.5px; font-weight: 800; color: #0f172a;">-</div>
             </div>
           </div>
         </div>
@@ -7108,6 +7106,7 @@
       }
 
       async function openEwalletWithdrawScreen(method) {
+        pushNavigationState('ewallet-dana');
         _activeWithdrawMethod = method;
         const screen = document.getElementById('screen-ewallet-dana');
         if (!screen) return;
@@ -7295,11 +7294,29 @@
         });
 
         const submitBtn = document.getElementById('btn-submit-dana');
-        submitBtn.disabled = false;
-        submitBtn.style.background = 'linear-gradient(135deg, #7B2D8E, #9B4DB8)';
-        submitBtn.style.color = 'white';
-        submitBtn.style.cursor = 'pointer';
-        submitBtn.innerText = 'Lanjut Konfirmasi — Rp ' + price.toLocaleString('id-ID');
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.style.background = 'linear-gradient(135deg, #7B2D8E, #9B4DB8)';
+          submitBtn.style.color = 'white';
+          submitBtn.style.cursor = 'pointer';
+          submitBtn.innerText = 'Lanjut Konfirmasi — Rp ' + price.toLocaleString('id-ID');
+        }
+
+        const phoneInput = document.getElementById('dana-withdraw-phone');
+        const phone = phoneInput ? phoneInput.value.trim() : '';
+        const method = _activeWithdrawMethod || 'DANA';
+        if (!phone || phone.replace(/\D/g, '').length < 9) {
+          showCustomAlert('Pemberitahuan', 'Silakan masukkan Nomor ' + method + ' Tujuan yang valid terlebih dahulu.', 'warning', 'Mengerti', () => {
+            if (phoneInput) {
+              phoneInput.focus();
+              try { phoneInput.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(e) {}
+            }
+          });
+          return;
+        }
+
+        // Phone is valid -> Open confirmation modal directly!
+        openCheckoutModal();
       }
 
 
@@ -8516,6 +8533,7 @@
 
       // ---- QR SCANNER ----
       function openQRScannerScreen() {
+        pushNavigationState('qr-scanner');
         _qrScannerMode = 'standalone';
         const screen = document.getElementById('screen-qr-scanner');
         if (!screen) return;
@@ -8525,6 +8543,7 @@
       }
 
       function openQRScannerForTransfer() {
+        pushNavigationState('qr-scanner');
         _qrScannerMode = 'transfer';
         const screen = document.getElementById('screen-qr-scanner');
         if (!screen) return;
@@ -10013,12 +10032,7 @@
           card.style.opacity = '1';
           card.style.transform = 'scale(1)';
         });
-
-        // Auto dismiss alert after 2.2 seconds so it never disturbs user flow
-        clearTimeout(modal._autoDismissTimer);
-        modal._autoDismissTimer = setTimeout(() => {
-          closeCustomAlert();
-        }, 2200);
+        // Alert remains open until user explicitly taps 'Mengerti' button (behaving like JS alert)
       }
 
       function closeCustomAlert() {
@@ -12273,10 +12287,15 @@
       }
 
       function openPPOBCheckout(product) {
-        const target = document.getElementById('ppob-target-input').value.trim();
+        const targetInput = document.getElementById('ppob-target-input');
+        const target = targetInput ? targetInput.value.trim() : '';
         if (!target || target.length < 3) {
-          showNotification('⚠️ Masukkan Nomor Tujuan / ID Pelanggan yang valid terlebih dahulu.');
-          document.getElementById('ppob-target-input').focus();
+          showCustomAlert('Pemberitahuan', 'Silakan masukkan Nomor HP / ID Player Game yang valid terlebih dahulu.', 'warning', 'Mengerti', () => {
+            if (targetInput) {
+              targetInput.focus();
+              try { targetInput.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(e) {}
+            }
+          });
           return;
         }
 
@@ -13199,6 +13218,13 @@
       // ============================================================
       // NATIVE PHONE HARDWARE BACK BUTTON NAVIGATION HANDLER
       // ============================================================
+      // Seed root history entry if not set
+      try {
+        if (!history.state || !history.state.root) {
+          history.replaceState({ root: true, screen: 'home' }, '');
+        }
+      } catch(e) {}
+
       function pushNavigationState(screenName) {
         try {
           history.pushState({ screen: screenName, timestamp: Date.now() }, '');
@@ -13206,12 +13232,67 @@
       }
 
       window.addEventListener('popstate', function(event) {
-        // 1. Close active modals / screens in stack order
+        // 1. Close active modals & screens in reverse z-index / stack order
+        const setupModal = document.getElementById('setup-modal');
+        if (setupModal && setupModal.style.display !== 'none') {
+          closeSetupModal();
+          return;
+        }
+
+        const pinOverlay = document.getElementById('pin-entry-overlay');
+        if (pinOverlay && pinOverlay.style.display !== 'none') {
+          closePinOverlay();
+          return;
+        }
+
+        const modalCheckout = document.getElementById('modal-checkout');
+        if (modalCheckout && modalCheckout.style.display !== 'none') {
+          closeCheckoutModal();
+          return;
+        }
+
+        const ppobCheckoutModal = document.getElementById('ppob-checkout-modal');
+        if (ppobCheckoutModal && ppobCheckoutModal.style.display !== 'none' && ppobCheckoutModal.style.display !== '') {
+          closePPOBCheckout();
+          return;
+        }
+
+        const receiptModal = document.getElementById('receipt-download-modal');
+        if (receiptModal && receiptModal.style.display !== 'none') {
+          closeReceiptDownloadModal();
+          return;
+        }
+
+        const qrModal = document.getElementById('qr-modal');
+        if (qrModal && qrModal.style.display !== 'none' && qrModal.classList.contains('active')) {
+          closeQRModal();
+          return;
+        }
+
+        const withdrawModal = document.getElementById('withdraw-modal');
+        if (withdrawModal && withdrawModal.style.display !== 'none') {
+          closeWithdrawModal();
+          return;
+        }
+
+        const myQrModal = document.getElementById('modal-my-qr');
+        if (myQrModal && myQrModal.style.display !== 'none') {
+          closeMyQRModal();
+          return;
+        }
+
+        const infoDetailModal = document.getElementById('info-detail-modal');
+        if (infoDetailModal && infoDetailModal.style.display !== 'none') {
+          closeInfoDetailModal();
+          return;
+        }
+
         const mutasiScreen = document.getElementById('screen-mutasi');
         if (mutasiScreen && mutasiScreen.style.display !== 'none' && mutasiScreen.classList.contains('active')) {
           closeMutasiScreen();
           return;
         }
+
         const postCheckoutScreen = document.getElementById('screen-post-checkout-status');
         if (postCheckoutScreen && postCheckoutScreen.style.display !== 'none' && postCheckoutScreen.classList.contains('active')) {
           closePostCheckoutStatus();
@@ -13224,21 +13305,21 @@
           return;
         }
 
-        const ppobCheckoutModal = document.getElementById('ppob-checkout-modal');
-        if (ppobCheckoutModal && ppobCheckoutModal.style.display !== 'none' && ppobCheckoutModal.style.display !== '') {
-          closePPOBCheckout();
+        const qrScannerScreen = document.getElementById('screen-qr-scanner');
+        if (qrScannerScreen && qrScannerScreen.style.display !== 'none') {
+          closeQRScannerScreen();
           return;
         }
 
-        const ppobScreen = document.getElementById('screen-ppob');
-        if (ppobScreen && ppobScreen.style.display !== 'none' && ppobScreen.classList.contains('active')) {
-          closePPOBScreen();
+        const transferScreen = document.getElementById('screen-transfer');
+        if (transferScreen && transferScreen.style.display !== 'none') {
+          closeTransferScreen();
           return;
         }
 
-        const gameListScreen = document.getElementById('screen-game-list');
-        if (gameListScreen && gameListScreen.style.display !== 'none' && gameListScreen.classList.contains('active')) {
-          closeGameListScreen();
+        const topupScreen = document.getElementById('screen-topup');
+        if (topupScreen && topupScreen.style.display !== 'none' && topupScreen.classList.contains('active')) {
+          closeTopUpModal();
           return;
         }
 
@@ -13254,41 +13335,28 @@
           return;
         }
 
-        const topupScreen = document.getElementById('screen-topup');
-        if (topupScreen && topupScreen.style.display !== 'none' && topupScreen.classList.contains('active')) {
-          closeTopUpModal();
+        const gameListScreen = document.getElementById('screen-game-list');
+        if (gameListScreen && gameListScreen.style.display !== 'none' && gameListScreen.classList.contains('active')) {
+          closeGameListScreen();
           return;
         }
 
-        const transferScreen = document.getElementById('screen-transfer');
-        if (transferScreen && transferScreen.style.display !== 'none') {
-          closeTransferScreen();
+        const ppobScreen = document.getElementById('screen-ppob');
+        if (ppobScreen && ppobScreen.style.display !== 'none' && ppobScreen.classList.contains('active')) {
+          closePPOBScreen();
           return;
         }
 
-        const myQrModal = document.getElementById('modal-my-qr');
-        if (myQrModal && myQrModal.style.display !== 'none') {
-          closeMyQRModal();
-          return;
-        }
-
-        const pinOverlay = document.getElementById('pin-entry-overlay');
-        if (pinOverlay && pinOverlay.style.display !== 'none') {
-          closePinOverlay();
-          return;
-        }
-
-        const qrScannerScreen = document.getElementById('qr-scanner-screen');
-        if (qrScannerScreen && qrScannerScreen.style.display !== 'none') {
-          closeQRScannerScreen();
-          return;
-        }
-
-        // 2. If no modal is open, return to Home tab if on sub-tabs
+        // 2. If no modal/panel is open, switch back to Home tab if currently on sub-tabs
         if (typeof currentTab !== 'undefined' && currentTab !== 'home') {
           switchTab('home');
           return;
         }
+
+        // 3. Root Guard: If on Home tab, re-push a guard state so back press NEVER exits app unexpectedly
+        try {
+          history.pushState({ root: true, screen: 'home' }, '');
+        } catch(e) {}
       });
     </script>
 
