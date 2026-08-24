@@ -5590,14 +5590,13 @@
       </div>
     </div>
 
-    <!-- Premium Native-like Toast/Banner Alerts -->
+    <!-- Premium Floating Toast / Alert System -->
     <div id="toast-banner"
-      style="position: fixed; top: -100px; left: 50%; transform: translateX(-50%); width: calc(100% - 32px); max-width: 440px; background: #0F172A; color: white; padding: 14px 18px; border-radius: 14px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.35); z-index: 99999; transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
-      <span class="material-symbols-outlined" id="toast-icon"
-        style="font-size: 22px; color: #9B4DB8; flex-shrink: 0;">info</span>
-      <span id="toast-message"
-        style="flex: 1; line-height: 1.4; word-break: break-word; max-height: 120px; overflow-y: auto;">Notifikasi
-        aplikasi aktif.</span>
+      style="position: fixed; top: -120px; left: 50%; transform: translateX(-50%) scale(0.92); opacity: 0; width: calc(100% - 32px); max-width: 440px; background: linear-gradient(135deg, rgba(123, 45, 142, 0.96) 0%, rgba(76, 23, 92, 0.98) 100%); color: white; padding: 12px 18px; border-radius: 16px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13.5px; font-weight: 600; display: flex; align-items: center; gap: 12px; box-shadow: 0 14px 35px -6px rgba(123, 45, 142, 0.45); z-index: 999999; pointer-events: none; transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.2);">
+      <div id="toast-icon-bg" style="width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.22); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+        <span class="material-symbols-outlined" id="toast-icon" style="font-size: 20px; color: white;">info</span>
+      </div>
+      <span id="toast-message" style="flex: 1; line-height: 1.45; word-break: break-word; font-size: 13px; color: white; font-weight: 600;">Notifikasi aplikasi aktif.</span>
     </div>
 
     <!-- QR Modal -->
@@ -10341,23 +10340,31 @@
       function showNotification(message, type) {
         if (!message) return;
         try {
-          const strMsg = typeof message === 'string' ? message : (message.message || String(message));
+          let strMsg = typeof message === 'string' ? message : (message.message || String(message));
+          const rawMsg = strMsg;
+
+          // Strip leading emojis and symbols (e.g. ❌, ⚠️, ✅, 🔑, 📩, 🔒, 🎉, 🔄, 💰) for clean UI
+          strMsg = strMsg.replace(/^[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}❌⚠️✅🔑📩🔒🎉🔄💰]\s*/u, '').trim();
+
           const now = Date.now();
           const cleanKey = strMsg.trim();
-          if (now - lastToastTime < 3500 && cleanKey === lastToastMessage) {
-            console.log('[Toast Anti-Spam] Suppressed duplicate toast notification:', strMsg);
+          if (now - lastToastTime < 2500 && cleanKey === lastToastMessage) {
+            console.log('[Toast Anti-Spam] Suppressed duplicate toast:', strMsg);
             return;
           }
           lastToastTime = now;
           lastToastMessage = cleanKey;
-          setTimeout(() => { if (lastToastMessage === cleanKey) lastToastMessage = ''; }, 3500);
+          setTimeout(() => { if (lastToastMessage === cleanKey) lastToastMessage = ''; }, 2500);
 
-          // Auto-detect type from emoji prefix or content if not explicitly provided
+          // Auto-detect type
           if (!type) {
-            if (strMsg.startsWith('❌') || strMsg.startsWith('⚠️') || strMsg.toLowerCase().includes('gagal') || strMsg.toLowerCase().includes('salah')) {
+            const lower = rawMsg.toLowerCase();
+            if (rawMsg.includes('❌') || rawMsg.includes('⚠️') || lower.includes('gagal') || lower.includes('salah') || lower.includes('error') || lower.includes('tidak terdaftar') || lower.includes('wajib') || lower.includes('minimal')) {
               type = 'error';
-            } else if (strMsg.startsWith('✅')) {
+            } else if (rawMsg.includes('✅') || lower.includes('berhasil') || lower.includes('sukses')) {
               type = 'success';
+            } else if (lower.includes('ingat') || lower.includes('periksa') || lower.includes('perhatian')) {
+              type = 'warning';
             } else {
               type = 'info';
             }
@@ -10366,34 +10373,70 @@
           const banner = document.getElementById('toast-banner');
           const messageEl = document.getElementById('toast-message');
           const iconEl = document.getElementById('toast-icon');
+          const iconBg = document.getElementById('toast-icon-bg');
 
-          const colors = {
-            success: '#059669',
-            error: '#DC2626',
-            warning: '#D97706',
-            info: '#9B4DB8'
+          const styles = {
+            success: {
+              bg: 'linear-gradient(135deg, rgba(5, 150, 105, 0.96) 0%, rgba(4, 120, 87, 0.98) 100%)',
+              border: '1px solid rgba(167, 243, 208, 0.4)',
+              shadow: '0 14px 35px -6px rgba(16, 185, 129, 0.45)',
+              iconBg: 'rgba(255, 255, 255, 0.22)',
+              iconColor: '#FFFFFF',
+              icon: 'check_circle'
+            },
+            error: {
+              bg: 'linear-gradient(135deg, rgba(225, 29, 72, 0.96) 0%, rgba(159, 18, 57, 0.98) 100%)',
+              border: '1px solid rgba(254, 205, 211, 0.4)',
+              shadow: '0 14px 35px -6px rgba(225, 29, 72, 0.45)',
+              iconBg: 'rgba(255, 255, 255, 0.22)',
+              iconColor: '#FFFFFF',
+              icon: 'error'
+            },
+            warning: {
+              bg: 'linear-gradient(135deg, rgba(217, 119, 6, 0.96) 0%, rgba(180, 83, 9, 0.98) 100%)',
+              border: '1px solid rgba(254, 243, 199, 0.4)',
+              shadow: '0 14px 35px -6px rgba(217, 119, 6, 0.45)',
+              iconBg: 'rgba(255, 255, 255, 0.22)',
+              iconColor: '#FFFFFF',
+              icon: 'warning'
+            },
+            info: {
+              bg: 'linear-gradient(135deg, rgba(123, 45, 142, 0.96) 0%, rgba(76, 23, 92, 0.98) 100%)',
+              border: '1px solid rgba(233, 213, 255, 0.4)',
+              shadow: '0 14px 35px -6px rgba(123, 45, 142, 0.45)',
+              iconBg: 'rgba(255, 255, 255, 0.22)',
+              iconColor: '#FFFFFF',
+              icon: 'info'
+            }
           };
-          const icons = {
-            success: 'check_circle',
-            error: 'error',
-            warning: 'warning',
-            info: 'info'
-          };
+
+          const currentStyle = styles[type] || styles.info;
 
           if (iconEl) {
-            iconEl.innerText = icons[type] || 'info';
-            iconEl.style.color = colors[type] || colors.info;
+            iconEl.innerText = currentStyle.icon;
+            iconEl.style.color = currentStyle.iconColor;
           }
+          if (iconBg) {
+            iconBg.style.background = currentStyle.iconBg;
+          }
+
           if (banner) {
-            banner.style.background = type === 'error' ? '#1C1012' : type === 'success' ? '#0A1F15' : '#0F172A';
+            banner.style.background = currentStyle.bg;
+            banner.style.border = currentStyle.border;
+            banner.style.boxShadow = currentStyle.shadow;
 
             if (messageEl) messageEl.innerText = strMsg;
-            banner.style.top = '70px';
+
+            banner.style.top = '24px';
+            banner.style.opacity = '1';
+            banner.style.transform = 'translateX(-50%) scale(1)';
 
             clearTimeout(banner._hideTimer);
             banner._hideTimer = setTimeout(() => {
-              banner.style.top = '-100px';
-            }, type === 'error' && strMsg.length > 80 ? 3200 : 2200);
+              banner.style.top = '-120px';
+              banner.style.opacity = '0';
+              banner.style.transform = 'translateX(-50%) scale(0.92)';
+            }, strMsg.length > 70 ? 3500 : 2500);
           }
         } catch (e) {
           console.error('[Notification Error]', e);
