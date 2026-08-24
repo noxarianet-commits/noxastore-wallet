@@ -1270,6 +1270,7 @@ async function removePushSubscription(endpoint) {
 
 module.exports = {
   initDb,
+  getWibDateTime,
   getConfig,
   setConfig,
   getUser,
