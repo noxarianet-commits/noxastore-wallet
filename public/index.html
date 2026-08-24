@@ -5497,7 +5497,48 @@
 
               <div style="text-align: center; margin-top: 16px;">
                 <span style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; color: #64748b;">Sudah punya akun? </span>
-                <span onclick="switchAuthTab('login')" style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; font-weight: 700; color: #7B2D8E; cursor: pointer; text-decoration: underline; text-underline-offset: 3px;">Masuk di sini</span>
+            </div>
+
+            <!-- ============ FORM OTP VERIFICATION ============ -->
+            <div id="auth-otp-form" style="display: none;">
+              <div style="text-align: center; margin-bottom: 20px;">
+                <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(123,45,142,0.1); border: 1.5px solid rgba(123,45,142,0.3); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+                  <span class="material-symbols-outlined" style="font-size: 28px; color: #7B2D8E;">mark_chat_unread</span>
+                </div>
+                <h3 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 18px; font-weight: 800; color: #0f172a; margin: 0 0 6px;">Verifikasi WhatsApp</h3>
+                <p style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; color: #64748b; margin: 0; line-height: 1.5;">
+                  Kode OTP 6-digit telah dikirim via WhatsApp ke:<br>
+                  <strong id="otp-target-phone" style="color: #7B2D8E; font-size: 13px;">0812xxxx</strong>
+                </p>
+              </div>
+
+              <!-- Input OTP 6-digit (Stylized digit boxes) -->
+              <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div style="display: flex; justify-content: center; gap: 8px;" id="otp-inputs-container">
+                  <input type="tel" maxlength="1" class="otp-digit-input" id="otp-d1" oninput="handleOtpInput(this, 1)" onkeydown="handleOtpKeydown(this, 1)" style="width: 42px; height: 50px; text-align: center; font-size: 20px; font-weight: 800; font-family: monospace; border: 1.5px solid #cbd5e1; border-radius: 12px; outline: none; transition: all 0.2s; background: white;" />
+                  <input type="tel" maxlength="1" class="otp-digit-input" id="otp-d2" oninput="handleOtpInput(this, 2)" onkeydown="handleOtpKeydown(this, 2)" style="width: 42px; height: 50px; text-align: center; font-size: 20px; font-weight: 800; font-family: monospace; border: 1.5px solid #cbd5e1; border-radius: 12px; outline: none; transition: all 0.2s; background: white;" />
+                  <input type="tel" maxlength="1" class="otp-digit-input" id="otp-d3" oninput="handleOtpInput(this, 3)" onkeydown="handleOtpKeydown(this, 3)" style="width: 42px; height: 50px; text-align: center; font-size: 20px; font-weight: 800; font-family: monospace; border: 1.5px solid #cbd5e1; border-radius: 12px; outline: none; transition: all 0.2s; background: white;" />
+                  <input type="tel" maxlength="1" class="otp-digit-input" id="otp-d4" oninput="handleOtpInput(this, 4)" onkeydown="handleOtpKeydown(this, 4)" style="width: 42px; height: 50px; text-align: center; font-size: 20px; font-weight: 800; font-family: monospace; border: 1.5px solid #cbd5e1; border-radius: 12px; outline: none; transition: all 0.2s; background: white;" />
+                  <input type="tel" maxlength="1" class="otp-digit-input" id="otp-d5" oninput="handleOtpInput(this, 5)" onkeydown="handleOtpKeydown(this, 5)" style="width: 42px; height: 50px; text-align: center; font-size: 20px; font-weight: 800; font-family: monospace; border: 1.5px solid #cbd5e1; border-radius: 12px; outline: none; transition: all 0.2s; background: white;" />
+                  <input type="tel" maxlength="1" class="otp-digit-input" id="otp-d6" oninput="handleOtpInput(this, 6)" onkeydown="handleOtpKeydown(this, 6)" style="width: 42px; height: 50px; text-align: center; font-size: 20px; font-weight: 800; font-family: monospace; border: 1.5px solid #cbd5e1; border-radius: 12px; outline: none; transition: all 0.2s; background: white;" />
+                </div>
+              </div>
+
+              <!-- Submit Verification -->
+              <button id="btn-verify-otp" type="button" onclick="submitOtpVerification()" style="width: 100%; height: 52px; margin-top: 20px; background: linear-gradient(135deg, #7B2D8E 0%, #9B4DB8 100%); color: white; border: none; border-radius: 14px; font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 6px 20px rgba(123,45,142,0.3); transition: all 0.25s ease;">
+                <span>Verifikasi OTP</span>
+                <span class="material-symbols-outlined" style="font-size: 20px;">verified</span>
+              </button>
+
+              <!-- Resend / Back to Register -->
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 16px;">
+                <button type="button" onclick="cancelOtpVerification()" style="background: none; border: none; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 600; color: #64748b; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                  <span class="material-symbols-outlined" style="font-size: 16px;">arrow_back</span>
+                  <span>Ubah Nomor</span>
+                </button>
+                <button id="btn-resend-otp" type="button" onclick="resendOtpCode()" disabled style="background: none; border: none; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 700; color: #94a3b8; cursor: pointer;">
+                  Kirim Ulang (<span id="otp-timer">60</span>s)
+                </button>
               </div>
             </div>
 
@@ -6180,6 +6221,7 @@
       function switchAuthTab(tab) {
         const regForm = document.getElementById('auth-register-form');
         const loginForm = document.getElementById('auth-login-form');
+        const otpForm = document.getElementById('auth-otp-form');
         const regBtn = document.getElementById('tab-register-btn');
         const loginBtn = document.getElementById('tab-login-btn');
         const mainTitle = document.getElementById('auth-main-title');
@@ -6187,6 +6229,8 @@
 
         const activeStyle = 'flex: 1; padding: 11px 16px; border-radius: 11px; border: none; font-family: "Plus Jakarta Sans", "Inter", sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.25s ease; background: #7B2D8E; color: white; box-shadow: 0 2px 8px rgba(123,45,142,0.3);';
         const inactiveStyle = 'flex: 1; padding: 11px 16px; border-radius: 11px; border: none; font-family: "Plus Jakarta Sans", "Inter", sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.25s ease; background: transparent; color: #64748b; box-shadow: none;';
+
+        if (otpForm) otpForm.style.display = 'none';
 
         if (tab === 'register') {
           if (regForm) regForm.style.display = 'block';
@@ -6679,6 +6723,9 @@
       }
 
 
+      let _otpTimerInterval = null;
+      let _pendingOtpPhone = '';
+
       async function saveRegistration() {
         const fullname = document.getElementById('reg-fullname').value.trim();
         const user = document.getElementById('reg-username').value.trim();
@@ -6703,40 +6750,231 @@
         }
 
         const btn = document.querySelector('#auth-register-form button');
-        if (btn) { btn.disabled = true; btn.innerText = '⏳ Mendaftarkan...'; }
+        if (btn) { btn.disabled = true; btn.innerHTML = '<span>⏳ Mengirim OTP...</span>'; }
 
         try {
-          const res = await originalFetch('/register', {
+          const res = await originalFetch('/api/otp/send', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fullname, username: user, brand: fullname.toUpperCase(), password, email })
+            body: JSON.stringify({ fullname, username: user, phone: user, password, email })
           });
           const data = await res.json().catch(() => ({}));
 
           if (!res.ok) {
-            showNotification('❌ ' + (data.error || data.msg || 'Gagal mendaftar.'));
+            showNotification('❌ ' + (data.error || data.msg || 'Gagal mengirim OTP.'));
             return;
           }
 
           if (data.success || data.status) {
-            document.getElementById('reg-fullname').value = '';
-            document.getElementById('reg-username').value = '';
-            document.getElementById('reg-email').value = '';
-            document.getElementById('reg-password').value = '';
+            _pendingOtpPhone = data.phone || user;
+            const phoneEl = document.getElementById('otp-target-phone');
+            if (phoneEl) phoneEl.innerText = _pendingOtpPhone;
+            
+            // Switch UI view to OTP form
+            const regForm = document.getElementById('auth-register-form');
+            const loginForm = document.getElementById('auth-login-form');
+            const otpForm = document.getElementById('auth-otp-form');
+            if (regForm) regForm.style.display = 'none';
+            if (loginForm) loginForm.style.display = 'none';
+            if (otpForm) otpForm.style.display = 'block';
 
-            switchAuthTab('login');
-            const loginUserInput = document.getElementById('login-username');
-            if (loginUserInput) loginUserInput.value = user;
+            // Clear digits
+            for (let i = 1; i <= 6; i++) {
+              const inp = document.getElementById(`otp-d${i}`);
+              if (inp) inp.value = '';
+            }
+            setTimeout(() => {
+              const firstDigit = document.getElementById('otp-d1');
+              if (firstDigit) firstDigit.focus();
+            }, 200);
 
-            showNotification('✅ Akun berhasil dibuat. Silakan masuk untuk melanjutkan.');
+            startOtpTimer(60);
+            showNotification('📩 Kode OTP telah dikirim ke WhatsApp Anda!');
           } else {
-            showNotification('❌ ' + (data.error || data.msg || 'Gagal mendaftar.'));
+            showNotification('❌ ' + (data.error || data.msg || 'Gagal mengirim OTP.'));
           }
         } catch (err) {
-          console.error('Register error', err);
-          showNotification('❌ Gagal menghubungi server.');
+          console.error('Send OTP error', err);
+          showNotification('❌ Gagal menghubungi server OTP.');
         } finally {
-          if (btn) { btn.disabled = false; btn.innerText = 'DAFTAR SEKARANG'; }
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<span>Daftar Sekarang</span><span class="material-symbols-outlined" style="font-size: 20px;">arrow_forward</span>';
+          }
+        }
+      }
+
+      function handleOtpInput(el, index) {
+        if (!el) return;
+        el.value = el.value.replace(/[^0-9]/g, '');
+        if (el.value.length === 1 && index < 6) {
+          const nextInp = document.getElementById(`otp-d${index + 1}`);
+          if (nextInp) nextInp.focus();
+        }
+        
+        // Auto check if all 6 digits entered
+        let fullOtp = '';
+        for (let i = 1; i <= 6; i++) {
+          const inp = document.getElementById(`otp-d${i}`);
+          fullOtp += (inp ? inp.value.trim() : '');
+        }
+        if (fullOtp.length === 6) {
+          submitOtpVerification();
+        }
+      }
+
+      function handleOtpKeydown(el, index) {
+        if (!el) return;
+        if (window.event && window.event.key === 'Backspace' && !el.value && index > 1) {
+          const prevInp = document.getElementById(`otp-d${index - 1}`);
+          if (prevInp) {
+            prevInp.focus();
+            prevInp.value = '';
+          }
+        }
+      }
+
+      function startOtpTimer(seconds = 60) {
+        if (_otpTimerInterval) clearInterval(_otpTimerInterval);
+        const timerEl = document.getElementById('otp-timer');
+        const resendBtn = document.getElementById('btn-resend-otp');
+        let remaining = seconds;
+
+        if (resendBtn) {
+          resendBtn.disabled = true;
+          resendBtn.style.color = '#94a3b8';
+        }
+        if (timerEl) timerEl.innerText = remaining;
+
+        _otpTimerInterval = setInterval(() => {
+          remaining--;
+          if (timerEl) timerEl.innerText = remaining;
+          if (remaining <= 0) {
+            clearInterval(_otpTimerInterval);
+            if (resendBtn) {
+              resendBtn.disabled = false;
+              resendBtn.style.color = '#7B2D8E';
+              resendBtn.innerHTML = 'Kirim Ulang OTP';
+            }
+          }
+        }, 1000);
+      }
+
+      function cancelOtpVerification() {
+        if (_otpTimerInterval) clearInterval(_otpTimerInterval);
+        const regForm = document.getElementById('auth-register-form');
+        const otpForm = document.getElementById('auth-otp-form');
+        if (otpForm) otpForm.style.display = 'none';
+        if (regForm) regForm.style.display = 'block';
+      }
+
+      async function resendOtpCode() {
+        const fullname = document.getElementById('reg-fullname').value.trim();
+        const user = document.getElementById('reg-username').value.trim();
+        const email = document.getElementById('reg-email').value.trim();
+        const password = document.getElementById('reg-password').value.trim();
+
+        showNotification('⏳ Mengirim ulang kode OTP...');
+
+        try {
+          const res = await originalFetch('/api/otp/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fullname, username: user, phone: user, password, email })
+          });
+          const data = await res.json().catch(() => ({}));
+
+          if (data.success || data.status) {
+            startOtpTimer(60);
+            showNotification('📩 Kode OTP baru telah dikirim via WhatsApp!');
+          } else {
+            showNotification('❌ ' + (data.error || data.msg || 'Gagal mengirim ulang OTP.'));
+          }
+        } catch (err) {
+          showNotification('❌ Gagal menghubungi server OTP.');
+        }
+      }
+
+      async function submitOtpVerification() {
+        let otpCode = '';
+        for (let i = 1; i <= 6; i++) {
+          const inp = document.getElementById(`otp-d${i}`);
+          otpCode += (inp ? inp.value.trim() : '');
+        }
+
+        if (otpCode.length < 6) {
+          showNotification('❌ Masukkan 6 digit kode OTP WhatsApp!');
+          return;
+        }
+
+        const btn = document.getElementById('btn-verify-otp');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<span>⏳ Memverifikasi...</span>'; }
+
+        try {
+          const fullname = document.getElementById('reg-fullname').value.trim();
+          const user = document.getElementById('reg-username').value.trim();
+          const email = document.getElementById('reg-email').value.trim();
+          const password = document.getElementById('reg-password').value.trim();
+
+          const res = await originalFetch('/api/otp/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              phone: _pendingOtpPhone || user,
+              username: user,
+              otp: otpCode,
+              fullname,
+              email,
+              password
+            })
+          });
+
+          const data = await res.json().catch(() => ({}));
+
+          if (!res.ok || (!data.success && !data.status)) {
+            showNotification('❌ ' + (data.error || data.msg || 'Verifikasi OTP gagal.'));
+            return;
+          }
+
+          // SUCCESS! Save session, login & cleanup
+          if (data.token) {
+            localStorage.setItem('noxaAuthToken', data.token);
+          }
+          if (data.user || data.data) {
+            const u = data.user || data.data;
+            localStorage.setItem('noxaUsername', u.username || user);
+            localStorage.setItem('noxaFullname', u.fullname || fullname || user);
+            localStorage.setItem('noxaBrandName', u.brand || fullname || user);
+            localStorage.setItem('noxaWaContact', u.waContact || user);
+            localStorage.setItem('noxaEmail', u.email || email);
+          }
+
+          if (_otpTimerInterval) clearInterval(_otpTimerInterval);
+
+          // Clear form fields
+          document.getElementById('reg-fullname').value = '';
+          document.getElementById('reg-username').value = '';
+          document.getElementById('reg-email').value = '';
+          document.getElementById('reg-password').value = '';
+
+          // Close Auth Modal
+          const setupModal = document.getElementById('setup-modal');
+          if (setupModal) setupModal.style.display = 'none';
+
+          showNotification('🎉 Verifikasi WhatsApp Berhasil! Selamat datang!');
+
+          // Refresh user data & balances
+          if (typeof fetchBalance === 'function') fetchBalance();
+          if (typeof updateAppUiHeader === 'function') updateAppUiHeader();
+
+        } catch (err) {
+          console.error('Verify OTP Error', err);
+          showNotification('❌ Gagal memverifikasi OTP.');
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<span>Verifikasi OTP</span><span class="material-symbols-outlined" style="font-size: 20px;">verified</span>';
+          }
         }
       }
 

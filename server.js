@@ -10,6 +10,7 @@ const { exec } = require('child_process');
 const SekaliPayService = require('./sekalipayService');
 const db = require('./database');
 const orkutService = require('./orkutService');
+const waBot = require('./waBot');
 
 const app = express();
 
@@ -584,9 +585,121 @@ app.post('/api/github-webhook', (req, res) => {
   });
 });
 
-// ==========================================
-// USER AUTH & APP APIs (FIXING 404s)
-// ==========================================
+// GET /api/wa-bot/status — Cek Status WA Bot
+app.get('/api/wa-bot/status', (req, res) => {
+  res.json(waBot.getBotStatus());
+});
+
+// POST /api/otp/send — Kirim Kode OTP ke WhatsApp User
+app.post('/api/otp/send', async (req, res) => {
+  try {
+    const inputPhone = String(req.body.phone || req.body.username || '').trim();
+    const fullname = String(req.body.fullname || '').trim();
+    const email = String(req.body.email || '').trim();
+    const password = String(req.body.password || '').trim();
+
+    if (!inputPhone) {
+      return res.status(400).json({ success: false, status: false, error: 'Nomor WhatsApp wajib diisi.', msg: 'Nomor WhatsApp wajib diisi.' });
+    }
+
+    // Direct check if user already exists
+    let existing = await db.getUser(inputPhone);
+    if (!existing) existing = await db.getUserByWaContact(inputPhone);
+    if (!existing && email) existing = await db.getUserByEmail(email);
+
+    if (existing) {
+      return res.status(400).json({ success: false, status: false, error: 'Nomor WhatsApp / Email sudah terdaftar. Silakan langsung masuk (Login).', msg: 'Nomor WhatsApp / Email sudah terdaftar.' });
+    }
+
+    // Send OTP via WA Bot
+    const result = await waBot.sendRegisterOtp(inputPhone, { fullname, email, password });
+    return res.json({
+      success: true,
+      status: true,
+      msg: `Kode OTP 6-digit telah dikirim via WhatsApp ke nomor ${result.phone}. Silakan periksa pesan Anda.`,
+      phone: result.phone,
+      expiresAt: result.expiresAt
+    });
+  } catch (err) {
+    console.error('[OTP Send Error]', err);
+    return res.status(500).json({
+      success: false,
+      status: false,
+      error: err.message || 'Gagal mengirim OTP ke WhatsApp. Pastikan WA Bot server aktif.',
+      msg: err.message || 'Gagal mengirim OTP ke WhatsApp.'
+    });
+  }
+});
+
+// POST /api/otp/verify — Verifikasi OTP & Selesaikan Pendaftaran
+app.post('/api/otp/verify', async (req, res) => {
+  try {
+    const inputPhone = String(req.body.phone || req.body.username || '').trim();
+    const inputOtp = String(req.body.otp || '').trim();
+
+    if (!inputPhone || !inputOtp) {
+      return res.status(400).json({ success: false, status: false, error: 'Nomor WhatsApp dan Kode OTP wajib diisi.', msg: 'Nomor WhatsApp dan Kode OTP wajib diisi.' });
+    }
+
+    const verifyResult = waBot.verifyRegisterOtp(inputPhone, inputOtp);
+    if (!verifyResult.success) {
+      return res.status(400).json({ success: false, status: false, error: verifyResult.message, msg: verifyResult.message });
+    }
+
+    // OTP Verified! Complete Registration
+    const regData = verifyResult.registrationData || {};
+    const inputUsername = waBot.formatPhoneStandard(inputPhone);
+    const inputPassword = String(regData.password || req.body.password || '').trim();
+    const inputFullname = String(regData.fullname || req.body.fullname || inputUsername).trim();
+    const inputEmail = String(regData.email || req.body.email || '').trim();
+    const inputBrand = String(regData.brand || (inputFullname ? inputFullname.toUpperCase() : inputUsername)).trim();
+
+    if (!inputUsername || !inputPassword) {
+      return res.status(400).json({ success: false, status: false, error: 'Data registrasi tidak lengkap.', msg: 'Data registrasi tidak lengkap.' });
+    }
+
+    let userObj = await db.getUser(inputUsername);
+    if (!userObj) {
+      userObj = await db.createUser({
+        username: inputUsername,
+        password: inputPassword,
+        fullname: inputFullname,
+        brand: inputBrand,
+        email: inputEmail,
+        waContact: inputUsername
+      });
+    }
+
+    userObj = userObj || { username: inputUsername, role: 'MEMBER', fullname: inputFullname };
+    const token = jwt.sign(
+      { username: userObj.username, role: userObj.role || 'MEMBER' },
+      JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+
+    // Broadcast Activity Event
+    try {
+      broadcastRealtimeEvent('activity', {
+        targetUsername: inputUsername,
+        title: '🎉 Registrasi WA Terverifikasi!',
+        body: `Selamat datang ${inputFullname}! Akun WhatsApp Anda telah terverifikasi via OTP.`,
+        type: 'register'
+      });
+    } catch (e) {}
+
+    return res.json({
+      success: true,
+      status: true,
+      msg: 'Verifikasi OTP berhasil! Akun Anda telah terdaftar.',
+      token: token,
+      data: userObj,
+      user: userObj
+    });
+  } catch (err) {
+    console.error('[OTP Verify Error]', err);
+    return res.status(500).json({ success: false, status: false, error: `Gagal verifikasi OTP: ${err.message}`, msg: err.message });
+  }
+});
 
 // Register & Login Noxaria Wallet
 app.post('/register', async (req, res) => {
@@ -2554,6 +2667,9 @@ app.listen(PORT, HOST, () => {
   console.log(`   Internal  : http://localhost:${PORT}`);
   console.log(`   External  : http://203.175.125.151:${PORT}`);
   console.log(`================================================================`);
+
+  // Initialize WhatsApp Baileys Bot Service
+  waBot.initWaBot();
 
   const tunnelToken = process.env.CLOUDFLARE_TUNNEL_TOKEN;
   if (tunnelToken) {
