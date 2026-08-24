@@ -7144,11 +7144,13 @@
         if (gridEl) gridEl.innerHTML = '';
 
         const submitBtn = document.getElementById('btn-submit-dana');
-        submitBtn.disabled = true;
-        submitBtn.style.background = '#e2e8f0';
-        submitBtn.style.color = '#94a3b8';
-        submitBtn.style.cursor = 'not-allowed';
-        submitBtn.innerText = 'Pilih Nominal Dulu';
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.style.background = '#e2e8f0';
+          submitBtn.style.color = '#94a3b8';
+          submitBtn.style.cursor = 'not-allowed';
+          submitBtn.innerText = 'Pilih Nominal Dulu';
+        }
 
         screen.style.display = 'flex';
         void screen.offsetWidth;
@@ -7845,8 +7847,10 @@
         }
 
         const submitBtn = document.getElementById('btn-submit-dana');
-        submitBtn.disabled = true;
-        submitBtn.innerText = 'Memproses...';
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerText = 'Memproses...';
+        }
 
         try {
           const response = await fetch('/withdraw-dana', {
