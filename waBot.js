@@ -157,7 +157,7 @@ function generateOtpCode() {
 async function sendRegisterOtp(phone, registrationData = {}) {
   const standardPhone = formatPhoneStandard(phone);
   if (!standardPhone || standardPhone.length < 9) {
-    throw new Error('Nomor WhatsApp tidak valid.');
+    throw new Error('Nomor WhatsApp tidak valid. Masukkan nomor HP aktif.');
   }
 
   const otpCode = generateOtpCode();
@@ -170,10 +170,24 @@ async function sendRegisterOtp(phone, registrationData = {}) {
     `Jangan berikan kode ini kepada siapa pun termasuk pihak NoxariaNet Wallet.\n\n` +
     `_Terima kasih telah mendaftar di NoxariaNet Wallet._`;
 
-  // Try sending via WhatsApp
-  await sendMessage(phone, messageText);
+  let sentViaWa = false;
+  let waError = null;
 
-  // Save to memory store
+  try {
+    if (sock && isConnected) {
+      await sendMessage(phone, messageText);
+      sentViaWa = true;
+      console.log(`[WA-Bot OTP] Sent OTP ${otpCode} via WhatsApp to ${standardPhone}`);
+    } else {
+      waError = 'WhatsApp Bot belum di-scan (Mode Simulasi OTP Aktif)';
+      console.log(`[WA-Bot OTP NOTE] Bot WA belum scan QR. Simulated OTP ${otpCode} created for ${standardPhone}`);
+    }
+  } catch (err) {
+    waError = err.message;
+    console.error(`[WA-Bot OTP Send Error] ${err.message}. Saving OTP ${otpCode} in memory store for fallback.`);
+  }
+
+  // Always save to memory store so user can verify
   otpStore.set(standardPhone, {
     otp: otpCode,
     expiresAt,
@@ -181,8 +195,14 @@ async function sendRegisterOtp(phone, registrationData = {}) {
     attempts: 0
   });
 
-  console.log(`[WA-Bot OTP] Sent OTP ${otpCode} to ${standardPhone}`);
-  return { success: true, phone: standardPhone, expiresAt };
+  return {
+    success: true,
+    phone: standardPhone,
+    expiresAt,
+    sentViaWa,
+    otpCode,
+    waNotice: waError
+  };
 }
 
 /**

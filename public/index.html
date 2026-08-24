@@ -6790,7 +6790,11 @@
             }, 200);
 
             startOtpTimer(60);
-            showNotification('📩 Kode OTP telah dikirim ke WhatsApp Anda!');
+            if (data.otpCode && !data.sentViaWa) {
+              showNotification(`🔑 [KODE OTP: ${data.otpCode}] Masukkan kode 6 digit ini di bawah.`);
+            } else {
+              showNotification('📩 Kode OTP telah dikirim ke WhatsApp Anda!');
+            }
           } else {
             showNotification('❌ ' + (data.error || data.msg || 'Gagal mengirim OTP.'));
           }
@@ -6887,7 +6891,11 @@
 
           if (data.success || data.status) {
             startOtpTimer(60);
-            showNotification('📩 Kode OTP baru telah dikirim via WhatsApp!');
+            if (data.otpCode && !data.sentViaWa) {
+              showNotification(`🔑 [KODE OTP BARU: ${data.otpCode}] Masukkan kode ini.`);
+            } else {
+              showNotification('📩 Kode OTP baru telah dikirim via WhatsApp!');
+            }
           } else {
             showNotification('❌ ' + (data.error || data.msg || 'Gagal mengirim ulang OTP.'));
           }

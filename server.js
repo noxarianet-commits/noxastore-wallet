@@ -711,21 +711,29 @@ app.post('/api/otp/send', async (req, res) => {
       return res.status(400).json({ success: false, status: false, error: 'Nomor WhatsApp / Email sudah terdaftar. Silakan langsung masuk (Login).', msg: 'Nomor WhatsApp / Email sudah terdaftar.' });
     }
 
-    // Send OTP via WA Bot
+    // Send OTP via WA Bot (with test fallback if bot is not scanned yet)
     const result = await waBot.sendRegisterOtp(inputPhone, { fullname, email, password });
+
+    let msg = `Kode OTP 6-digit telah dikirim via WhatsApp ke nomor ${result.phone}.`;
+    if (!result.sentViaWa) {
+      msg = `[KODE OTP: ${result.otpCode}] Masukkan 6-digit kode OTP di bawah ini.`;
+    }
+
     return res.json({
       success: true,
       status: true,
-      msg: `Kode OTP 6-digit telah dikirim via WhatsApp ke nomor ${result.phone}. Silakan periksa pesan Anda.`,
+      msg: msg,
       phone: result.phone,
-      expiresAt: result.expiresAt
+      expiresAt: result.expiresAt,
+      otpCode: result.otpCode,
+      sentViaWa: result.sentViaWa
     });
   } catch (err) {
     console.error('[OTP Send Error]', err);
     return res.status(500).json({
       success: false,
       status: false,
-      error: err.message || 'Gagal mengirim OTP ke WhatsApp. Pastikan WA Bot server aktif.',
+      error: err.message || 'Gagal mengirim OTP ke WhatsApp.',
       msg: err.message || 'Gagal mengirim OTP ke WhatsApp.'
     });
   }
