@@ -7294,12 +7294,11 @@
         const phone = phoneInput ? phoneInput.value.trim() : '';
         const method = _activeWithdrawMethod || 'DANA';
         if (!phone || phone.replace(/\D/g, '').length < 9) {
-          showCustomAlert('Pemberitahuan', 'Silakan masukkan Nomor ' + method + ' Tujuan yang valid terlebih dahulu.', 'warning', 'Mengerti', () => {
-            if (phoneInput) {
-              phoneInput.focus();
-              try { phoneInput.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(e) {}
-            }
-          });
+          showNotification('⚠️ Masukkan Nomor ' + method + ' Tujuan terlebih dahulu.');
+          if (phoneInput) {
+            phoneInput.focus();
+            try { phoneInput.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(e) {}
+          }
           return;
         }
 
@@ -10115,13 +10114,6 @@
             }
           }
 
-          // Trigger ultra-premium in-app alert modal for errors & warnings
-          if (type === 'error' || type === 'warning' || strMsg.startsWith('❌') || strMsg.startsWith('⚠️')) {
-            let cleanMsg = strMsg.replace(/^[\u274c\u26a0\u2705\u26a1\u26a0️\s]+/, '').trim();
-            let alertTitle = (type === 'error' || strMsg.startsWith('❌')) ? 'Pemberitahuan' : 'Pemberitahuan';
-            showCustomAlert(alertTitle, cleanMsg, type);
-          }
-
           const banner = document.getElementById('toast-banner');
           const messageEl = document.getElementById('toast-message');
           const iconEl = document.getElementById('toast-icon');
@@ -11001,6 +10993,7 @@
       }
 
       function openTrxDetail(tx) {
+        pushNavigationState('trx-detail');
         currentPrintTx = tx;
         if (_receiptPollTimer) { clearInterval(_receiptPollTimer); _receiptPollTimer = null; }
 
@@ -11476,7 +11469,9 @@
 
       function closeTrxDetail() {
         stopReceiptClock();
-        document.getElementById('screen-trx-detail').classList.remove('active');
+        if (_receiptPollTimer) { clearInterval(_receiptPollTimer); _receiptPollTimer = null; }
+        const screen = document.getElementById('screen-trx-detail');
+        if (screen) screen.classList.remove('active');
       }
 
       let _lastGeneratedReceiptDataUrl = null;
@@ -12328,12 +12323,11 @@
         const targetInput = document.getElementById('ppob-target-input');
         const target = targetInput ? targetInput.value.trim() : '';
         if (!target || target.length < 3) {
-          showCustomAlert('Pemberitahuan', 'Silakan masukkan Nomor HP / ID Player Game yang valid terlebih dahulu.', 'warning', 'Mengerti', () => {
-            if (targetInput) {
-              targetInput.focus();
-              try { targetInput.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(e) {}
-            }
-          });
+          showNotification('⚠️ Masukkan Nomor HP / ID Player Game terlebih dahulu.');
+          if (targetInput) {
+            targetInput.focus();
+            try { targetInput.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(e) {}
+          }
           return;
         }
 
