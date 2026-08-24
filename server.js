@@ -238,14 +238,21 @@ async function sendBackgroundWebPush(targetUsername, payload) {
   try {
     const key = String(targetUsername || 'all').toLowerCase();
     const now = Date.now();
-    const lastTime = lastNotificationSent.get(key) || 0;
+    const payloadHash = `${key}:${payload.title || ''}:${payload.body || ''}`;
+    const lastTime = lastNotificationSent.get(payloadHash) || 0;
     
-    // Prevent spamming push notifications: maximum 1 push per 5 seconds per user
-    if (now - lastTime < 5000) {
-      console.log(`[WebPush Rate Limit] Bypassing duplicate notification to ${targetUsername} to prevent spam.`);
+    // Prevent spamming push notifications: 10 seconds payload TTL per user/payload
+    if (now - lastTime < 10000) {
+      console.log(`[WebPush Rate Limit] Suppressed duplicate push notification to ${targetUsername}: ${payload.title}`);
       return;
     }
-    lastNotificationSent.set(key, now);
+    lastNotificationSent.set(payloadHash, now);
+
+    if (lastNotificationSent.size > 200) {
+      for (const [k, t] of lastNotificationSent.entries()) {
+        if (now - t > 15000) lastNotificationSent.delete(k);
+      }
+    }
 
     const rawSubs = await db.getPushSubscriptions(targetUsername);
     if (!rawSubs || !Array.isArray(rawSubs) || rawSubs.length === 0) return;
@@ -261,7 +268,8 @@ async function sendBackgroundWebPush(targetUsername, payload) {
 
     // Fixed tag so Android OS replaces notification instead of creating multiple cards
     const finalPayload = Object.assign({
-      tag: 'noxa-global-notif'
+      tag: 'noxa-single-notification',
+      timestamp: Date.now()
     }, payload);
 
     for (const sub of subs) {

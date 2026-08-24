@@ -1239,10 +1239,10 @@ async function setPpobVisibility(sku, active, category = '', brand = '', markup 
 async function savePushSubscription(username, subscription) {
   if (!subscription || !subscription.endpoint) return;
   let subs = readJSONFile(PUSH_SUBS_FILE, []);
-  const uName = username || 'guest';
+  const uName = String(username || 'guest').toLowerCase();
 
-  // Keep only 1 active subscription per user / endpoint to eliminate duplicate notifications
-  subs = subs.filter(s => s.endpoint !== subscription.endpoint && s.username !== uName);
+  // Keep strictly 1 active subscription entry per physical endpoint
+  subs = subs.filter(s => s.endpoint !== subscription.endpoint);
 
   subs.push({
     username: uName,
@@ -1256,9 +1256,17 @@ async function savePushSubscription(username, subscription) {
 
 async function getPushSubscriptions(username = 'all') {
   const subs = readJSONFile(PUSH_SUBS_FILE, []);
-  if (!username || username === 'all') return subs;
+  if (!username || username === 'all') {
+    const map = new Map();
+    subs.forEach(s => { if (s && s.endpoint) map.set(s.endpoint, s); });
+    return Array.from(map.values());
+  }
   const targetLower = String(username).toLowerCase();
-  return subs.filter(s => String(s.username || '').toLowerCase() === targetLower || s.username === 'all' || s.username === 'guest');
+  // Filter STRICTLY for subscriptions registered to this exact target username
+  const matched = subs.filter(s => String(s.username || '').toLowerCase() === targetLower);
+  const map = new Map();
+  matched.forEach(s => { if (s && s.endpoint) map.set(s.endpoint, s); });
+  return Array.from(map.values());
 }
 
 async function removePushSubscription(endpoint) {
