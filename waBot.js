@@ -1,11 +1,13 @@
-const pino = require('pino');
+const QRCode = require('qrcode');
 const path = require('path');
 const fs = require('fs');
+const pino = require('pino');
 
 let baileys = null;
 let sock = null;
 let isConnected = false;
 let qrCodeString = null;
+let qrDataUrl = null;
 let connectionStatus = 'DISCONNECTED'; // DISCONNECTED, CONNECTING, CONNECTED
 
 const SESSION_DIR = process.env.WA_BOT_SESSION_PATH || path.join(__dirname, 'wa_session');
@@ -71,21 +73,32 @@ async function initWaBot() {
 
     sock.ev.on('creds.update', saveCreds);
 
-    sock.ev.on('connection.update', (update) => {
+    sock.ev.on('connection.update', async (update) => {
       const { connection, lastDisconnect, qr } = update;
 
       if (qr) {
         qrCodeString = qr;
         connectionStatus = 'WAITING_QR_SCAN';
+        try {
+          qrDataUrl = await QRCode.toDataURL(qr);
+        } catch (e) {
+          qrDataUrl = null;
+        }
+
         console.log('\n==================================================');
         console.log('📱 WHATSAPP BOT QR CODE READY FOR SCANNING!');
-        console.log('Scan QR Code di terminal ini menggunakan WA Bot Anda.');
+        console.log('Buka browser & buka URL /wa-qr atau scan QR dibawah ini:');
+        try {
+          const terminalQr = await QRCode.toString(qr, { type: 'terminal', small: true });
+          console.log(terminalQr);
+        } catch (err) {}
         console.log('==================================================\n');
       }
 
       if (connection === 'close') {
         isConnected = false;
         qrCodeString = null;
+        qrDataUrl = null;
         const statusCode = lastDisconnect?.error?.output?.statusCode;
         const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
 
@@ -102,6 +115,7 @@ async function initWaBot() {
       } else if (connection === 'open') {
         isConnected = true;
         qrCodeString = null;
+        qrDataUrl = null;
         connectionStatus = 'CONNECTED';
         console.log('\n✅ [WA-Bot] WHATSAPP BOT CONNECTED SUCCESSFULLY & READY TO SEND OTP!\n');
       }
@@ -212,7 +226,8 @@ function getBotStatus() {
     isConnected,
     connectionStatus,
     hasQr: !!qrCodeString,
-    qrCodeString
+    qrCodeString,
+    qrDataUrl
   };
 }
 

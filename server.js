@@ -51,6 +51,106 @@ app.get(['/admin', '/admin/'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
+// Standalone Web Page for Scan WA Bot QR Code
+app.get('/wa-qr', (req, res) => {
+  res.send(`
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scan WhatsApp Bot QR Code — NoxariaNet Wallet</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { background: #0f172a; color: white; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+    .card { background: #1e293b; border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; padding: 32px; width: 100%; max-width: 440px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+    .title { font-size: 20px; font-weight: 800; margin-bottom: 6px; color: #f8fafc; }
+    .subtitle { font-size: 13px; color: #94a3b8; margin-bottom: 24px; line-height: 1.5; }
+    .qr-container { background: white; padding: 20px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; min-width: 260px; min-height: 260px; margin-bottom: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); position: relative; }
+    .qr-container img { width: 220px; height: 220px; object-fit: contain; }
+    .badge { display: inline-block; padding: 8px 16px; border-radius: 50px; font-size: 12px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+    .badge-waiting { background: rgba(234, 179, 8, 0.15); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.3); }
+    .badge-connected { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+    .badge-disconnected { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .instructions { font-size: 12px; color: #64748b; margin-top: 20px; line-height: 1.6; text-align: left; background: rgba(255,255,255,0.03); padding: 14px; border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1); }
+    .instructions ol { padding-left: 18px; margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div style="font-size: 40px; margin-bottom: 12px;">📱</div>
+    <h1 class="title">WhatsApp Bot Scanner</h1>
+    <p class="subtitle">Scan QR Code ini dari HP menggunakan akun WhatsApp Bot OTP Anda.</p>
+
+    <div class="qr-container" id="qr-box">
+      <div id="loading-text" style="color: #64748b; font-weight: 600; font-size: 14px;">Memuat QR Code...</div>
+      <img id="qr-img" src="" alt="WA Bot QR Code" style="display: none;" />
+    </div>
+
+    <div>
+      <span id="status-badge" class="badge badge-waiting">MEMERIKSA STATUS...</span>
+    </div>
+
+    <div class="instructions">
+      <strong>Cara Menghubungkan WA Bot:</strong>
+      <ol>
+        <li>Buka WhatsApp di ponsel khusus Bot Anda.</li>
+        <li>Buka menu <b>Perangkat Tertaut (Linked Devices)</b>.</li>
+        <li>Ketuk <b>Tautkan Perangkat (Link a Device)</b>.</li>
+        <li>Arahkan kamera ke QR Code di atas.</li>
+      </ol>
+    </div>
+  </div>
+
+  <script>
+    async function checkStatus() {
+      try {
+        const res = await fetch('/api/wa-bot/status');
+        const data = await res.json();
+
+        const badge = document.getElementById('status-badge');
+        const img = document.getElementById('qr-img');
+        const loading = document.getElementById('loading-text');
+
+        if (data.isConnected) {
+          badge.className = 'badge badge-connected';
+          badge.innerText = '✅ WHATSAPP BOT TERHUBUNG';
+          if (img) img.style.display = 'none';
+          if (loading) {
+            loading.style.display = 'block';
+            loading.innerHTML = '<span style="color:#4ade80;font-size:18px;">✅ Bot Berhasil Terhubung!</span><br><span style="font-size:12px;color:#94a3b8;margin-top:6px;display:block;">Siap mengirimkan kode OTP via WhatsApp.</span>';
+          }
+        } else if (data.qrDataUrl) {
+          badge.className = 'badge badge-waiting';
+          badge.innerText = '⏳ MENUNGGU SCAN QR CODE';
+          if (loading) loading.style.display = 'none';
+          if (img) {
+            img.src = data.qrDataUrl;
+            img.style.display = 'block';
+          }
+        } else {
+          badge.className = 'badge badge-disconnected';
+          badge.innerText = '⚠️ MENGHUBUNGKAN KE WHATSAPP...';
+          if (img) img.style.display = 'none';
+          if (loading) {
+            loading.style.display = 'block';
+            loading.innerText = 'Sedang menyiapkan QR Code...';
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching bot status:', err);
+      }
+    }
+
+    checkStatus();
+    setInterval(checkStatus, 2500);
+  </script>
+</body>
+</html>
+  `);
+});
+
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
