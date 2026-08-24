@@ -3142,11 +3142,15 @@
     .circle-solid {
       position: absolute;
       inset: 0;
+      width: 100%;
+      height: 100%;
       border-radius: 50%;
+      aspect-ratio: 1 / 1;
       background: radial-gradient(circle at 40% 35%, #9B4DB8, #7B2D8E);
       box-shadow: 0 0 30px rgba(123, 45, 142, 0.25);
       transform: scale(0.2);
       animation: popCircle 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.4) forwards;
+      box-sizing: border-box;
     }
     .circle-solid-failed {
       background: radial-gradient(circle at 40% 35%, #ef4444, #dc2626) !important;
@@ -3174,9 +3178,11 @@
 
     .checkmark-svg {
       position: absolute;
-      inset: 18%;
-      width: 64%;
-      height: 64%;
+      inset: 0;
+      margin: auto;
+      width: 58%;
+      height: 58%;
+      aspect-ratio: 1 / 1;
       z-index: 5;
       filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15));
     }
@@ -3259,12 +3265,16 @@
       animation-delay: 0.75s;
     }
 
-    /* ─── STATUS ANIMATION CONTAINER (RESPONSIVE & COMPACT) ─── */
+    /* ─── STATUS ANIMATION CONTAINER (100% PERFECT CIRCLE & RESPONSIVE) ─── */
     .status-anim-container-box {
       position: relative;
-      width: 90px;
-      height: 90px;
+      width: clamp(72px, 20vw, 90px);
+      height: clamp(72px, 20vw, 90px);
+      aspect-ratio: 1 / 1;
       margin: 0 auto;
+      flex-shrink: 0;
+      box-sizing: border-box;
+      display: block;
     }
 
     /* Ripple rings for Success */
@@ -4465,45 +4475,56 @@
     <!-- ========================================== -->
     <!-- QR SCANNER FULL-SCREEN PANEL              -->
     <!-- ========================================== -->
-    <div id="screen-qr-scanner" class="full-screen-panel" style="background: linear-gradient(180deg, #0b0714 0%, #170d2b 100%); display: none;">
-      <div style="background: linear-gradient(135deg, #1e1035, #3b1366); padding: 18px 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; position: sticky; top: 0; z-index: 20; border-bottom: 1px solid rgba(255,255,255,0.08);">
+    <div id="screen-qr-scanner" class="full-screen-panel" style="background: radial-gradient(circle at 50% 30%, #1e0f36 0%, #0a0614 100%); display: none;">
+      <!-- Sticky Top Header -->
+      <div style="background: linear-gradient(135deg, #2a1147, #4c1d95); padding: 18px 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; position: sticky; top: 0; z-index: 20; border-bottom: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
         <button onclick="closeQRScannerScreen()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s;" onmousedown="this.style.background='rgba(255,255,255,0.3)'" onmouseup="this.style.background='rgba(255,255,255,0.15)'">
           <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
         </button>
         <div>
-          <h3 style="color: white; font-size: 17px; font-weight: 700; margin: 0;">Pindai QR Code</h3>
-          <p style="color: rgba(255,255,255,0.7); font-size: 12px; margin: 0;">Arahkan kamera ke QR Code pengguna / merchant</p>
+          <h3 style="color: white; font-size: 17px; font-weight: 800; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif;">Pindai QR Transfer</h3>
+          <p style="color: rgba(255,255,255,0.8); font-size: 11.5px; margin: 2px 0 0; font-family: 'Plus Jakarta Sans', sans-serif;">Arahkan kamera ke QR Code pengguna / sesama NoxaPay</p>
         </div>
       </div>
-      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; gap: 20px;">
-        <!-- 3:4 Camera Viewfinder Box -->
-        <div style="position: relative; width: 100%; max-width: 290px; aspect-ratio: 3 / 4; background: #000000; border-radius: 24px; overflow: hidden; box-shadow: 0 16px 45px rgba(168, 85, 247, 0.35); border: 2px solid rgba(192, 132, 252, 0.5);">
+
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 16px; gap: 16px;">
+
+        <!-- Clarification Info Card (Anti-Misunderstanding) -->
+        <div style="background: rgba(168, 85, 247, 0.12); border: 1.5px solid rgba(192, 132, 252, 0.35); border-radius: 16px; padding: 12px 14px; display: flex; align-items: center; gap: 10px; text-align: left; width: 100%; max-width: 320px; backdrop-filter: blur(12px);">
+          <span class="material-symbols-outlined" style="color: #c084fc; font-size: 22px; flex-shrink: 0;">qr_code_2</span>
+          <span style="color: rgba(255,255,255,0.92); font-size: 11.5px; line-height: 1.45; font-weight: 600; font-family: 'Plus Jakarta Sans', sans-serif;">
+            <strong>Khusus QR Pengguna:</strong> Fitur pemindai ini khusus untuk transfer ke akun sesama pengguna NoxaPay (bukan QRIS toko/merchant).
+          </span>
+        </div>
+
+        <!-- 3:4 Camera Viewfinder Box with Laser Neon Glow -->
+        <div style="position: relative; width: 100%; max-width: 290px; aspect-ratio: 3 / 4; background: #000000; border-radius: 26px; overflow: hidden; box-shadow: 0 20px 50px rgba(168, 85, 247, 0.4); border: 2px solid rgba(192, 132, 252, 0.6);">
           <div id="qr-reader" style="width: 100%; height: 100%;"></div>
 
           <!-- Animated Laser Scanning Line -->
           <div class="qr-laser-line"></div>
 
           <!-- Corner decorations (Neon Violet Glow) -->
-          <div style="position: absolute; top: 14px; left: 14px; width: 36px; height: 36px; border-top: 3.5px solid #c084fc; border-left: 3.5px solid #c084fc; border-radius: 8px 0 0 0; pointer-events: none; box-shadow: -2px -2px 10px rgba(192, 132, 252, 0.6);"></div>
-          <div style="position: absolute; top: 14px; right: 14px; width: 36px; height: 36px; border-top: 3.5px solid #c084fc; border-right: 3.5px solid #c084fc; border-radius: 0 8px 0 0; pointer-events: none; box-shadow: 2px -2px 10px rgba(192, 132, 252, 0.6);"></div>
-          <div style="position: absolute; bottom: 14px; left: 14px; width: 36px; height: 36px; border-bottom: 3.5px solid #c084fc; border-left: 3.5px solid #c084fc; border-radius: 0 0 0 8px; pointer-events: none; box-shadow: -2px 2px 10px rgba(192, 132, 252, 0.6);"></div>
-          <div style="position: absolute; bottom: 14px; right: 14px; width: 36px; height: 36px; border-bottom: 3.5px solid #c084fc; border-right: 3.5px solid #c084fc; border-radius: 0 0 8px 0; pointer-events: none; box-shadow: 2px 2px 10px rgba(192, 132, 252, 0.6);"></div>
+          <div style="position: absolute; top: 14px; left: 14px; width: 36px; height: 36px; border-top: 3.5px solid #c084fc; border-left: 3.5px solid #c084fc; border-radius: 8px 0 0 0; pointer-events: none; box-shadow: -2px -2px 10px rgba(192, 132, 252, 0.8);"></div>
+          <div style="position: absolute; top: 14px; right: 14px; width: 36px; height: 36px; border-top: 3.5px solid #c084fc; border-right: 3.5px solid #c084fc; border-radius: 0 8px 0 0; pointer-events: none; box-shadow: 2px -2px 10px rgba(192, 132, 252, 0.8);"></div>
+          <div style="position: absolute; bottom: 14px; left: 14px; width: 36px; height: 36px; border-bottom: 3.5px solid #c084fc; border-left: 3.5px solid #c084fc; border-radius: 0 0 0 8px; pointer-events: none; box-shadow: -2px 2px 10px rgba(192, 132, 252, 0.8);"></div>
+          <div style="position: absolute; bottom: 14px; right: 14px; width: 36px; height: 36px; border-bottom: 3.5px solid #c084fc; border-right: 3.5px solid #c084fc; border-radius: 0 0 8px 0; pointer-events: none; box-shadow: 2px 2px 10px rgba(192, 132, 252, 0.8);"></div>
         </div>
 
-        <p id="qr-scanner-hint" style="color: rgba(255,255,255,0.85); font-size: 13px; text-align: center; margin: 0; font-weight: 600; letter-spacing: 0.2px;">Arahkan QR Code tepat ke dalam kotak pemindai</p>
-        <p id="qr-scanner-status" style="color: #c084fc; font-size: 13px; text-align: center; font-weight: 700; margin: 0; display: none;"></p>
+        <p id="qr-scanner-hint" style="color: rgba(255,255,255,0.85); font-size: 12.5px; text-align: center; margin: 0; font-weight: 600; font-family: 'Plus Jakarta Sans', sans-serif;">Arahkan QR Code teman / pengguna ke dalam kotak</p>
+        <p id="qr-scanner-status" style="color: #c084fc; font-size: 12.5px; text-align: center; font-weight: 700; margin: 0; display: none; font-family: 'Plus Jakarta Sans', sans-serif;"></p>
 
         <!-- Scanner Control Action Pill Buttons (Senter & Galeri) -->
         <div style="display: flex; gap: 14px; align-items: center; justify-content: center; margin-top: 4px;">
           <button id="btn-qr-flash" onclick="toggleQRFlashlight()"
-            style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06)); border: 1.5px solid rgba(255, 255, 255, 0.25); border-radius: 20px; padding: 12px 24px; color: white; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 700; cursor: pointer; backdrop-filter: blur(16px); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); transition: all 0.2s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'">
-            <span id="qr-flash-icon" class="material-symbols-outlined" style="font-size: 22px; color: #ffffff;">flashlight_on</span>
+            style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.06)); border: 1.5px solid rgba(255, 255, 255, 0.25); border-radius: 20px; padding: 12px 24px; color: white; display: flex; align-items: center; gap: 10px; font-size: 13.5px; font-weight: 700; cursor: pointer; backdrop-filter: blur(16px); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); transition: all 0.2s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'">
+            <span id="qr-flash-icon" class="material-symbols-outlined" style="font-size: 20px; color: #ffffff;">flashlight_on</span>
             <span id="qr-flash-label">Senter</span>
           </button>
 
           <button onclick="openQRFromGallery()"
-            style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06)); border: 1.5px solid rgba(255, 255, 255, 0.25); border-radius: 20px; padding: 12px 24px; color: white; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 700; cursor: pointer; backdrop-filter: blur(16px); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); transition: all 0.2s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'">
-            <span class="material-symbols-outlined" style="font-size: 22px; color: #ffffff;">photo_library</span>
+            style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.06)); border: 1.5px solid rgba(255, 255, 255, 0.25); border-radius: 20px; padding: 12px 24px; color: white; display: flex; align-items: center; gap: 10px; font-size: 13.5px; font-weight: 700; cursor: pointer; backdrop-filter: blur(16px); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); transition: all 0.2s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'">
+            <span class="material-symbols-outlined" style="font-size: 20px; color: #ffffff;">photo_library</span>
             <span>Galeri</span>
           </button>
         </div>
@@ -4753,6 +4774,10 @@
 
         <!-- ACTION BUTTONS -->
         <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px;">
+          <!-- Salin Semua Rincian Button -->
+          <button onclick="copyTransactionDetails(currentPrintTx)" style="width: 100%; padding: 12px 14px; background: linear-gradient(135deg, #7B2D8E, #9B4DB8); color: white; border: none; border-radius: 14px; font-weight: 700; font-size: 13.5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(123,45,142,0.25); transition: opacity 0.2s;">
+            <span class="material-symbols-outlined" style="font-size: 18px;">content_copy</span> Salin Semua Rincian Transaksi
+          </button>
           <!-- Share ke WhatsApp Direct Button -->
           <button id="share-wa-btn" onclick="shareReceiptToWA()" style="width: 100%; padding: 12px 14px; background: #25D366; color: white; border: none; border-radius: 14px; font-weight: 700; font-size: 13.5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(37,211,102,0.25); transition: opacity 0.2s;">
             <svg style="width: 18px; height: 18px; fill: currentColor; flex-shrink: 0;" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
@@ -4786,7 +4811,7 @@
 
         <!-- Status Hero Card (Berhasil / Diproses / Gagal) -->
         <div id="post-checkout-status-card" style="background: white; border-radius: 20px; padding: 22px 18px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; transition: all 0.3s ease;">
-          <div id="post-checkout-status-icon" style="width: 58px; height: 58px; border-radius: 50%; margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.1);">
+          <div id="post-checkout-status-icon" style="margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; width: 100%;">
             <span class="material-symbols-outlined" style="font-size: 32px; color: white;">check_circle</span>
           </div>
           <h3 id="post-checkout-status-title" style="font-size: 17px; font-weight: 800; color: #0f172a; margin: 0 0 4px; font-family: 'Plus Jakarta Sans', sans-serif;">Status Pesanan</h3>
@@ -4820,7 +4845,12 @@
 
         <!-- Section B: Transaction Info Card -->
         <div style="background: white; border-radius: 20px; padding: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid #e2e8f0;">
-          <h4 style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 12px; font-family: 'Plus Jakarta Sans', sans-serif;">RINCIAN TRANSAKSI</h4>
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <h4 style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif;">RINCIAN TRANSAKSI</h4>
+            <button onclick="copyTransactionDetails(_currentPostCheckoutTx)" style="background: rgba(123, 45, 142, 0.08); border: 1px solid rgba(123, 45, 142, 0.18); color: #7B2D8E; padding: 4px 10px; border-radius: 20px; font-weight: 800; font-size: 10.5px; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: all 0.2s;">
+              <span class="material-symbols-outlined" style="font-size: 14px;">content_copy</span> Salin Semua Rincian
+            </button>
+          </div>
 
           <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #f1f5f9; font-size: 13px;">
             <span style="color: #64748b;">Nama Produk / Layanan</span>
@@ -9026,20 +9056,39 @@
           } catch(e) {}
         }
 
+        // Force stop ALL media stream tracks attached to any video element
         try {
-          const videoEl = document.querySelector('#qr-reader video');
-          if (videoEl && videoEl.srcObject) {
-            const tracks = videoEl.srcObject.getTracks();
-            tracks.forEach(track => {
-              try { track.stop(); } catch(tErr) {}
-            });
-            videoEl.srcObject = null;
-          }
+          const videoElements = document.querySelectorAll('video');
+          videoElements.forEach(videoEl => {
+            if (videoEl && videoEl.srcObject) {
+              const tracks = videoEl.srcObject.getTracks ? videoEl.srcObject.getTracks() : [];
+              tracks.forEach(track => {
+                try { track.stop(); } catch(tErr) {}
+              });
+              videoEl.srcObject = null;
+            }
+          });
         } catch(e) {}
 
         const readerEl = document.getElementById('qr-reader');
         if (readerEl) readerEl.innerHTML = '';
       }
+
+      // Auto-stop camera on app background, tab switch, minimize, or pagehide
+      document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+          _stopQRScanner();
+        }
+      });
+      window.addEventListener('pagehide', function() {
+        _stopQRScanner();
+      });
+      window.addEventListener('blur', function() {
+        const screen = document.getElementById('screen-qr-scanner');
+        if (screen && (screen.style.display !== 'none' || screen.classList.contains('active'))) {
+          _stopQRScanner();
+        }
+      });
 
       function _onQRScanned(decodedText) {
         _stopQRScanner();
@@ -11166,6 +11215,69 @@
         } catch (e) {
           showNotification('Gagal menyalin teks.');
         }
+      }
+
+      function copyTransactionDetails(txData) {
+        const tx = txData || _currentPostCheckoutTx || currentPrintTx || {};
+
+        const statusStr = String(tx.status || 'BERHASIL').toUpperCase();
+        const statusEmoji = (statusStr === 'BERHASIL' || statusStr === 'PAID') ? '✅' : ((statusStr === 'GAGAL' || statusStr === 'FAILED') ? '❌' : '⏳');
+
+        const productName = tx.merchant || tx.product_name || tx.title || tx.service || 'NoxaPay Wallet';
+        const targetNo = tx.target || tx.phoneNumber || tx.customerNo || tx.noTujuan || '-';
+        const accName = tx.account_name || tx.customerName || tx.accountName || '';
+        const priceVal = tx.amount || tx.price || 0;
+        const amountStr = typeof formatRupiah === 'function' ? formatRupiah(priceVal) : `Rp ${priceVal}`;
+        const txId = tx.id || tx.ref_id || '-';
+
+        let timeStr = '-';
+        if (tx.createdAt) {
+          try {
+            const d = new Date(tx.createdAt);
+            timeStr = d.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+          } catch (e) {
+            timeStr = tx.createdAt;
+          }
+        } else if (tx.date) {
+          timeStr = tx.date;
+        }
+
+        let snVal = tx.product_license || tx.license || tx.sn || tx.voucher || tx.serialNumber || tx.serial_number || tx.seller_note || '';
+        if (!snVal && tx.note && looksLikeCredential(tx.note)) snVal = tx.note;
+        if (snVal && isRawSystemCode(snVal)) snVal = '';
+
+        let lines = [
+          `🧾 RINCIAN TRANSAKSI - NOXAPAY`,
+          `---------------------------------`,
+          `Status Transaksi : ${statusEmoji} ${statusStr}`,
+          `Nama Layanan     : ${productName}`,
+          `Nomor Tujuan/ID  : ${targetNo}`
+        ];
+
+        if (accName) {
+          lines.push(`Atas Nama        : ${accName}`);
+        }
+
+        lines.push(`Total Bayar      : ${amountStr}`);
+        lines.push(`ID Transaksi     : ${txId}`);
+        lines.push(`Waktu Transaksi  : ${timeStr}`);
+
+        if (snVal) {
+          lines.push(`Detail Produk/SN : ${snVal}`);
+        }
+
+        if (statusStr === 'GAGAL' || statusStr === 'FAILED') {
+          const rawFail = tx.failureReason || tx.apiMessage || tx.note || tx.description || '';
+          if (rawFail) {
+            lines.push(`Alasan Gagal     : ${formatHumanFailReason(rawFail)}`);
+          }
+        }
+
+        lines.push(`---------------------------------`);
+        lines.push(`Noxarianet Wallet • Transaksi Aman & Cepat`);
+
+        const fullText = lines.join('\n');
+        copyText(fullText, 'Seluruh Rincian Transaksi');
       }
 
       function getStatusIconAnimationHtml(status) {
