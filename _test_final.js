@@ -1,33 +1,38 @@
-const FinCloudService = require('./fincloudService');
+require('dotenv').config();
+const SekaliPayService = require('./sekalipayService');
 
-const service = new FinCloudService({
-  apiKey: 'fin-86417488e6552d00a6caad592b71a162'
-});
+const service = new SekaliPayService();
 
 async function run() {
-  // Test semua kategori utama
-  const categories = ['PULSA', 'KUOTA', 'TOKEN PLN', 'GAMES', 'E-Money', 'SMS & TELP'];
-  let allOk = true;
+  console.log('=== VERIFIKASI PPOB SEKALIPAY (ACTIVE ENGINE) ===\n');
 
-  for (const cat of categories) {
-    // Override cache agar fresh fetch selalu terjadi
-    delete service._productCache[`${cat}_`];
-    delete service._productCacheTime[`${cat}_`];
+  const result = await service.getItems();
+  const items = result.data || [];
+  const ok = result.success && items.length > 0;
 
-    const result = await service.getProducts(cat, '');
-    const len = result && result.data ? result.data.length : 0;
-    const brands = result && result.data ? [...new Set(result.data.map(p => p.brand))].join(', ') : '-';
-    const ok = result && result.status === true && len > 0;
-    if (!ok) allOk = false;
-    console.log(`[${ok ? '✅' : '❌'}] ${cat.padEnd(12)} | ${len} produk | brands: ${brands} | ${result?.msg}`);
+  console.log(`[${ok ? '✅' : '❌'}] SekaliPay Items Load: ${items.length} produk terdaftar (Cached: ${result.cached ? 'Ya' : 'Tidak'})\n`);
 
-    // jeda 3 detik antar kategori agar tidak kena rate limit
-    if (categories.indexOf(cat) < categories.length - 1) {
-      await new Promise(r => setTimeout(r, 3000));
-    }
+  const categories = [
+    { label: 'PULSA & DATA', cat: 'Pulsa & Paket Data' },
+    { label: 'GAMES', cat: 'Game' },
+    { label: 'E-WALLET', cat: 'E-Wallet' },
+    { label: 'TOKEN PLN', cat: 'Listrik' },
+    { label: 'VOUCHER', cat: 'Voucher' }
+  ];
+
+  let allOk = ok;
+
+  for (const item of categories) {
+    const matched = items.filter(i => (i.category || '').toLowerCase() === item.cat.toLowerCase());
+    const count = matched.length;
+    const catOk = count > 0;
+    if (!catOk) allOk = false;
+    const sampleBrands = [...new Set(matched.map(m => m.brand))].slice(0, 5).join(', ');
+    console.log(`[${catOk ? '✅' : '❌'}] ${item.label.padEnd(14)} | ${String(count).padStart(4)} produk | Brand sample: ${sampleBrands || '-'}`);
   }
 
-  console.log('\n' + (allOk ? '🎉 SEMUA KATEGORI OK!' : '⚠️ ADA KATEGORI YANG GAGAL — cek log di atas'));
+  console.log('\n' + (allOk ? '🎉 SEMUA KATEGORI PPOB SEKALIPAY OK & SIAP DUGUNAKAN!' : '⚠️ ADA KATEGORI YANG KOSONG — cek log di atas'));
 }
 
 run().catch(console.error);
+

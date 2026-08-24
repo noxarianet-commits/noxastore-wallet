@@ -146,7 +146,7 @@ class FinCloudService {
           try {
             resolve(JSON.parse(data));
           } catch (e) {
-            reject(new Error(`Response bukan JSON: ${data.substring(0, 300)}`));
+            reject(new Error(`Response FinCloud bukan JSON (Domain/Endpoint mengembalikan halaman Web/HTML landing page).`));
           }
         });
       });
