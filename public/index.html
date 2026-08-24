@@ -9583,85 +9583,91 @@
         'profile': 4
       };
 
-      // Tab Navigation Switcher
+      // Tab Navigation Switcher (Bulletproof & Error-Safe)
       function switchTab(tabName, clickedNavItem = null) {
-        if (isTabTransitioning) return;
+        const targetPanel = document.getElementById(`panel-${tabName}`);
+        if (!targetPanel) {
+          isTabTransitioning = false;
+          return;
+        }
 
         const activePanel = document.querySelector('.tab-panel.active');
-        const targetPanel = document.getElementById(`panel-${tabName}`);
+        if (activePanel === targetPanel) {
+          isTabTransitioning = false;
+          return;
+        }
 
-        if (activePanel === targetPanel) return;
+        if (isTabTransitioning) {
+          // Safety timeout reset in case transition was interrupted
+          setTimeout(() => { isTabTransitioning = false; }, 400);
+          return;
+        }
 
         isTabTransitioning = true;
 
-        // Deactivate all nav buttons
-        document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+        try {
+          // Deactivate all nav buttons
+          document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
 
-        // Activate navigation item
-        if (clickedNavItem) {
-          clickedNavItem.classList.add('active');
-        } else {
-          const navBtn = document.getElementById(`nav-btn-${tabName}`);
-          if (navBtn) navBtn.classList.add('active');
-        }
-
-        if (tabName === 'info') {
-          loadClientInformations();
-        }
-
-        if (tabName === 'profile') {
-          initBiometricSetting();
-        }
-
-        if (activePanel && targetPanel) {
-          const activeTabName = activePanel.id.replace('panel-', '');
-          const activeIndex = tabIndices[activeTabName];
-          const targetIndex = tabIndices[tabName];
-
-          // Determine direction
-          const isNext = targetIndex > activeIndex;
-
-          // Lock main height using active panel's rendered height
-          const mainEl = document.querySelector('main');
-          const panelHeight = activePanel.offsetHeight;
-          mainEl.style.height = Math.max(panelHeight, mainEl.clientHeight) + 'px';
-          mainEl.style.overflowY = 'hidden';
-
-          // Force reflow so browser registers the locked height
-          void mainEl.offsetHeight;
-
-          // Scroll to top
-          mainEl.scrollTop = 0;
-
-          // Apply classes for animation
-          if (isNext) {
-            activePanel.className = 'tab-panel slide-out-left';
-            targetPanel.className = 'tab-panel slide-in-right';
+          // Activate navigation item
+          if (clickedNavItem) {
+            clickedNavItem.classList.add('active');
           } else {
-            activePanel.className = 'tab-panel slide-out-right';
-            targetPanel.className = 'tab-panel slide-in-left';
+            const navBtn = document.getElementById(`nav-btn-${tabName}`);
+            if (navBtn) navBtn.classList.add('active');
           }
 
-          setTimeout(() => {
-            activePanel.className = 'tab-panel';
+          if (tabName === 'info') {
+            loadClientInformations();
+          } else if (tabName === 'profile') {
+            initBiometricSetting();
+            updateProfileAnalytics();
+          } else if (tabName === 'history') {
+            renderHistoryList();
+          }
+
+          if (activePanel && targetPanel) {
+            const activeTabName = activePanel.id ? activePanel.id.replace('panel-', '') : '';
+            const activeIndex = (activeTabName && tabIndices[activeTabName] !== undefined) ? tabIndices[activeTabName] : 0;
+            const targetIndex = (tabIndices[tabName] !== undefined) ? tabIndices[tabName] : 0;
+
+            const isNext = targetIndex > activeIndex;
+
+            const mainEl = document.querySelector('main');
+            if (mainEl) {
+              const panelHeight = activePanel.offsetHeight || 0;
+              mainEl.style.height = Math.max(panelHeight, mainEl.clientHeight || 0) + 'px';
+              mainEl.style.overflowY = 'hidden';
+              void mainEl.offsetHeight;
+              mainEl.scrollTop = 0;
+            }
+
+            if (isNext) {
+              activePanel.className = 'tab-panel slide-out-left';
+              targetPanel.className = 'tab-panel slide-in-right';
+            } else {
+              activePanel.className = 'tab-panel slide-out-right';
+              targetPanel.className = 'tab-panel slide-in-left';
+            }
+
+            setTimeout(() => {
+              activePanel.className = 'tab-panel';
+              targetPanel.className = 'tab-panel active';
+              if (mainEl) {
+                mainEl.style.height = '';
+                mainEl.style.overflowY = 'auto';
+              }
+              isTabTransitioning = false;
+            }, 340);
+
+          } else {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
             targetPanel.className = 'tab-panel active';
-            mainEl.style.height = '';
-            mainEl.style.overflowY = 'auto';
             isTabTransitioning = false;
-          }, 340);
-
-        } else {
-          if (targetPanel) {
-            targetPanel.className = 'tab-panel active';
           }
+        } catch (err) {
+          console.error('switchTab error:', err);
           isTabTransitioning = false;
-        }
-
-        // Special action on tab switch
-        if (tabName === 'history') {
-          renderHistoryList();
-        } else if (tabName === 'profile') {
-          updateProfileAnalytics();
         }
       }
 
