@@ -188,15 +188,44 @@
       --shadow-premium: 0 10px 25px rgba(123, 45, 142, 0.08);
       --shadow-card: 0 8px 20px rgba(15, 23, 42, 0.03);
       --shadow-active: 0 4px 14px rgba(123, 45, 142, 0.2);
-      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      --transition-fast: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.15s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    /* Global Reset */
+    /* Global Reset & High-Performance GPU Rendering */
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    html {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+      scroll-behavior: smooth;
+    }
+
+    button, a, .quick-action-btn, .nav-item, [onclick], input[type="button"], input[type="submit"] {
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* Instant tactile feedback on tap with hardware acceleration */
+    button:active, .quick-action-btn:active, .nav-item:active, [onclick]:active {
+      transform: scale(0.96) translate3d(0, 0, 0) !important;
+      transition: transform 0.08s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+
+    .gpu-layer {
+      transform: translate3d(0, 0, 0);
+      will-change: transform, opacity;
+      backface-visibility: hidden;
+      perspective: 1000px;
     }
 
     body {
@@ -1552,17 +1581,19 @@
 
     /* Modal Overlay */
     .modal-overlay {
-      position: absolute;
+      position: fixed;
       inset: 0;
       background: rgba(15, 23, 42, 0.6);
-      backdrop-filter: blur(4px);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
       z-index: 1000;
       display: none;
       align-items: center;
       justify-content: center;
       padding: 24px;
       opacity: 0;
-      transition: opacity 0.3s ease;
+      transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: opacity;
     }
 
     .modal-overlay.active {
@@ -1579,12 +1610,14 @@
       text-align: center;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
       position: relative;
-      transform: translateY(20px);
-      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transform: translate3d(0, 20px, 0) scale(0.96);
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: transform, opacity;
+      backface-visibility: hidden;
     }
 
     .modal-overlay.active .modal-content {
-      transform: translateY(0);
+      transform: translate3d(0, 0, 0) scale(1);
     }
 
     .qr-image-container {
@@ -1601,7 +1634,7 @@
     .qr-image-container img {
       max-width: 100%;
       height: auto;
-      transition: transform 0.3s ease;
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .qr-image-container img.zoomed {
@@ -1646,19 +1679,20 @@
       z-index: 300;
       display: flex;
       flex-direction: column;
-      transform: translateX(100%);
+      transform: translate3d(100%, 0, 0);
       opacity: 0;
       visibility: hidden;
-      transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.28s step-end;
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.25s step-end;
       overflow-y: auto;
       will-change: transform, opacity;
+      backface-visibility: hidden;
     }
 
     .full-screen-panel.active {
-      transform: translateX(0);
+      transform: translate3d(0, 0, 0);
       opacity: 1;
       visibility: visible;
-      transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s step-start;
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s step-start;
     }
 
     /* Automatically add top safe-area-inset padding to any full screen panel's header bar */
@@ -3657,7 +3691,7 @@
   <div id="app-container">
 
     <!-- Minimal Native Pull-to-Refresh Circular Spinner -->
-    <div id="pull-to-refresh-indicator" style="position: fixed; top: -60px; left: 50%; transform: translateX(-50%); z-index: 99999; background: #ffffff; width: 40px; height: 40px; border-radius: 50%; box-shadow: 0 4px 18px rgba(0,0,0,0.16); display: flex; align-items: center; justify-content: center; pointer-events: none; transition: top 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s; opacity: 0; border: 1.5px solid rgba(123, 45, 142, 0.12);">
+    <div id="pull-to-refresh-indicator" style="position: fixed; top: 0; left: 50%; transform: translate3d(-50%, -60px, 0); z-index: 99999; background: #ffffff; width: 40px; height: 40px; border-radius: 50%; box-shadow: 0 4px 18px rgba(0,0,0,0.16); display: flex; align-items: center; justify-content: center; pointer-events: none; transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s; opacity: 0; border: 1.5px solid rgba(123, 45, 142, 0.12); will-change: transform, opacity;">
       <span class="material-symbols-outlined" id="ptr-icon" style="color: #7B2D8E; font-size: 22px; transition: transform 0.1s linear;">refresh</span>
     </div>
 
@@ -3974,8 +4008,42 @@
       <!-- ========================================== -->
       <div id="panel-history" class="tab-panel">
         <section class="app-section" style="padding-top: max(52px, calc(env(safe-area-inset-top) + 16px));">
-          <div class="section-header" style="margin-bottom: 16px;">
-            <h3>Riwayat Transaksi</h3>
+          <div class="section-header" style="margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
+            <h3 style="font-size: 18px; font-weight: 800; color: #0f172a; margin: 0;">Mutasi Transaksi</h3>
+            <select id="history-month-select" onchange="onHistoryMonthChange(this.value)" style="background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 6px 12px; font-size: 12px; font-weight: 700; color: #0f172a; outline: none; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+              <option value="CURRENT_MONTH" selected>Bulan Ini</option>
+              <option value="ALL">Semua Bulan</option>
+            </select>
+          </div>
+
+          <!-- Cash Flow Summary Card (Uang Masuk & Uang Keluar) -->
+          <div class="cashflow-summary-card" style="background: #ffffff; border-radius: 18px; padding: 16px 18px; border: 1px solid #e2e8f0; box-shadow: 0 4px 16px rgba(15,23,42,0.04); margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; position: relative;">
+            
+            <!-- Uang Masuk -->
+            <div style="flex: 1; display: flex; align-items: center; gap: 12px; min-width: 0;">
+              <div style="width: 38px; height: 38px; border-radius: 50%; background: #22c55e; color: #ffffff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 8px rgba(34, 197, 94, 0.25);">
+                <span class="material-symbols-outlined" style="font-size: 22px; font-weight: 700;">arrow_downward</span>
+              </div>
+              <div style="flex: 1; min-width: 0;">
+                <span style="display: block; font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Uang Masuk</span>
+                <h4 id="summary-uang-masuk" style="font-size: 15px; font-weight: 800; color: #0f172a; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Rp 0</h4>
+              </div>
+            </div>
+
+            <!-- Vertical Divider -->
+            <div style="width: 1px; height: 36px; background: #e2e8f0; margin: 0 14px; flex-shrink: 0;"></div>
+
+            <!-- Uang Keluar -->
+            <div style="flex: 1; display: flex; align-items: center; gap: 12px; min-width: 0;">
+              <div style="width: 38px; height: 38px; border-radius: 50%; background: #f97316; color: #ffffff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 8px rgba(249, 115, 22, 0.25);">
+                <span class="material-symbols-outlined" style="font-size: 22px; font-weight: 700;">arrow_upward</span>
+              </div>
+              <div style="flex: 1; min-width: 0;">
+                <span style="display: block; font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Uang Keluar</span>
+                <h4 id="summary-uang-keluar" style="font-size: 15px; font-weight: 800; color: #0f172a; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Rp 0</h4>
+              </div>
+            </div>
+
           </div>
 
           <!-- Filter Tabs -->
@@ -7837,7 +7905,7 @@
           if (diff > 0 && isScrollAtTop()) {
             const pullDistance = Math.min(diff * 0.45, 100);
             ptrElement.style.opacity = Math.min(pullDistance / 40, 1);
-            ptrElement.style.top = `${Math.min(pullDistance - 45, 20)}px`;
+            ptrElement.style.transform = `translate3d(-50%, ${Math.min(pullDistance - 45, 20)}px, 0)`;
             if (ptrIcon) {
               ptrIcon.style.animation = 'none';
               ptrIcon.style.transform = `rotate(${pullDistance * 3.6}deg)`;
@@ -7876,7 +7944,7 @@
             isDragging = true;
             const pullDistance = Math.min(diff * 0.4, 100);
             ptrElement.style.opacity = Math.min(pullDistance / 40, 1);
-            ptrElement.style.top = `${Math.min(pullDistance - 45, 20)}px`;
+            ptrElement.style.transform = `translate3d(-50%, ${Math.min(pullDistance - 45, 20)}px, 0)`;
             if (ptrIcon) {
               ptrIcon.style.animation = 'none';
               ptrIcon.style.transform = `rotate(${pullDistance * 3.6}deg)`;
@@ -7902,7 +7970,7 @@
 
         async function triggerPTR() {
           isRefreshing = true;
-          ptrElement.style.top = '20px';
+          ptrElement.style.transform = 'translate3d(-50%, 20px, 0)';
           ptrElement.style.opacity = '1';
           if (ptrIcon) {
             ptrIcon.style.animation = 'ptr-spin 0.75s linear infinite';
@@ -7919,7 +7987,7 @@
         }
 
         function resetPTR() {
-          ptrElement.style.top = '-60px';
+          ptrElement.style.transform = 'translate3d(-50%, -60px, 0)';
           ptrElement.style.opacity = '0';
           setTimeout(() => {
             isRefreshing = false;
@@ -10297,6 +10365,125 @@
         updateProfileAnalytics();
       }
 
+      let selectedHistoryMonth = 'CURRENT_MONTH';
+
+      function onHistoryMonthChange(val) {
+        selectedHistoryMonth = val;
+        renderHistoryList();
+      }
+
+      function parseTxDateObj(tx) {
+        if (!tx) return new Date();
+        if (tx.createdAt) {
+          try {
+            const d = new Date(tx.createdAt);
+            if (!isNaN(d.getTime())) return d;
+          } catch (e) {}
+        }
+        if (tx.date && tx.date !== '-') {
+          try {
+            if (tx.date.includes('/')) {
+              const parts = tx.date.split('/');
+              if (parts.length >= 3) {
+                return new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+              }
+            }
+            const monthsMap = {
+              'jan': 0, 'feb': 1, 'mar': 2, 'apr': 3, 'mei': 4, 'jun': 5,
+              'jul': 6, 'agu': 7, 'ags': 7, 'sep': 8, 'okt': 9, 'nov': 10, 'des': 11
+            };
+            const parts = tx.date.split(' ');
+            if (parts.length >= 3) {
+              const day = parseInt(parts[0], 10);
+              const mStr = parts[1].toLowerCase().substring(0, 3);
+              const year = parseInt(parts[2], 10);
+              const mIdx = monthsMap[mStr] !== undefined ? monthsMap[mStr] : 0;
+              return new Date(year, mIdx, day);
+            }
+          } catch (e) {}
+        }
+        return new Date();
+      }
+
+      function populateHistoryMonthSelect(allHistory) {
+        const selectEl = document.getElementById('history-month-select');
+        if (!selectEl) return;
+
+        const monthsSet = new Map();
+        const monthsIndo = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+        allHistory.forEach(tx => {
+          const d = parseTxDateObj(tx);
+          if (d) {
+            const y = d.getFullYear();
+            const m = d.getMonth();
+            const key = `${y}-${String(m + 1).padStart(2, '0')}`;
+            const label = `${monthsIndo[m]} ${y}`;
+            if (!monthsSet.has(key)) {
+              monthsSet.set(key, label);
+            }
+          }
+        });
+
+        const currentVal = selectedHistoryMonth;
+        selectEl.innerHTML = `
+          <option value="CURRENT_MONTH" ${currentVal === 'CURRENT_MONTH' ? 'selected' : ''}>Bulan Ini</option>
+          <option value="ALL" ${currentVal === 'ALL' ? 'selected' : ''}>Semua Bulan</option>
+        `;
+
+        for (const [key, label] of monthsSet.entries()) {
+          const opt = document.createElement('option');
+          opt.value = key;
+          opt.innerText = label;
+          if (key === currentVal) opt.selected = true;
+          selectEl.appendChild(opt);
+        }
+      }
+
+      function updateCashflowSummaryCard(historyList) {
+        const masukEl = document.getElementById('summary-uang-masuk');
+        const keluarEl = document.getElementById('summary-uang-keluar');
+        if (!masukEl || !keluarEl) return;
+
+        const now = new Date();
+        const curY = now.getFullYear();
+        const curM = now.getMonth();
+
+        let totalMasuk = 0;
+        let totalKeluar = 0;
+
+        historyList.forEach(tx => {
+          // Skip failed transactions from cash flow totals
+          const isFailed = String(tx.status || '').toUpperCase() === 'GAGAL';
+          if (isFailed) return;
+
+          const txDate = parseTxDateObj(tx);
+
+          if (selectedHistoryMonth === 'CURRENT_MONTH') {
+            if (txDate.getFullYear() !== curY || txDate.getMonth() !== curM) {
+              return;
+            }
+          } else if (selectedHistoryMonth !== 'ALL') {
+            const ymKey = `${txDate.getFullYear()}-${String(txDate.getMonth() + 1).padStart(2, '0')}`;
+            if (ymKey !== selectedHistoryMonth) {
+              return;
+            }
+          }
+
+          const info = getTxDisplayInfo(tx);
+          const amt = Math.ceil(Number(tx.amount) || 0);
+
+          if (info.prefix === '+') {
+            totalMasuk += amt;
+          } else if (info.prefix === '-') {
+            totalKeluar += amt;
+          }
+        });
+
+        masukEl.innerText = 'Rp ' + totalMasuk.toLocaleString('id-ID');
+        keluarEl.innerText = 'Rp ' + totalKeluar.toLocaleString('id-ID');
+      }
+
       function filterHistory(filterType, tabButton) {
         currentFilter = filterType;
 
@@ -10309,16 +10496,33 @@
       }
 
       function renderHistoryList() {
+        populateHistoryMonthSelect(transactionHistory);
+        updateCashflowSummaryCard(transactionHistory);
+
         const container = document.getElementById('history-container');
         container.innerHTML = ''; // reset
 
-        // Filter list
-        let filtered = transactionHistory;
-        if (currentFilter === 'berhasil') {
-          filtered = transactionHistory.filter(tx => tx.status === 'BERHASIL');
-        } else if (currentFilter === 'gagal') {
-          filtered = transactionHistory.filter(tx => tx.status === 'GAGAL'); // Currently server only saves successful claims, but allows failures in design
-        }
+        const now = new Date();
+        const curY = now.getFullYear();
+        const curM = now.getMonth();
+
+        // Filter list by status & month
+        let filtered = transactionHistory.filter(tx => {
+          // Status filter
+          if (currentFilter === 'berhasil' && tx.status !== 'BERHASIL') return false;
+          if (currentFilter === 'gagal' && tx.status !== 'GAGAL') return false;
+
+          // Month filter
+          const txDate = parseTxDateObj(tx);
+          if (selectedHistoryMonth === 'CURRENT_MONTH') {
+            if (txDate.getFullYear() !== curY || txDate.getMonth() !== curM) return false;
+          } else if (selectedHistoryMonth !== 'ALL') {
+            const ymKey = `${txDate.getFullYear()}-${String(txDate.getMonth() + 1).padStart(2, '0')}`;
+            if (ymKey !== selectedHistoryMonth) return false;
+          }
+
+          return true;
+        });
 
         if (filtered.length === 0) {
           container.innerHTML = `
@@ -10335,14 +10539,12 @@
         const monthsMap = {};
         filtered.forEach(tx => {
           // Standardize monthly header names based on transaction dates
-          // Date example: "24 Okt 2023" -> We extract "Okt 2023" or fallback to month of transaction date
           let monthHeader = 'Klaim Terbaru';
           if (tx.date && tx.date !== '-') {
             const dateParts = tx.date.split(' ');
             if (dateParts.length >= 3) {
               monthHeader = dateParts.slice(1).join(' '); // returns "Okt 2023"
             } else if (tx.date.includes('/')) {
-              // handle DD/MM/YYYY format
               const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
               const datePartsSlash = tx.date.split('/');
               if (datePartsSlash.length >= 3) {
