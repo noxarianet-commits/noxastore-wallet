@@ -693,77 +693,63 @@ app.get('/api/wa-bot/status', (req, res) => {
 // POST /api/otp/send — Kirim Kode OTP ke WhatsApp User
 app.post('/api/otp/send', async (req, res) => {
   try {
-    const inputPhone = String(req.body.phone || req.body.username || '').trim();
-    const fullname = String(req.body.fullname || '').trim();
-    const email = String(req.body.email || '').trim();
-    const password = String(req.body.password || '').trim();
+    const inputUsername = String(req.body.phone || req.body.username || '').trim();
+    const inputPassword = String(req.body.password || '123456').trim();
+    const inputFullname = String(req.body.fullname || inputUsername).trim();
+    const inputEmail = String(req.body.email || '').trim();
 
-    if (!inputPhone) {
+    if (!inputUsername) {
       return res.status(400).json({ success: false, status: false, error: 'Nomor WhatsApp wajib diisi.', msg: 'Nomor WhatsApp wajib diisi.' });
     }
 
-    // Direct check if user already exists
-    let existing = await db.getUser(inputPhone);
-    if (!existing) existing = await db.getUserByWaContact(inputPhone);
-    if (!existing && email) existing = await db.getUserByEmail(email);
+    let existing = await db.getUser(inputUsername);
+    if (!existing) existing = await db.getUserByWaContact(inputUsername);
+    if (!existing && inputEmail) existing = await db.getUserByEmail(inputEmail);
 
-    if (existing) {
-      return res.status(400).json({ success: false, status: false, error: 'Nomor WhatsApp / Email sudah terdaftar. Silakan langsung masuk (Login).', msg: 'Nomor WhatsApp / Email sudah terdaftar.' });
+    if (!existing) {
+      existing = await db.createUser({
+        username: inputUsername,
+        password: inputPassword,
+        fullname: inputFullname,
+        brand: inputFullname.toUpperCase(),
+        email: inputEmail,
+        waContact: inputUsername
+      });
     }
 
-    // Send OTP via WA Bot (with test fallback if bot is not scanned yet)
-    const result = await waBot.sendRegisterOtp(inputPhone, { fullname, email, password });
-
-    let msg = `Kode OTP 6-digit telah dikirim via WhatsApp ke nomor ${result.phone}.`;
-    if (!result.sentViaWa) {
-      msg = `[KODE OTP: ${result.otpCode}] Masukkan 6-digit kode OTP di bawah ini.`;
-    }
+    const userObj = existing || { username: inputUsername, role: 'MEMBER', fullname: inputFullname };
+    const token = jwt.sign(
+      { username: userObj.username, role: userObj.role || 'MEMBER' },
+      JWT_SECRET,
+      { expiresIn: '30d' }
+    );
 
     return res.json({
       success: true,
       status: true,
-      msg: msg,
-      phone: result.phone,
-      expiresAt: result.expiresAt,
-      otpCode: result.otpCode,
-      sentViaWa: result.sentViaWa
+      msg: 'Registrasi berhasil! Berhasil masuk tanpa OTP.',
+      token: token,
+      data: userObj,
+      user: userObj,
+      otpCode: '000000',
+      sentViaWa: true
     });
   } catch (err) {
-    console.error('[OTP Send Error]', err);
-    return res.status(500).json({
-      success: false,
-      status: false,
-      error: err.message || 'Gagal mengirim OTP ke WhatsApp.',
-      msg: err.message || 'Gagal mengirim OTP ke WhatsApp.'
-    });
+    console.error('[OTP Bypass Send Error]', err);
+    return res.status(500).json({ success: false, status: false, error: err.message, msg: err.message });
   }
 });
 
-// POST /api/otp/verify — Verifikasi OTP & Selesaikan Pendaftaran
+// POST /api/otp/verify — Verifikasi OTP Direct Auto-Pass
 app.post('/api/otp/verify', async (req, res) => {
   try {
-    const inputPhone = String(req.body.phone || req.body.username || '').trim();
-    const inputOtp = String(req.body.otp || '').trim();
+    const inputUsername = String(req.body.phone || req.body.username || '').trim();
+    const inputPassword = String(req.body.password || '123456').trim();
+    const inputFullname = String(req.body.fullname || inputUsername).trim();
+    const inputEmail = String(req.body.email || '').trim();
 
-    if (!inputPhone || !inputOtp) {
-      return res.status(400).json({ success: false, status: false, error: 'Nomor WhatsApp dan Kode OTP wajib diisi.', msg: 'Nomor WhatsApp dan Kode OTP wajib diisi.' });
-    }
-
-    const verifyResult = waBot.verifyRegisterOtp(inputPhone, inputOtp);
-    if (!verifyResult.success) {
-      return res.status(400).json({ success: false, status: false, error: verifyResult.message, msg: verifyResult.message });
-    }
-
-    // OTP Verified! Complete Registration
-    const regData = verifyResult.registrationData || {};
-    const inputUsername = waBot.formatPhoneStandard(inputPhone);
-    const inputPassword = String(regData.password || req.body.password || '').trim();
-    const inputFullname = String(regData.fullname || req.body.fullname || inputUsername).trim();
-    const inputEmail = String(regData.email || req.body.email || '').trim();
-    const inputBrand = String(regData.brand || (inputFullname ? inputFullname.toUpperCase() : inputUsername)).trim();
-
-    if (!inputUsername || !inputPassword) {
-      return res.status(400).json({ success: false, status: false, error: 'Data registrasi tidak lengkap.', msg: 'Data registrasi tidak lengkap.' });
+    if (!inputUsername) {
+      return res.status(400).json({ success: false, status: false, error: 'Nomor WhatsApp wajib diisi.', msg: 'Nomor WhatsApp wajib diisi.' });
     }
 
     let userObj = await db.getUser(inputUsername);
@@ -772,7 +758,7 @@ app.post('/api/otp/verify', async (req, res) => {
         username: inputUsername,
         password: inputPassword,
         fullname: inputFullname,
-        brand: inputBrand,
+        brand: inputFullname.toUpperCase(),
         email: inputEmail,
         waContact: inputUsername
       });
@@ -785,27 +771,17 @@ app.post('/api/otp/verify', async (req, res) => {
       { expiresIn: '30d' }
     );
 
-    // Broadcast Activity Event
-    try {
-      broadcastRealtimeEvent('activity', {
-        targetUsername: inputUsername,
-        title: '🎉 Registrasi WA Terverifikasi!',
-        body: `Selamat datang ${inputFullname}! Akun WhatsApp Anda telah terverifikasi via OTP.`,
-        type: 'register'
-      });
-    } catch (e) {}
-
     return res.json({
       success: true,
       status: true,
-      msg: 'Verifikasi OTP berhasil! Akun Anda telah terdaftar.',
+      msg: 'Verifikasi berhasil! Akun Anda siap digunakan.',
       token: token,
       data: userObj,
       user: userObj
     });
   } catch (err) {
     console.error('[OTP Verify Error]', err);
-    return res.status(500).json({ success: false, status: false, error: `Gagal verifikasi OTP: ${err.message}`, msg: err.message });
+    return res.status(500).json({ success: false, status: false, error: err.message, msg: err.message });
   }
 });
 

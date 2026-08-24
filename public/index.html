@@ -6751,10 +6751,10 @@
         }
 
         const btn = document.querySelector('#auth-register-form button');
-        if (btn) { btn.disabled = true; btn.innerHTML = '<span>⏳ Mengirim OTP...</span>'; }
+        if (btn) { btn.disabled = true; btn.innerHTML = '<span>⏳ Memproses Pendaftaran...</span>'; }
 
         try {
-          const res = await originalFetch('/api/otp/send', {
+          const res = await originalFetch('/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ fullname, username: user, phone: user, password, email })
@@ -6762,45 +6762,30 @@
           const data = await res.json().catch(() => ({}));
 
           if (!res.ok) {
-            showNotification('❌ ' + (data.error || data.msg || 'Gagal mengirim OTP.'));
+            showNotification('❌ ' + (data.error || data.msg || 'Gagal mendaftar.'));
             return;
           }
 
           if (data.success || data.status) {
-            _pendingOtpPhone = data.phone || user;
-            const phoneEl = document.getElementById('otp-target-phone');
-            if (phoneEl) phoneEl.innerText = _pendingOtpPhone;
+            if (data.token) {
+              localStorage.setItem('token', data.token);
+            }
+            if (data.user || data.data) {
+              currentUser = data.user || data.data;
+            }
+            showNotification('🎉 Registrasi Berhasil! Selamat datang di NoxariaNet Wallet.');
             
-            // Switch UI view to OTP form
-            const regForm = document.getElementById('auth-register-form');
-            const loginForm = document.getElementById('auth-login-form');
-            const otpForm = document.getElementById('auth-otp-form');
-            if (regForm) regForm.style.display = 'none';
-            if (loginForm) loginForm.style.display = 'none';
-            if (otpForm) otpForm.style.display = 'block';
-
-            // Clear digits
-            for (let i = 1; i <= 6; i++) {
-              const inp = document.getElementById(`otp-d${i}`);
-              if (inp) inp.value = '';
-            }
-            setTimeout(() => {
-              const firstDigit = document.getElementById('otp-d1');
-              if (firstDigit) firstDigit.focus();
-            }, 200);
-
-            startOtpTimer(60);
-            if (data.otpCode && !data.sentViaWa) {
-              showNotification(`🔑 [KODE OTP: ${data.otpCode}] Masukkan kode 6 digit ini di bawah.`);
-            } else {
-              showNotification('📩 Kode OTP telah dikirim ke WhatsApp Anda!');
-            }
+            // Close auth modal and update UI
+            closeAuthModal();
+            updateAuthUI();
+            if (typeof fetchInitialData === 'function') fetchInitialData();
+            if (typeof loadUserProfile === 'function') loadUserProfile();
           } else {
-            showNotification('❌ ' + (data.error || data.msg || 'Gagal mengirim OTP.'));
+            showNotification('❌ ' + (data.error || data.msg || 'Gagal mendaftar.'));
           }
         } catch (err) {
-          console.error('Send OTP error', err);
-          showNotification('❌ Gagal menghubungi server OTP.');
+          console.error('Register error', err);
+          showNotification('❌ Gagal menghubungi server registrasi.');
         } finally {
           if (btn) {
             btn.disabled = false;
