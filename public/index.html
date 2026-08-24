@@ -658,16 +658,16 @@
       bottom: 0;
       left: 0;
       right: 0;
-      background: rgba(255, 255, 255, 0.94);
+      background: rgba(255, 255, 255, 0.96);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       display: flex;
       justify-content: space-around;
       align-items: center;
       border-top: 1px solid rgba(15, 23, 42, 0.08);
-      /* Proper safe area inset for notch phones (iPhone, Android) */
-      padding: 8px var(--padding-side) max(12px, env(safe-area-inset-bottom)) var(--padding-side);
-      box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.06);
+      /* Proper safe area inset for notch phones (iPhone, Android) - slightly shifted upward */
+      padding: 10px var(--padding-side) max(14px, env(safe-area-inset-bottom)) var(--padding-side);
+      box-shadow: 0 -6px 24px rgba(15, 23, 42, 0.08);
       z-index: 100;
       touch-action: manipulation;
     }
@@ -683,7 +683,7 @@
       cursor: pointer;
       font-family: inherit;
       padding: 0 2px;
-      margin-top: -24px;
+      margin-top: -28px;
       position: relative;
       z-index: 105;
       transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -693,19 +693,19 @@
       transform: scale(0.92);
     }
     .nav-fab-icon-wrapper {
-      width: 56px;
-      height: 56px;
+      width: 58px;
+      height: 58px;
       border-radius: 50%;
       background: linear-gradient(135deg, #7B2D8E 0%, #a855f7 100%);
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 6px 22px rgba(123, 45, 142, 0.48), 0 0 0 4px rgba(255, 255, 255, 0.98);
+      box-shadow: 0 8px 24px rgba(123, 45, 142, 0.5), 0 0 0 4px rgba(255, 255, 255, 0.98);
       transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .nav-fab-scan:hover .nav-fab-icon-wrapper {
       transform: scale(1.06);
-      box-shadow: 0 8px 26px rgba(123, 45, 142, 0.58), 0 0 0 4px rgba(255, 255, 255, 1);
+      box-shadow: 0 10px 28px rgba(123, 45, 142, 0.6), 0 0 0 4px rgba(255, 255, 255, 1);
     }
 
     /* Laser Scan Animation for QR Scanner */
@@ -738,11 +738,11 @@
       cursor: pointer;
       font-family: inherit;
       transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
-      padding: 6px 12px;
+      padding: 6px 14px;
       border-radius: 22px;
       position: relative; /* needed for badge dot */
-      min-width: 58px;
-      min-height: 52px;
+      min-width: 60px;
+      min-height: 54px;
       touch-action: manipulation;
     }
 
@@ -770,16 +770,16 @@
     }
 
     .nav-item span {
-      font-size: 28px;
-      margin-bottom: 1px;
-      transform: translateY(-4px);
+      font-size: 30px;
+      margin-bottom: 2px;
+      transform: translateY(-2px);
       transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), font-size 0.2s ease;
       font-variation-settings: 'FILL' 0;
       display: inline-block;
     }
 
     .nav-item label {
-      font-size: 11px;
+      font-size: 11.5px;
       font-weight: 700;
       cursor: pointer;
       line-height: 1.1;
@@ -795,7 +795,7 @@
 
     .nav-item.active span {
       font-variation-settings: 'FILL' 1;
-      transform: translateY(-5px) scale(1.08);
+      transform: translateY(-3px) scale(1.08);
     }
 
     .nav-item.active label {
@@ -11217,6 +11217,60 @@
         }
       }
 
+      function extractProductLicenseOrSN(tx) {
+        if (!tx || typeof tx !== 'object') return '';
+
+        const getCleanVal = (val) => {
+          if (!val) return '';
+          const str = String(val).trim();
+          if (!str || str === '-' || isRawSystemCode(str)) return '';
+          const lower = str.toLowerCase();
+          if (lower.includes('ditolak') || lower.includes('requires_target') || lower.includes('invalid_') || lower.includes('gagal') || lower.includes('error')) return '';
+          return str;
+        };
+
+        // Direct fields from tx record
+        if (getCleanVal(tx.product_license)) return getCleanVal(tx.product_license);
+        if (getCleanVal(tx.license)) return getCleanVal(tx.license);
+        if (getCleanVal(tx.sn)) return getCleanVal(tx.sn);
+        if (getCleanVal(tx.serial_number)) return getCleanVal(tx.serial_number);
+        if (getCleanVal(tx.serialNumber)) return getCleanVal(tx.serialNumber);
+        if (getCleanVal(tx.voucher)) return getCleanVal(tx.voucher);
+        if (getCleanVal(tx.seller_note)) return getCleanVal(tx.seller_note);
+        if (getCleanVal(tx.account_details)) return getCleanVal(tx.account_details);
+        if (getCleanVal(tx.credentials)) return getCleanVal(tx.credentials);
+
+        // Check nested response object if present
+        if (tx.response && typeof tx.response === 'object') {
+          const r = tx.response;
+          if (getCleanVal(r.product_license)) return getCleanVal(r.product_license);
+          if (getCleanVal(r.license)) return getCleanVal(r.license);
+          if (getCleanVal(r.sn)) return getCleanVal(r.sn);
+          if (getCleanVal(r.serial_number)) return getCleanVal(r.serial_number);
+          if (getCleanVal(r.voucher)) return getCleanVal(r.voucher);
+          if (getCleanVal(r.seller_note)) return getCleanVal(r.seller_note);
+          if (getCleanVal(r.account_details)) return getCleanVal(r.account_details);
+
+          if (Array.isArray(r.items)) {
+            for (const itm of r.items) {
+              if (getCleanVal(itm.product_license)) return getCleanVal(itm.product_license);
+              if (getCleanVal(itm.license)) return getCleanVal(itm.license);
+              if (getCleanVal(itm.seller_note)) return getCleanVal(itm.seller_note);
+              if (getCleanVal(itm.sn)) return getCleanVal(itm.sn);
+              if (getCleanVal(itm.serial_number)) return getCleanVal(itm.serial_number);
+            }
+          }
+        }
+
+        // Check note or description field if not standard transfer text
+        const noteVal = getCleanVal(tx.note) || getCleanVal(tx.description);
+        if (noteVal && !noteVal.startsWith('Transfer saldo ke') && !noteVal.startsWith('Terima saldo dari')) {
+          return noteVal;
+        }
+
+        return '';
+      }
+
       function copyTransactionDetails(txData) {
         const tx = txData || _currentPostCheckoutTx || currentPrintTx || {};
 
@@ -11242,9 +11296,7 @@
           timeStr = tx.date;
         }
 
-        let snVal = tx.product_license || tx.license || tx.sn || tx.voucher || tx.serialNumber || tx.serial_number || tx.seller_note || '';
-        if (!snVal && tx.note && looksLikeCredential(tx.note)) snVal = tx.note;
-        if (snVal && isRawSystemCode(snVal)) snVal = '';
+        let snVal = extractProductLicenseOrSN(tx);
 
         let lines = [
           `🧾 RINCIAN TRANSAKSI - NOXAPAY`,
@@ -11405,8 +11457,7 @@
 
       function copyPostCheckoutProduct() {
         if (!_currentPostCheckoutTx) return;
-        let snVal = _currentPostCheckoutTx.product_license || _currentPostCheckoutTx.license || _currentPostCheckoutTx.sn || _currentPostCheckoutTx.voucher || _currentPostCheckoutTx.serialNumber || _currentPostCheckoutTx.serial_number || _currentPostCheckoutTx.seller_note || _currentPostCheckoutTx.note || '';
-        snVal = sanitizeErrorMessage(snVal);
+        let snVal = extractProductLicenseOrSN(_currentPostCheckoutTx);
         if (!snVal || snVal === '-') return showNotification('⚠️ Detail produk belum tersedia.');
         copyText(snVal, 'Detail Akun / Lisensi / Link');
       }
@@ -11471,9 +11522,7 @@
         }
 
         // 2. Product SN / Voucher / Credentials / License / Link Display Box
-        let snVal = tx.product_license || tx.license || tx.sn || tx.voucher || tx.serialNumber || tx.serial_number || tx.seller_note || '';
-        if (!snVal && tx.note && looksLikeCredential(tx.note)) snVal = tx.note;
-        if (snVal && isRawSystemCode(snVal)) snVal = '';
+        let snVal = extractProductLicenseOrSN(tx);
 
         const prodBox = document.getElementById('post-checkout-product-box-container');
         const prodContent = document.getElementById('post-checkout-product-content');
@@ -11673,19 +11722,31 @@
         }
 
         // Populate SN / Voucher / Detail Produk / Akun Lisensi Premium
-        // Priority: product_license > license > sn > voucher > serialNumber
-        // Only use 'note' if it looks like a credential (not an error message)
-        let snVal = tx.product_license || tx.license || tx.sn || tx.voucher || tx.serialNumber || '';
-        if (!snVal && tx.note && looksLikeCredential(tx.note)) snVal = tx.note;
+        let snVal = extractProductLicenseOrSN(tx);
         const snBox = document.getElementById('receipt-sn-container');
-        if (snVal && String(snVal).trim() !== '' &&
-            !String(snVal).toLowerCase().includes('gagal') &&
-            !String(snVal).toLowerCase().includes('error') &&
-            !String(snVal).toLowerCase().includes('respon gagal')) {
+        if (snVal && String(snVal).trim() !== '') {
           setTextIfExists('receipt-sn-value', snVal.trim());
           if (snBox) snBox.style.display = 'block';
         } else {
           if (snBox) snBox.style.display = 'none';
+
+          // Automatic background check-status fetch if SN is missing in history record
+          if (tx.id && (tx.type === 'PPOB' || !tx.type)) {
+            fetch(`/api/ppob/check-status/${tx.id}`)
+              .then(r => r.json())
+              .then(data => {
+                if (data && data.success && data.sn) {
+                  tx.sn = data.sn;
+                  tx.product_license = data.sn;
+                  const newSn = extractProductLicenseOrSN(tx);
+                  if (newSn) {
+                    setTextIfExists('receipt-sn-value', newSn);
+                    if (snBox) snBox.style.display = 'block';
+                  }
+                }
+              })
+              .catch(() => {});
+          }
         }
 
         // Format waktu transaksi (WIB Asia/Jakarta)
