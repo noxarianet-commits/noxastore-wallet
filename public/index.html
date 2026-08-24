@@ -7175,8 +7175,9 @@
         const gridEl = document.getElementById('ewallet-nominal-grid');
 
         try {
+          const uname = localStorage.getItem('noxaUsername') || 'guest';
           const res = await fetch(`/api/ppob/products?category=E-Money&brand=${encodeURIComponent(brand)}`, {
-            headers: { 'Authorization': 'Bearer ' + localStorage.getItem('noxaUsername') }
+            headers: { 'Authorization': 'Bearer ' + uname }
           });
           const result = await res.json();
 
@@ -7352,6 +7353,12 @@
 
 
       async function openCheckoutModal() {
+        const username = localStorage.getItem('noxaUsername');
+        if (!username) {
+          showNotification('⚠ Silakan masuk atau daftar akun terlebih dahulu.');
+          openSetupModal();
+          return;
+        }
         const phone = document.getElementById('dana-withdraw-phone').value.trim();
         const amount = parseInt(document.getElementById('dana-selected-nominal').value, 10);
         const method = _activeWithdrawMethod || 'DANA';
@@ -12232,8 +12239,9 @@
         list.innerHTML = '';
 
         try {
+          const uname = localStorage.getItem('noxaUsername') || 'guest';
           const res = await fetch(`/api/ppob/products?category=${encodeURIComponent(category)}&brand=${encodeURIComponent(brand)}`, {
-            headers: { 'Authorization': 'Bearer ' + localStorage.getItem('noxaUsername') }
+            headers: { 'Authorization': 'Bearer ' + uname }
           });
           const result = await res.json();
 
@@ -12320,6 +12328,12 @@
       }
 
       function openPPOBCheckout(product) {
+        const username = localStorage.getItem('noxaUsername');
+        if (!username) {
+          showNotification('⚠ Silakan masuk atau daftar akun terlebih dahulu.');
+          openSetupModal();
+          return;
+        }
         const targetInput = document.getElementById('ppob-target-input');
         const target = targetInput ? targetInput.value.trim() : '';
         if (!target || target.length < 3) {

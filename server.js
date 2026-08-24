@@ -1109,8 +1109,8 @@ app.post('/webhook/sekalipay', async (req, res) => {
 // NOXARIA WALLET PPOB & ADMIN APIs
 // ==========================================
 
-// PPOB Products API
-app.get('/api/ppob/products', requireAuth, async (req, res) => {
+// PPOB Products API (Public Read-Only Catalog)
+app.get('/api/ppob/products', async (req, res) => {
   const { category, brand } = req.query;
   try {
     const result = await sekalipayService.getItems();
