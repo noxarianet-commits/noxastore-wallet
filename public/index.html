@@ -3259,19 +3259,139 @@
       animation-delay: 0.75s;
     }
 
-    @keyframes sparkleBurst {
+    /* ─── STATUS ANIMATION CONTAINER (RESPONSIVE & COMPACT) ─── */
+    .status-anim-container-box {
+      position: relative;
+      width: 90px;
+      height: 90px;
+      margin: 0 auto;
+    }
+
+    /* Ripple rings for Success */
+    .ripple-ring-success {
+      border-color: rgba(34, 197, 94, 0.18) !important;
+    }
+    .ripple-ring-success:nth-child(2) {
+      border-color: rgba(34, 197, 94, 0.10) !important;
+    }
+    .ripple-ring-success:nth-child(3) {
+      border-color: rgba(34, 197, 94, 0.05) !important;
+    }
+
+    .circle-solid-success {
+      background: radial-gradient(circle at 40% 35%, #22c55e, #16a34a) !important;
+      box-shadow: 0 0 36px rgba(34, 197, 94, 0.35) !important;
+    }
+
+    .sparkle-success {
+      background: radial-gradient(circle, #86efac, #22c55e) !important;
+      box-shadow: 0 0 12px rgba(34, 197, 94, 0.8) !important;
+    }
+
+    /* SVG Cross (Gagal) Animation */
+    .x-svg-path {
+      fill: none;
+      stroke: #ffffff;
+      stroke-width: 8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 80;
+      stroke-dashoffset: 80;
+      animation: drawCross 0.65s cubic-bezier(0.2, 0.9, 0.3, 1.2) forwards;
+      animation-delay: 0.25s;
+    }
+
+    @keyframes drawCross {
       0% {
-        transform: scale(0) rotate(0deg);
-        opacity: 1;
-      }
-      70% {
-        transform: scale(2.8) rotate(200deg);
-        opacity: 0.8;
+        stroke-dashoffset: 80;
       }
       100% {
-        transform: scale(2) rotate(360deg);
-        opacity: 0;
+        stroke-dashoffset: 0;
       }
+    }
+
+    /* Process Spinner (Purple / Amber) Animation */
+    .pulse-ring {
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      border: 2px solid rgba(139, 92, 246, 0.15);
+      animation: pulseRing 2s ease-in-out infinite;
+      pointer-events: none;
+    }
+    .pulse-ring:nth-child(2) {
+      inset: -14px;
+      border-color: rgba(139, 92, 246, 0.08);
+      animation-delay: 0.5s;
+    }
+    .pulse-ring:nth-child(3) {
+      inset: -22px;
+      border-color: rgba(139, 92, 246, 0.04);
+      animation-delay: 1s;
+    }
+
+    @keyframes pulseRing {
+      0%, 100% {
+        transform: scale(0.85);
+        opacity: 0.4;
+      }
+      50% {
+        transform: scale(1.05);
+        opacity: 0.9;
+      }
+    }
+
+    .purple-spinner {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 5px solid rgba(139, 92, 246, 0.12);
+      border-top-color: #8b5cf6;
+      border-right-color: #8b5cf6;
+      animation: spin 1s cubic-bezier(0.6, 0, 0.4, 1) infinite;
+      box-shadow: 0 0 30px rgba(139, 92, 246, 0.15);
+    }
+
+    .inner-glow {
+      position: absolute;
+      inset: 20%;
+      border-radius: 50%;
+      background: radial-gradient(circle at 40% 35%, rgba(139, 92, 246, 0.25), rgba(139, 92, 246, 0.02));
+      animation: glowPulse 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes glowPulse {
+      0% {
+        transform: scale(0.88);
+        opacity: 0.4;
+      }
+      100% {
+        transform: scale(1.1);
+        opacity: 1;
+      }
+    }
+
+    .dot-glow {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: radial-gradient(circle, #c4b5fd, #8b5cf6);
+      border-radius: 50%;
+      box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+      animation: dotPulse 1.5s ease-in-out infinite alternate;
+    }
+    .dot-glow.d-top { top: 4%; left: 50%; transform: translateX(-50%); animation-delay: 0s; }
+    .dot-glow.d-bottom { bottom: 4%; left: 50%; transform: translateX(-50%); animation-delay: 0.75s; }
+    .dot-glow.d-left { top: 50%; left: 4%; transform: translateY(-50%); animation-delay: 0.37s; animation-name: dotPulseY; }
+    .dot-glow.d-right { top: 50%; right: 4%; transform: translateY(-50%); animation-delay: 1.12s; animation-name: dotPulseY; }
+
+    @keyframes dotPulse {
+      0% { transform: translateX(-50%) scale(0.5); opacity: 0.3; }
+      100% { transform: translateX(-50%) scale(1.2); opacity: 1; }
+    }
+    @keyframes dotPulseY {
+      0% { transform: translateY(-50%) scale(0.5); opacity: 0.3; }
+      100% { transform: translateY(-50%) scale(1.2); opacity: 1; }
     }
 
     /* Anti-Forgery DANA-Style Watermark Grid */
@@ -4649,58 +4769,58 @@
     <!-- ========================================== -->
     <div id="screen-post-checkout-status" class="full-screen-panel" style="background: #f8fafc; display: none;">
       <!-- Sticky Top Header -->
-      <div style="background: linear-gradient(135deg, #1e1b4b, #4c1d95); padding: 18px 16px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; position: sticky; top: 0; z-index: 20;">
+      <div style="background: linear-gradient(135deg, #7B2D8E 0%, #9B4DB8 100%); padding: 18px 16px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; position: sticky; top: 0; z-index: 20; box-shadow: 0 4px 20px rgba(123,45,142,0.25);">
         <div style="display: flex; align-items: center; gap: 12px;">
           <button onclick="closePostCheckoutStatus()"
-            style="background: rgba(255,255,255,0.15); border: none; color: white; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;">
+            style="background: rgba(255,255,255,0.2); border: none; color: white; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: background 0.2s;">
             <span class="material-symbols-outlined" style="font-size: 20px;">close</span>
           </button>
           <div>
-            <h2 style="color: white; font-size: 16px; font-weight: 800; margin: 0;">Detail Pesanan</h2>
-            <p style="color: rgba(255,255,255,0.7); font-size: 11px; margin: 2px 0 0;">Status Transaksi & rincian produk</p>
+            <h2 style="color: white; font-size: 16px; font-weight: 800; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif;">Detail Pesanan</h2>
+            <p style="color: rgba(255,255,255,0.85); font-size: 11px; margin: 2px 0 0; font-family: 'Plus Jakarta Sans', sans-serif;">Status Transaksi & Rincian Produk</p>
           </div>
         </div>
       </div>
 
-      <div style="padding: 20px 16px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 16px;">
+      <div style="padding: 18px 16px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 14px;">
 
-        <!-- Status Card (Berhasil / Diproses / Gagal) -->
-        <div id="post-checkout-status-card" style="background: white; border-radius: 20px; padding: 20px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
-          <div id="post-checkout-status-icon" style="width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 12px; display: flex; align-items: center; justify-content: center;">
-            <span class="material-symbols-outlined" style="font-size: 36px; color: white;">check_circle</span>
+        <!-- Status Hero Card (Berhasil / Diproses / Gagal) -->
+        <div id="post-checkout-status-card" style="background: white; border-radius: 20px; padding: 22px 18px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; transition: all 0.3s ease;">
+          <div id="post-checkout-status-icon" style="width: 58px; height: 58px; border-radius: 50%; margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.1);">
+            <span class="material-symbols-outlined" style="font-size: 32px; color: white;">check_circle</span>
           </div>
-          <h3 id="post-checkout-status-title" style="font-size: 18px; font-weight: 800; color: #0f172a; margin: 0 0 4px;">Status Pesanan</h3>
-          <p id="post-checkout-status-desc" style="font-size: 12px; color: #64748b; margin: 0;">Detail transaksi pesanan Anda</p>
+          <h3 id="post-checkout-status-title" style="font-size: 17px; font-weight: 800; color: #0f172a; margin: 0 0 4px; font-family: 'Plus Jakarta Sans', sans-serif;">Status Pesanan</h3>
+          <p id="post-checkout-status-desc" style="font-size: 12.5px; color: #64748b; margin: 0; line-height: 1.4; font-family: 'Plus Jakarta Sans', sans-serif;">Detail transaksi pesanan Anda</p>
         </div>
 
         <!-- Section A: Dedicated Product Display Box (For PPOB / Premium Apps / Token / Voucher) -->
-        <div id="post-checkout-product-box-container" style="background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1.5px solid #a855f7; display: block;">
-          <div style="font-size: 11px; font-weight: 800; color: #7B2D8E; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+        <div id="post-checkout-product-box-container" style="background: #faf5ff; border-radius: 18px; padding: 16px; box-shadow: 0 4px 16px rgba(123,45,142,0.06); border: 1.5px dashed #a855f7; display: block;">
+          <div style="font-size: 11px; font-weight: 800; color: #7B2D8E; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
             <span style="display: flex; align-items: center; gap: 6px;">
-              <span class="material-symbols-outlined" style="font-size: 18px; color: #7B2D8E;">verified</span> DETAIL PRODUK / AKUN / LISENSI
+              <span class="material-symbols-outlined" style="font-size: 17px; color: #7B2D8E;">verified</span> DETAIL PRODUK / KODE LISENSI
             </span>
-            <span id="post-checkout-product-badge" style="font-size: 10px; font-weight: 800; color: #059669; background: #ecfdf5; padding: 2px 8px; border-radius: 20px;">AKTIF</span>
+            <span id="post-checkout-product-badge" style="font-size: 10px; font-weight: 800; color: #059669; background: #ecfdf5; padding: 3px 10px; border-radius: 20px; border: 1px solid rgba(16,185,129,0.2);">AKTIF</span>
           </div>
 
           <!-- Product Content Box -->
-          <div id="post-checkout-product-content" style="background: #f8fafc; border: 1.5px dashed #a855f7; border-radius: 14px; padding: 14px; text-align: center; margin-bottom: 12px; word-break: break-all; font-family: 'Plus Jakarta Sans', monospace; font-size: 14px; font-weight: 800; color: #0f172a; line-height: 1.5;">
+          <div id="post-checkout-product-content" style="background: white; border: 1px solid #e9d5ff; border-radius: 12px; padding: 12px 14px; text-align: center; margin-bottom: 12px; word-break: break-all; font-family: 'Plus Jakarta Sans', monospace; font-size: 13.5px; font-weight: 800; color: #0f172a; line-height: 1.5;">
             -
           </div>
 
           <!-- Action Buttons Container (Buka Link + Salin) -->
           <div id="post-checkout-product-actions" style="display: flex; flex-direction: column; gap: 8px;">
-            <button id="btn-open-premium-link" onclick="openPostCheckoutLink()" style="display: none; width: 100%; padding: 13px; background: linear-gradient(135deg, #2563eb, #3b82f6); color: white; border: none; border-radius: 14px; font-weight: 800; font-size: 13.5px; cursor: pointer; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(37,99,235,0.25);">
-              <span class="material-symbols-outlined" style="font-size: 20px;">open_in_new</span> BUKA LINK APLIKASI PREMIUM
+            <button id="btn-open-premium-link" onclick="openPostCheckoutLink()" style="display: none; width: 100%; padding: 12px; background: linear-gradient(135deg, #2563eb, #3b82f6); color: white; border: none; border-radius: 12px; font-weight: 800; font-size: 13px; cursor: pointer; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(37,99,235,0.25);">
+              <span class="material-symbols-outlined" style="font-size: 18px;">open_in_new</span> BUKA LINK APLIKASI PREMIUM
             </button>
-            <button id="btn-copy-premium-code" onclick="copyPostCheckoutProduct()" style="width: 100%; padding: 13px; background: linear-gradient(135deg, #7B2D8E, #9B4DB8); color: white; border: none; border-radius: 14px; font-weight: 800; font-size: 13.5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(123,45,142,0.25);">
-              <span class="material-symbols-outlined" style="font-size: 20px;">content_copy</span> SALIN PRODUK / KODE LISENSI
+            <button id="btn-copy-premium-code" onclick="copyPostCheckoutProduct()" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #7B2D8E, #9B4DB8); color: white; border: none; border-radius: 12px; font-weight: 800; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(123,45,142,0.25);">
+              <span class="material-symbols-outlined" style="font-size: 18px;">content_copy</span> SALIN PRODUK / KODE LISENSI
             </button>
           </div>
         </div>
 
         <!-- Section B: Transaction Info Card -->
-        <div style="background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
-          <h4 style="font-size: 12px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 14px;">RINCIAN TRANSAKSI</h4>
+        <div style="background: white; border-radius: 20px; padding: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid #e2e8f0;">
+          <h4 style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 12px; font-family: 'Plus Jakarta Sans', sans-serif;">RINCIAN TRANSAKSI</h4>
 
           <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #f1f5f9; font-size: 13px;">
             <span style="color: #64748b;">Nama Produk / Layanan</span>
@@ -4727,29 +4847,29 @@
 
           <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #f1f5f9; font-size: 13px;">
             <span style="color: #64748b;">Total Bayar</span>
-            <strong id="post-checkout-price" style="color: #059669; font-weight: 800;">Rp 0</strong>
+            <strong id="post-checkout-price" style="color: #059669; font-weight: 800; font-size: 14px;">Rp 0</strong>
           </div>
 
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px dashed #f1f5f9; font-size: 13px; flex-wrap: wrap; gap: 6px;">
             <span style="color: #64748b; flex-shrink: 0;">ID Transaksi</span>
             <div style="display: flex; align-items: center; gap: 6px; max-width: 65%; justify-content: flex-end;">
-              <span id="post-checkout-txid" style="color: #64748b; font-family: monospace; font-size: 11px; word-break: break-all; text-align: right;">-</span>
+              <span id="post-checkout-txid" style="color: #64748b; font-family: monospace; font-size: 11.5px; word-break: break-all; text-align: right;">-</span>
               <button onclick="copyText(document.getElementById('post-checkout-txid').innerText, 'ID Transaksi')" style="background: none; border: none; cursor: pointer; color: #7B2D8E; display: flex; padding: 2px; flex-shrink: 0;"><span class="material-symbols-outlined" style="font-size: 16px;">content_copy</span></button>
             </div>
           </div>
 
           <div style="display: flex; justify-content: space-between; padding: 8px 0; font-size: 13px;">
             <span style="color: #64748b;">Tanggal & Waktu</span>
-            <span id="post-checkout-time" style="color: #475569; font-size: 12px;">-</span>
+            <span id="post-checkout-time" style="color: #475569; font-size: 12px; font-weight: 600;">-</span>
           </div>
         </div>
 
         <!-- Action Buttons -->
-        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 8px;">
-          <button onclick="openTrxDetailFromPostCheckout()" style="width: 100%; padding: 14px; background: white; border: 1.5px solid #7B2D8E; color: #7B2D8E; border-radius: 14px; font-weight: 800; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
-            <span class="material-symbols-outlined" style="font-size: 18px;">receipt_long</span> Lihat / Cetak Struk Pembayaran
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 6px;">
+          <button onclick="openTrxDetailFromPostCheckout()" style="width: 100%; height: 50px; background: linear-gradient(135deg, #7B2D8E 0%, #9B4DB8 100%); color: white; border: none; border-radius: 14px; font-weight: 700; font-size: 14px; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 6px 20px rgba(123,45,142,0.3); transition: all 0.25s ease;">
+            <span class="material-symbols-outlined" style="font-size: 20px;">receipt_long</span> Lihat / Cetak Struk Pembayaran
           </button>
-          <button onclick="closePostCheckoutStatus()" style="width: 100%; padding: 14px; background: #f1f5f9; border: none; color: #475569; border-radius: 14px; font-weight: 800; font-size: 14px; cursor: pointer;">
+          <button onclick="closePostCheckoutStatus()" style="width: 100%; height: 48px; background: #f1f5f9; border: none; color: #475569; border-radius: 14px; font-weight: 700; font-size: 13.5px; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; transition: background 0.2s;">
             Selesai & Kembali ke Beranda
           </button>
         </div>
@@ -11048,6 +11168,91 @@
         }
       }
 
+      function getStatusIconAnimationHtml(status) {
+        const norm = String(status || 'BERHASIL').toUpperCase();
+        if (norm === 'BERHASIL' || norm === 'PAID' || norm === 'SUCCESS') {
+          return `
+            <div class="status-anim-container-box">
+              <div class="ripple-ring ripple-ring-success"></div>
+              <div class="ripple-ring ripple-ring-success"></div>
+              <div class="ripple-ring ripple-ring-success"></div>
+              <div class="circle-solid circle-solid-success"></div>
+              <div class="sparkle sparkle-success"></div>
+              <div class="sparkle sparkle-success"></div>
+              <div class="sparkle sparkle-success"></div>
+              <div class="sparkle sparkle-success"></div>
+              <div class="sparkle sparkle-success"></div>
+              <div class="sparkle sparkle-success"></div>
+              <svg class="checkmark-svg" viewBox="0 0 100 100" fill="none">
+                <path d="M28 52 L44 68 L74 32" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </div>
+          `;
+        } else if (norm === 'GAGAL' || norm === 'FAILED' || norm === 'ERROR' || norm === 'CANCELLED') {
+          return `
+            <div class="status-anim-container-box">
+              <div class="ripple-ring ripple-ring-failed"></div>
+              <div class="ripple-ring ripple-ring-failed"></div>
+              <div class="ripple-ring ripple-ring-failed"></div>
+              <div class="circle-solid circle-solid-failed"></div>
+              <div class="sparkle sparkle-failed"></div>
+              <div class="sparkle sparkle-failed"></div>
+              <div class="sparkle sparkle-failed"></div>
+              <div class="sparkle sparkle-failed"></div>
+              <div class="sparkle sparkle-failed"></div>
+              <div class="sparkle sparkle-failed"></div>
+              <svg class="checkmark-svg" viewBox="0 0 100 100" fill="none">
+                <path class="x-svg-path" d="M32 32 L68 68 M68 32 L32 68" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </div>
+          `;
+        } else {
+          // DIPROSES / PENDING / PROCESSING
+          return `
+            <div class="status-anim-container-box">
+              <div class="pulse-ring"></div>
+              <div class="pulse-ring"></div>
+              <div class="pulse-ring"></div>
+              <div class="purple-spinner"></div>
+              <div class="inner-glow"></div>
+              <div class="dot-glow d-top"></div>
+              <div class="dot-glow d-bottom"></div>
+              <div class="dot-glow d-left"></div>
+              <div class="dot-glow d-right"></div>
+            </div>
+          `;
+        }
+      }
+
+      function isRawSystemCode(str) {
+        if (!str || typeof str !== 'string') return false;
+        const t = str.trim();
+        if (/^[A-Z0-9_]{5,}$/.test(t)) return true;
+        if (t.includes('POSTPAID_') || t.includes('INVALID_') || t.includes('REQUIRED_') || t.includes('TOKEN_') || t.includes('ERR_') || t.includes('SKU_')) return true;
+        return false;
+      }
+
+      function formatHumanFailReason(rawStr) {
+        if (!rawStr || typeof rawStr !== 'string') return 'Transaksi dibatalkan atau ditolak oleh provider.';
+        const s = rawStr.trim();
+        if (s.includes('POSTPAID_REQUIRES_TARGET_AND_INQUIRY_TOKEN') || s.includes('REQUIRES_TARGET_AND_INQUIRY_TOKEN')) {
+          return 'Layanan tagihan pascabayar memerlukan pengecekan nomor ID pelanggan & tagihan terlebih dahulu.';
+        }
+        if (s.includes('POSTPAID_')) {
+          return 'Layanan pembayaran pascabayar gagal diproses oleh sistem provider.';
+        }
+        if (s.includes('INVALID_') || s.includes('NOT_FOUND') || s.includes('UNREGISTERED')) {
+          return 'Nomor tujuan atau ID pelanggan tidak ditemukan / tidak valid.';
+        }
+        if (s.includes('BALANCE') || s.includes('SALDO')) {
+          return 'Saldo provider sedang tidak mencukupi untuk memproses transaksi ini.';
+        }
+        if (isRawSystemCode(s)) {
+          return 'Layanan produk sedang gangguan atau tidak tersedia dari provider saat ini.';
+        }
+        return sanitizeErrorMessage(s);
+      }
+
       function looksLikeCredential(str) {
         if (!str) return false;
         // Heuristic: credential strings usually contain @ (email), | (separator), or multi-line, or key:value patterns
@@ -11059,6 +11264,7 @@
         let str = typeof msg === 'string' ? msg : JSON.stringify(msg);
         // If it looks like a product credential / account detail, return as-is (don't mangle)
         if (looksLikeCredential(str)) return str.trim();
+        if (isRawSystemCode(str)) return formatHumanFailReason(str);
         return str
           .replace(/ditolak oleh sekalipay/gi, 'Ditolak oleh sistem')
           .replace(/api sekalipay/gi, 'sistem')
@@ -11134,34 +11340,28 @@
         const titleEl = document.getElementById('post-checkout-status-title');
         const descEl = document.getElementById('post-checkout-status-desc');
 
+        if (iconContainer) {
+          iconContainer.style.background = 'transparent';
+          iconContainer.style.boxShadow = 'none';
+          iconContainer.innerHTML = getStatusIconAnimationHtml(status);
+        }
+
         if (status === 'BERHASIL' || status === 'PAID') {
-          if (iconContainer) {
-            iconContainer.style.background = 'linear-gradient(135deg, #10b981, #059669)';
-            iconContainer.innerHTML = '<span class="material-symbols-outlined" style="font-size: 36px; color: white;">check_circle</span>';
-          }
           if (titleEl) titleEl.innerText = isEwallet ? 'Top Up E-Wallet Berhasil!' : (isInternalTx ? 'Transaksi Berhasil!' : 'Pembelian Berhasil!');
           if (descEl) descEl.innerText = isEwallet ? 'Saldo e-wallet telah berhasil dikirim ke akun tujuan.' : (isInternalTx ? 'Transaksi internal telah berhasil diproses.' : 'Produk telah berhasil diproses. Detail akun / lisensi dapat disalin di bawah.');
         } else if (status === 'DIPROSES' || status === 'PENDING' || status === 'PROCESSING') {
-          if (iconContainer) {
-            iconContainer.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
-            iconContainer.innerHTML = '<span class="material-symbols-outlined" style="font-size: 36px; color: white; animation: spin 2s linear infinite;">sync</span>';
-          }
           if (titleEl) titleEl.innerText = 'Pesanan Sedang Diproses';
           if (descEl) descEl.innerText = 'Server sedang memproses transaksi. Cek status secara berkala.';
         } else {
-          if (iconContainer) {
-            iconContainer.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
-            iconContainer.innerHTML = '<span class="material-symbols-outlined" style="font-size: 36px; color: white;">cancel</span>';
-          }
           if (titleEl) titleEl.innerText = 'Transaksi Gagal';
-          let errNote = tx.note || tx.error || tx.failureReason || 'Transaksi gagal diproses oleh sistem.';
-          if (descEl) descEl.innerText = sanitizeErrorMessage(errNote);
+          let errNote = tx.failureReason || tx.apiMessage || tx.error || tx.note || 'Transaksi gagal diproses oleh sistem.';
+          if (descEl) descEl.innerText = formatHumanFailReason(errNote);
         }
 
         // 2. Product SN / Voucher / Credentials / License / Link Display Box
         let snVal = tx.product_license || tx.license || tx.sn || tx.voucher || tx.serialNumber || tx.serial_number || tx.seller_note || '';
         if (!snVal && tx.note && looksLikeCredential(tx.note)) snVal = tx.note;
-        snVal = sanitizeErrorMessage(snVal);
+        if (snVal && isRawSystemCode(snVal)) snVal = '';
 
         const prodBox = document.getElementById('post-checkout-product-box-container');
         const prodContent = document.getElementById('post-checkout-product-content');
@@ -11240,7 +11440,14 @@
 
         const transferNoteVal = tx.note || tx.description || '';
         const noteRow = document.getElementById('post-checkout-note-row');
-        if (transferNoteVal && transferNoteVal !== '-' && !transferNoteVal.startsWith('Transfer saldo ke') && !transferNoteVal.startsWith('Terima saldo dari') && !isLicenseOrUrl(transferNoteVal)) {
+        const isTxFailed = String(status || '').toUpperCase() === 'GAGAL' || String(status || '').toUpperCase() === 'FAILED';
+
+        if (transferNoteVal && transferNoteVal !== '-' &&
+            !transferNoteVal.startsWith('Transfer saldo ke') &&
+            !transferNoteVal.startsWith('Terima saldo dari') &&
+            !isLicenseOrUrl(transferNoteVal) &&
+            !isRawSystemCode(transferNoteVal) &&
+            !isTxFailed) {
           setTextIfExists('post-checkout-note', transferNoteVal);
           if (noteRow) noteRow.style.display = 'flex';
         } else {
@@ -11337,10 +11544,16 @@
           if (accRow) accRow.style.display = 'none';
         }
 
-        // Populate Catatan Transfer
+        // Populate Catatan Transfer (Only display for real user transfer notes, never for system error codes)
         const receiptNoteVal = tx.note || tx.description || '';
         const rNoteRow = document.getElementById('receipt-note-row');
-        if (receiptNoteVal && receiptNoteVal !== '-' && !receiptNoteVal.startsWith('Transfer saldo ke') && !receiptNoteVal.startsWith('Terima saldo dari')) {
+        const isTxFailed = String(tx.status || '').toUpperCase() === 'GAGAL' || String(tx.status || '').toUpperCase() === 'FAILED';
+
+        if (receiptNoteVal && receiptNoteVal !== '-' &&
+            !receiptNoteVal.startsWith('Transfer saldo ke') &&
+            !receiptNoteVal.startsWith('Terima saldo dari') &&
+            !isRawSystemCode(receiptNoteVal) &&
+            !isTxFailed) {
           setTextIfExists('receipt-note', `"${receiptNoteVal}"`);
           if (rNoteRow) rNoteRow.style.display = 'block';
         } else {
@@ -11479,24 +11692,11 @@
         const tx = txData || currentPrintTx || {};
         const normalized = String(status || 'BERHASIL').toUpperCase();
 
+        if (animContainer) {
+          animContainer.innerHTML = getStatusIconAnimationHtml(normalized);
+        }
+
         if (normalized === 'BERHASIL' || normalized === 'PAID') {
-          if (animContainer) {
-            animContainer.innerHTML = `
-              <div class="ripple-ring"></div>
-              <div class="ripple-ring"></div>
-              <div class="ripple-ring"></div>
-              <div class="circle-solid"></div>
-              <div class="sparkle"></div>
-              <div class="sparkle"></div>
-              <div class="sparkle"></div>
-              <div class="sparkle"></div>
-              <div class="sparkle"></div>
-              <div class="sparkle"></div>
-              <svg class="checkmark-svg" viewBox="0 0 100 100" fill="none">
-                <path d="M28 52 L44 68 L74 32" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-            `;
-          }
           if (brandingTitle) brandingTitle.innerText = 'Pembayaran Berhasil';
           if (subTitle) {
             subTitle.innerText = 'TRANSAKSI SELESAI • DANA DITERIMA';
@@ -11508,23 +11708,6 @@
           badge.innerHTML = '<span class="material-symbols-outlined" style="font-size: 13px;">check_circle</span> BERHASIL';
           if (alertBox) alertBox.style.display = 'none';
         } else if (normalized === 'GAGAL' || normalized === 'FAILED') {
-          if (animContainer) {
-            animContainer.innerHTML = `
-              <div class="ripple-ring ripple-ring-failed"></div>
-              <div class="ripple-ring ripple-ring-failed"></div>
-              <div class="ripple-ring ripple-ring-failed"></div>
-              <div class="circle-solid circle-solid-failed"></div>
-              <div class="sparkle sparkle-failed"></div>
-              <div class="sparkle sparkle-failed"></div>
-              <div class="sparkle sparkle-failed"></div>
-              <div class="sparkle sparkle-failed"></div>
-              <div class="sparkle sparkle-failed"></div>
-              <div class="sparkle sparkle-failed"></div>
-              <svg class="checkmark-svg" viewBox="0 0 100 100" fill="none">
-                <path d="M34 34 L66 66 M66 34 L34 66" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-            `;
-          }
           if (brandingTitle) brandingTitle.innerText = 'Pembayaran Gagal';
           if (subTitle) {
             subTitle.innerText = 'TRANSAKSI DIBATALKAN / GAGAL';
@@ -11536,35 +11719,19 @@
           badge.innerHTML = '<span class="material-symbols-outlined" style="font-size: 13px;">cancel</span> GAGAL';
 
           if (alertBox) {
-            const failReason = tx.failureReason || tx.apiMessage || tx.description || 'Transaksi dibatalkan atau ditolak oleh provider.';
+            const rawFail = tx.failureReason || tx.apiMessage || tx.note || tx.description || 'Transaksi dibatalkan atau ditolak oleh provider.';
+            const cleanFailReason = formatHumanFailReason(rawFail);
             alertBox.style.display = 'block';
             alertBox.innerHTML = `
               <div style="background: #fef2f2; border: 1.5px solid #fca5a5; border-radius: 14px; padding: 14px;">
                 <div style="font-size: 11px; font-weight: 800; color: #dc2626; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
                   <span class="material-symbols-outlined" style="font-size: 16px;">error</span> ALASAN TRANSAKSI GAGAL
                 </div>
-                <div style="font-size: 13px; font-weight: 700; color: #991b1b; line-height: 1.4; word-break: break-word;">${failReason}</div>
+                <div style="font-size: 13px; font-weight: 700; color: #991b1b; line-height: 1.4; word-break: break-word;">${cleanFailReason}</div>
               </div>
             `;
           }
         } else {
-          if (animContainer) {
-            animContainer.innerHTML = `
-              <div class="ripple-ring ripple-ring-process"></div>
-              <div class="ripple-ring ripple-ring-process"></div>
-              <div class="ripple-ring ripple-ring-process"></div>
-              <div class="circle-solid circle-solid-process"></div>
-              <div class="sparkle sparkle-process"></div>
-              <div class="sparkle sparkle-process"></div>
-              <div class="sparkle sparkle-process"></div>
-              <div class="sparkle sparkle-process"></div>
-              <div class="sparkle sparkle-process"></div>
-              <div class="sparkle sparkle-process"></div>
-              <svg class="checkmark-svg" viewBox="0 0 100 100" fill="none">
-                <path d="M50 26 V50 L66 60" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            `;
-          }
           if (brandingTitle) brandingTitle.innerText = 'Pesanan Sedang Diproses';
           if (subTitle) {
             subTitle.innerText = 'MOHON TUNGGU • PROSES OTOMATIS';

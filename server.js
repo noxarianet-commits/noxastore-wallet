@@ -1917,10 +1917,26 @@ app.post('/admin/remote-control', requireAdminAuth, async (req, res) => {
 // PPOB TRANSACTION ORDER & CHECKOUT API
 // ==========================================
 
-// Helper to sanitize user-facing error messages (stripping internal provider names)
 function sanitizeErrorMessage(msg) {
   if (!msg) return 'Transaksi gagal diproses oleh sistem.';
   let str = typeof msg === 'string' ? msg : JSON.stringify(msg);
+
+  if (str.includes('POSTPAID_REQUIRES_TARGET_AND_INQUIRY_TOKEN') || str.includes('REQUIRES_TARGET_AND_INQUIRY_TOKEN')) {
+    return 'Layanan tagihan pascabayar memerlukan pengecekan nomor ID pelanggan & tagihan terlebih dahulu.';
+  }
+  if (str.includes('POSTPAID_')) {
+    return 'Layanan pembayaran pascabayar gagal diproses oleh sistem provider.';
+  }
+  if (str.includes('INVALID_') || str.includes('NOT_FOUND') || str.includes('UNREGISTERED')) {
+    return 'Nomor tujuan atau ID pelanggan tidak ditemukan / tidak valid.';
+  }
+  if (str.includes('BALANCE') || str.includes('SALDO')) {
+    return 'Saldo provider sedang tidak mencukupi untuk memproses transaksi ini.';
+  }
+  if (/^[A-Z0-9_]{5,}$/.test(str.trim())) {
+    return 'Layanan produk sedang gangguan atau tidak tersedia dari provider saat ini.';
+  }
+
   return str
     .replace(/ditolak oleh sekalipay/gi, 'Ditolak oleh sistem')
     .replace(/api sekalipay/gi, 'sistem')
