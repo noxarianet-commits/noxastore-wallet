@@ -1064,23 +1064,101 @@ app.post('/setup-pin', requireAuth, async (req, res) => {
 
 app.post('/set-pin', requireAuth, async (req, res) => {
   const { pin } = req.body;
-  if (!pin || String(pin).length !== 6) {
+  const username = req.user.username;
+  const user = await db.getUser(username);
+
+  if (!user) {
+    return res.status(404).json({ success: false, status: false, error: 'User tidak ditemukan.' });
+  }
+
+  if (user.isSuspended || user.status === 'suspended') {
+    return res.status(403).json({
+      success: false,
+      status: false,
+      isSuspended: true,
+      error: '🚫 Akun Anda telah ditangguhkan (TERSUSPEND). Silakan hubungi Customer Service.'
+    });
+  }
+
+  if (!pin || String(pin).length !== 6 || !/^\d{6}$/.test(String(pin))) {
     return res.status(400).json({ success: false, status: false, msg: 'PIN harus 6 digit angka.', error: 'PIN harus 6 digit angka.' });
   }
-  await db.updateUser(req.user.username, { transactionPin: String(pin), pin: String(pin) });
-  res.json({ success: true, status: true, msg: 'PIN transaksi berhasil dibuat.' });
+
+  await db.updateUser(username, {
+    transactionPin: String(pin),
+    pin: String(pin),
+    pinFailedAttempts: 0
+  });
+
+  // Broadcast event
+  broadcastRealtimeEvent('activity', {
+    targetUsername: username,
+    title: '🔑 PIN Transaksi Diperbarui',
+    body: 'PIN transaksi 6-digit Anda telah berhasil diperbarui.',
+    type: 'pin_change'
+  });
+
+  res.json({ success: true, status: true, msg: 'PIN transaksi berhasil diperbarui.' });
 });
 
 app.post('/verify-pin', requireAuth, async (req, res) => {
   const { pin } = req.body;
-  const user = await db.getUser(req.user.username);
-  if (!user || (!user.transactionPin && !user.pin)) {
-    return res.status(400).json({ success: false, status: false, msg: 'PIN belum dibuat.', error: 'PIN belum dibuat.' });
+  const username = req.user.username;
+  const user = await db.getUser(username);
+
+  if (!user) {
+    return res.status(404).json({ success: false, status: false, error: 'User tidak ditemukan.' });
   }
+
+  // Check if account is suspended
+  if (user.isSuspended || user.status === 'suspended') {
+    return res.status(403).json({
+      success: false,
+      status: false,
+      isSuspended: true,
+      error: '🚫 AKSES DITOLAK! Akun Anda telah DITANGGUHKAN (TERSUSPEND) karena 5x salah memasukkan PIN transaksi. Silakan hubungi CS.'
+    });
+  }
+
+  const userHasPin = Boolean(user.transactionPin || user.pin);
+  if (!userHasPin) {
+    return res.status(200).json({ success: true, status: true, hasPin: false, msg: 'User belum memiliki PIN.' });
+  }
+
   if (!verifyUserPin(user, pin)) {
-    return res.status(400).json({ success: false, status: false, msg: 'PIN transaksi salah.', error: 'PIN transaksi salah.' });
+    const failedAttempts = Number(user.pinFailedAttempts || 0) + 1;
+    const remaining = Math.max(0, 5 - failedAttempts);
+
+    if (failedAttempts >= 5) {
+      await db.updateUser(username, {
+        isSuspended: true,
+        status: 'suspended',
+        suspendReason: 'Salah PIN transaksi 5x berturut-turut pada Ubah PIN',
+        pinFailedAttempts: failedAttempts,
+        suspendedAt: new Date().toISOString()
+      });
+
+      return res.status(403).json({
+        success: false,
+        status: false,
+        isSuspended: true,
+        remainingAttempts: 0,
+        error: '🚫 AKSES DITOLAK! Akun Anda telah DITANGGUHKAN (TERSUSPEND) karena 5x salah memasukkan PIN transaksi. Silakan hubungi Customer Service untuk pemulihan akses.'
+      });
+    } else {
+      await db.updateUser(username, { pinFailedAttempts: failedAttempts });
+      return res.status(400).json({
+        success: false,
+        status: false,
+        remainingAttempts: remaining,
+        error: `❌ PIN saat ini salah! Percobaan tersisa ${remaining}/5.`
+      });
+    }
   }
-  res.json({ success: true, status: true, msg: 'PIN valid.' });
+
+  // PIN verified successfully! Reset failed attempts count to 0
+  await db.updateUser(username, { pinFailedAttempts: 0 });
+  res.json({ success: true, status: true, hasPin: true, msg: 'PIN valid.' });
 });
 
 // ==========================================

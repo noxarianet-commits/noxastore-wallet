@@ -5077,22 +5077,31 @@
     <!-- ====================================================== -->
     <!-- MODAL BUAT PIN (Jika belum punya PIN) -->
     <!-- ====================================================== -->
+    <!-- Modal Setup / Ubah PIN Transaksi Interactive Multi-Step -->
     <div id="modal-setup-pin"
-      style="display:none; position: fixed; inset: 0; z-index: 2100; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px);">
+      style="display:none; position: fixed; inset: 0; z-index: 2100; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(6px);">
       <div
-        style="background: white; border-radius: 24px; padding: 28px 24px; width: 100%; max-width: 380px; animation: slideUpModal 0.3s ease;">
-        <div style="text-align: center; margin-bottom: 24px;">
-          <div
-            style="width: 60px; height: 60px; background: rgba(123,45,142,0.1); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px;">
-            <span class="material-symbols-outlined" style="font-size: 30px; color: #7B2D8E;">lock</span>
+        style="background: white; border-radius: 24px; padding: 28px 24px; width: 100%; max-width: 390px; animation: slideUpModal 0.3s ease; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+        
+        <div style="text-align: center; margin-bottom: 20px;">
+          <div id="pin-modal-icon-bg"
+            style="width: 60px; height: 60px; background: rgba(123,45,142,0.1); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; transition: all 0.3s ease;">
+            <span id="pin-modal-icon" class="material-symbols-outlined" style="font-size: 30px; color: #7B2D8E;">lock</span>
           </div>
-          <h2 style="font-size: 18px; font-weight: 800; color: #0f172a; margin: 0 0 6px;">Buat PIN Transaksi</h2>
-          <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 0;">PIN 6 digit diperlukan untuk
-            mengamankan setiap transaksi penarikan saldo Anda.</p>
+          <h2 id="pin-modal-title" style="font-size: 18px; font-weight: 800; color: #0f172a; margin: 0 0 6px;">Verifikasi PIN Saat Ini</h2>
+          <p id="pin-modal-desc" style="font-size: 12.5px; color: #64748b; line-height: 1.5; margin: 0;">Masukkan 6 digit PIN transaksi yang sedang Anda gunakan saat ini.</p>
         </div>
 
-        <label style="font-size: 12px; font-weight: 700; color: #475569; display: block; margin-bottom: 10px;">MASUKKAN
-          PIN BARU</label>
+        <!-- Step Indicator Pills -->
+        <div id="pin-step-pills" style="display: flex; gap: 6px; justify-content: center; margin-bottom: 18px;">
+          <span id="pill-step-1" style="font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: 12px; background: #7B2D8E; color: white;">1. PIN Saat Ini</span>
+          <span id="pill-step-2" style="font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: 12px; background: #f1f5f9; color: #94a3b8;">2. PIN Baru</span>
+          <span id="pill-step-3" style="font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: 12px; background: #f1f5f9; color: #94a3b8;">3. Konfirmasi</span>
+        </div>
+
+        <label id="pin-modal-label" style="font-size: 11.5px; font-weight: 800; color: #475569; display: block; margin-bottom: 10px; text-transform: uppercase; text-align: center; letter-spacing: 0.5px;">MASUKKAN PIN SAAT INI</label>
+
+        <!-- 6 Digit Inputs -->
         <div style="display: flex; gap: 8px; justify-content: center; margin-bottom: 12px;">
           <input type="password" inputmode="numeric" maxlength="1" class="pin-digit-input" id="sp-d1"
             style="width: 44px; height: 50px; text-align: center; font-size: 22px; font-weight: 800; border: 2px solid #e2e8f0; border-radius: 12px; outline: none; font-family: inherit; color: #0f172a;"
@@ -5113,15 +5122,17 @@
             style="width: 44px; height: 50px; text-align: center; font-size: 22px; font-weight: 800; border: 2px solid #e2e8f0; border-radius: 12px; outline: none; font-family: inherit; color: #0f172a;"
             onkeydown="pinBackspace(event, 'sp-d5')" />
         </div>
-        <p style="font-size: 11px; color: #94a3b8; text-align: center; margin: 0 0 20px;">Hanya angka. Jangan bagikan
-          PIN ke siapapun.</p>
+        <p id="pin-modal-footnote" style="font-size: 11px; color: #94a3b8; text-align: center; margin: 0 0 20px;">
+          Maksimal 5x percobaan salah sebelum akun ditangguhkan.
+        </p>
 
         <div style="display: flex; gap: 10px;">
           <button onclick="closeSetupPinModal()"
             style="flex: 1; padding: 14px; border-radius: 12px; border: 1.5px solid #e2e8f0; background: white; color: #475569; font-family: inherit; font-weight: 700; font-size: 14px; cursor: pointer;">Batal</button>
-          <button onclick="saveNewPin()"
-            style="flex: 2; padding: 14px; border-radius: 12px; border: none; background: linear-gradient(135deg, #7B2D8E, #9B4DB8); color: white; font-family: inherit; font-weight: 800; font-size: 14px; cursor: pointer; box-shadow: 0 4px 12px rgba(123,45,142,0.25);">Simpan
-            PIN</button>
+          <button id="sp-action-btn" onclick="handlePinModalNextStep()"
+            style="flex: 2; padding: 14px; border-radius: 12px; border: none; background: linear-gradient(135deg, #7B2D8E, #9B4DB8); color: white; font-family: inherit; font-weight: 800; font-size: 14px; cursor: pointer; box-shadow: 0 4px 12px rgba(123,45,142,0.25);">
+            Verifikasi PIN
+          </button>
         </div>
       </div>
     </div>
@@ -8183,38 +8194,187 @@
       function markAppAsLocked() { return; }
 
       // ============================================
-      // Setup / Ubah PIN Modal
+      // Setup / Ubah PIN Modal Multi-Step Controller
       // ============================================
       let _pinModalReturnToCheckout = false;
+      let _pinChangeStep = 1; // 1: Verify Current PIN, 2: Enter New PIN, 3: Confirm New PIN
+      let _currentVerifiedOldPin = '';
+      let _pendingNewPin = '';
+
+      function setPinChangeStep(step) {
+        _pinChangeStep = step;
+        clearPinInputs('sp');
+
+        const titleEl = document.getElementById('pin-modal-title');
+        const descEl = document.getElementById('pin-modal-desc');
+        const labelEl = document.getElementById('pin-modal-label');
+        const actionBtn = document.getElementById('sp-action-btn');
+        const iconEl = document.getElementById('pin-modal-icon');
+        const iconBg = document.getElementById('pin-modal-icon-bg');
+        const footnoteEl = document.getElementById('pin-modal-footnote');
+
+        const pill1 = document.getElementById('pill-step-1');
+        const pill2 = document.getElementById('pill-step-2');
+        const pill3 = document.getElementById('pill-step-3');
+
+        // Highlight step indicator pills
+        if (pill1) pill1.style.cssText = step === 1 ? 'font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: 12px; background: #7B2D8E; color: white;' : 'font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: 12px; background: #f1f5f9; color: #94a3b8;';
+        if (pill2) pill2.style.cssText = step === 2 ? 'font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: 12px; background: #2563eb; color: white;' : 'font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: 12px; background: #f1f5f9; color: #94a3b8;';
+        if (pill3) pill3.style.cssText = step === 3 ? 'font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: 12px; background: #16a34a; color: white;' : 'font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: 12px; background: #f1f5f9; color: #94a3b8;';
+
+        if (step === 1) {
+          if (titleEl) titleEl.innerText = 'Verifikasi PIN Saat Ini';
+          if (descEl) descEl.innerText = 'Masukkan 6 digit PIN transaksi yang sedang Anda gunakan saat ini.';
+          if (labelEl) labelEl.innerText = 'MASUKKAN PIN SAAT INI';
+          if (actionBtn) {
+            actionBtn.innerText = 'Verifikasi PIN';
+            actionBtn.style.background = 'linear-gradient(135deg, #7B2D8E, #9B4DB8)';
+          }
+          if (iconEl) iconEl.innerText = 'lock';
+          if (iconBg) iconBg.style.background = 'rgba(123,45,142,0.1)';
+          if (footnoteEl) footnoteEl.innerText = 'Maksimal 5x percobaan salah sebelum akun ditangguhkan.';
+        } else if (step === 2) {
+          if (titleEl) titleEl.innerText = 'Buat PIN Transaksi Baru';
+          if (descEl) descEl.innerText = 'Masukkan 6 digit PIN transaksi baru yang ingin Anda gunakan.';
+          if (labelEl) labelEl.innerText = 'MASUKKAN PIN BARU';
+          if (actionBtn) {
+            actionBtn.innerText = 'Lanjut Konfirmasi';
+            actionBtn.style.background = 'linear-gradient(135deg, #2563eb, #3b82f6)';
+          }
+          if (iconEl) iconEl.innerText = 'key';
+          if (iconBg) iconBg.style.background = 'rgba(37,99,235,0.1)';
+          if (footnoteEl) footnoteEl.innerText = 'Hanya angka. Jangan gunakan kombinasi mudah seperti 123456.';
+        } else if (step === 3) {
+          if (titleEl) titleEl.innerText = 'Konfirmasi PIN Baru';
+          if (descEl) descEl.innerText = 'Masukkan ulang 6 digit PIN transaksi baru Anda untuk konfirmasi.';
+          if (labelEl) labelEl.innerText = 'KONFIRMASI PIN BARU';
+          if (actionBtn) {
+            actionBtn.innerText = 'Simpan PIN Baru';
+            actionBtn.style.background = 'linear-gradient(135deg, #16a34a, #22c55e)';
+          }
+          if (iconEl) iconEl.innerText = 'verified_user';
+          if (iconBg) iconBg.style.background = 'rgba(22,163,74,0.1)';
+          if (footnoteEl) footnoteEl.innerText = 'Pastikan 6 digit konfirmasi cocok dengan PIN baru.';
+        }
+
+        setTimeout(() => { const el = document.getElementById('sp-d1'); if (el) el.focus(); }, 120);
+      }
 
       function openSetupPinModal(fromProfile = false) {
         _pinModalReturnToCheckout = !fromProfile;
-        clearPinInputs('sp');
+        _currentVerifiedOldPin = '';
+        _pendingNewPin = '';
+
+        const savedPin = localStorage.getItem('noxaUserPin');
+        if (savedPin || fromProfile) {
+          setPinChangeStep(1); // Require verification of current PIN first!
+        } else {
+          setPinChangeStep(2); // First time setup
+        }
+
         document.getElementById('modal-setup-pin').style.display = 'flex';
-        setTimeout(() => { const el = document.getElementById('sp-d1'); if (el) el.focus(); }, 120);
       }
 
       function closeSetupPinModal() {
         document.getElementById('modal-setup-pin').style.display = 'none';
         clearPinInputs('sp');
+        _currentVerifiedOldPin = '';
+        _pendingNewPin = '';
       }
 
-      async function saveNewPin() {
-        const pin = getPinValue('sp');
-        if (!/^\d{6}$/.test(pin)) { showNotification('❌ PIN harus 6 digit angka.'); return; }
-        try {
-          const res = await fetch('/set-pin', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('noxaUsername') },
-            body: JSON.stringify({ pin })
-          });
-          const data = await res.json();
-          if (data.success) {
-            localStorage.setItem('noxaUserPin', pin);
-            showNotification('✅ PIN transaksi berhasil disimpan!');
-            closeSetupPinModal();
-          } else { showNotification('❌ ' + (data.error || 'Gagal menyimpan PIN.')); }
-        } catch (e) { showNotification('❌ Kesalahan jaringan.'); }
+      async function handlePinModalNextStep() {
+        const pinVal = getPinValue('sp');
+
+        if (_pinChangeStep === 1) {
+          // STEP 1: Verify Current PIN
+          if (!/^\d{6}$/.test(pinVal)) {
+            showNotification('❌ Masukkan 6 digit PIN saat ini.');
+            return;
+          }
+
+          const actionBtn = document.getElementById('sp-action-btn');
+          if (actionBtn) { actionBtn.disabled = true; actionBtn.innerText = 'Memeriksa...'; }
+
+          try {
+            const res = await fetch('/verify-pin', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('noxaUsername') },
+              body: JSON.stringify({ pin: pinVal })
+            });
+            const data = await res.json();
+
+            if (res.status === 403 || data.isSuspended) {
+              alert(data.error || '🚫 AKSES DITOLAK! Akun Anda telah DITANGGUHKAN (TERSUSPEND) karena 5x salah memasukkan PIN transaksi.');
+              closeSetupPinModal();
+              handleLogout();
+              return;
+            }
+
+            if (data.success) {
+              _currentVerifiedOldPin = pinVal;
+              showNotification('✅ PIN saat ini terverifikasi! Silakan buat PIN baru.');
+              setPinChangeStep(2);
+            } else {
+              showNotification(data.error || '❌ PIN saat ini salah!');
+              clearPinInputs('sp');
+              setTimeout(() => { const el = document.getElementById('sp-d1'); if (el) el.focus(); }, 120);
+            }
+          } catch (e) {
+            showNotification('❌ Kesalahan jaringan. Coba lagi.');
+          } finally {
+            if (actionBtn) actionBtn.disabled = false;
+          }
+
+        } else if (_pinChangeStep === 2) {
+          // STEP 2: Enter New PIN
+          if (!/^\d{6}$/.test(pinVal)) {
+            showNotification('❌ PIN baru harus 6 digit angka.');
+            return;
+          }
+          if (_currentVerifiedOldPin && pinVal === _currentVerifiedOldPin) {
+            showNotification('❌ PIN baru tidak boleh sama dengan PIN saat ini!');
+            return;
+          }
+          _pendingNewPin = pinVal;
+          showNotification('🔑 PIN baru dicatat. Masukkan ulang untuk konfirmasi.');
+          setPinChangeStep(3);
+
+        } else if (_pinChangeStep === 3) {
+          // STEP 3: Confirm New PIN
+          if (!/^\d{6}$/.test(pinVal)) {
+            showNotification('❌ Masukkan 6 digit konfirmasi PIN baru.');
+            return;
+          }
+          if (pinVal !== _pendingNewPin) {
+            showNotification('❌ Konfirmasi PIN baru tidak cocok! Silakan buat ulang PIN baru.');
+            setPinChangeStep(2);
+            return;
+          }
+
+          const actionBtn = document.getElementById('sp-action-btn');
+          if (actionBtn) { actionBtn.disabled = true; actionBtn.innerText = 'Menyimpan...'; }
+
+          try {
+            const res = await fetch('/set-pin', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('noxaUsername') },
+              body: JSON.stringify({ pin: pinVal, oldPin: _currentVerifiedOldPin })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+              localStorage.setItem('noxaUserPin', pinVal);
+              showNotification('✅ PIN Transaksi 6-Digit Berhasil Diperbarui!');
+              closeSetupPinModal();
+            } else {
+              showNotification('❌ ' + (data.error || 'Gagal memperbarui PIN.'));
+            }
+          } catch (e) {
+            showNotification('❌ Kesalahan jaringan.');
+          } finally {
+            if (actionBtn) actionBtn.disabled = false;
+          }
+        }
       }
       async function submitDanaWithdraw() {
         const phoneInput = document.getElementById('dana-withdraw-phone').value;
