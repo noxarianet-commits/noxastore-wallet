@@ -693,8 +693,8 @@
       transform: scale(0.92);
     }
     .nav-fab-icon-wrapper {
-      width: 64px;
-      height: 64px;
+      width: 68px;
+      height: 68px;
       border-radius: 50%;
       background: linear-gradient(135deg, #7B2D8E 0%, #a855f7 100%);
       display: flex;
@@ -702,6 +702,9 @@
       justify-content: center;
       box-shadow: 0 10px 28px rgba(123, 45, 142, 0.55), 0 0 0 5px rgba(255, 255, 255, 1);
       transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .nav-fab-icon-wrapper span {
+      font-size: 34px !important;
     }
     .nav-fab-scan:hover .nav-fab-icon-wrapper {
       transform: scale(1.08);
@@ -770,7 +773,7 @@
     }
 
     .nav-item span {
-      font-size: 34px;
+      font-size: 38px;
       margin-bottom: 3px;
       transform: translateY(-2px);
       transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), font-size 0.2s ease;
@@ -779,7 +782,7 @@
     }
 
     .nav-item label {
-      font-size: 12px;
+      font-size: 12.5px;
       font-weight: 800;
       cursor: pointer;
       line-height: 1.1;
@@ -2519,17 +2522,19 @@
 
       /* Bottom Navigation */
       .bottom-nav {
-        height: 76px;
-        padding: 4px 12px max(14px, env(safe-area-inset-bottom)) 12px;
+        min-height: 72px;
+        padding: 6px 8px max(14px, env(safe-area-inset-bottom)) 8px;
       }
       .nav-item {
-        padding: 4px 8px;
+        padding: 6px 10px;
+        min-width: 64px;
       }
       .nav-item span {
-        font-size: 22px;
+        font-size: 34px !important;
       }
       .nav-item label {
-        font-size: 9px;
+        font-size: 11.5px !important;
+        font-weight: 800 !important;
       }
 
       /* Main content padding for bottom nav */
@@ -2684,13 +2689,14 @@
         font-size: 12px;
       }
       .nav-item span {
-        font-size: 20px;
+        font-size: 32px !important;
       }
       .nav-item label {
-        font-size: 8px;
+        font-size: 11px !important;
+        font-weight: 800 !important;
       }
       .bottom-nav {
-        height: 58px;
+        min-height: 68px;
       }
       main {
         padding-bottom: 72px;
@@ -12753,24 +12759,46 @@
       // PROFILE SETTINGS LOGIC (Full-screen panels)
       // ==========================================
       function openEditProfileScreen() {
+        pushNavigationState('edit-profile');
+        const screen = document.getElementById('screen-edit-profile');
+        if (!screen) return;
+
         document.getElementById('ep-fullname').value = localStorage.getItem('noxaFullname') || '';
         document.getElementById('ep-email').value = localStorage.getItem('noxaEmail') || '';
         document.getElementById('ep-wa').value = localStorage.getItem('noxaUsername') || '';
         document.getElementById('editprof-display-name').innerText = localStorage.getItem('noxaFullname') || '-';
         document.getElementById('editprof-display-email').innerText = localStorage.getItem('noxaEmail') || '-';
-        document.getElementById('screen-edit-profile').classList.add('active');
+
+        screen.style.display = 'flex';
+        void screen.offsetWidth;
+        screen.classList.add('active');
       }
+
       function closeEditProfileScreen() {
-        document.getElementById('screen-edit-profile').classList.remove('active');
+        const screen = document.getElementById('screen-edit-profile');
+        if (!screen) return;
+        screen.classList.remove('active');
+        setTimeout(() => { screen.style.display = 'none'; }, 200);
       }
 
       function openChangePasswordScreen() {
+        pushNavigationState('change-password');
+        const screen = document.getElementById('screen-change-password');
+        if (!screen) return;
+
         document.getElementById('cp-old').value = '';
         document.getElementById('cp-new').value = '';
-        document.getElementById('screen-change-password').classList.add('active');
+
+        screen.style.display = 'flex';
+        void screen.offsetWidth;
+        screen.classList.add('active');
       }
+
       function closeChangePasswordScreen() {
-        document.getElementById('screen-change-password').classList.remove('active');
+        const screen = document.getElementById('screen-change-password');
+        if (!screen) return;
+        screen.classList.remove('active');
+        setTimeout(() => { screen.style.display = 'none'; }, 200);
       }
 
       async function submitUpdateProfile(btn) {
@@ -14111,6 +14139,18 @@
         const myQrModal = document.getElementById('modal-my-qr');
         if (myQrModal && myQrModal.style.display !== 'none') {
           closeMyQRModal();
+          return;
+        }
+
+        const editProfileScreen = document.getElementById('screen-edit-profile');
+        if (editProfileScreen && editProfileScreen.style.display !== 'none') {
+          closeEditProfileScreen();
+          return;
+        }
+
+        const changePasswordScreen = document.getElementById('screen-change-password');
+        if (changePasswordScreen && changePasswordScreen.style.display !== 'none') {
+          closeChangePasswordScreen();
           return;
         }
 
