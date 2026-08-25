@@ -11255,12 +11255,13 @@
         const getCleanVal = (val) => {
           if (!val) return '';
           const str = String(val).trim();
-          if (!str || str === '-' || isRawSystemCode(str)) return '';
+          if (!str || str === '-' || str === 'null' || str === 'undefined') return '';
+          if (isRawSystemCode(str)) return '';
           // Exclude any transaction IDs or dummy ref numbers from being returned as product licenses
-          if (str.startsWith('TRX_') || str.startsWith('SN-TRX_') || str.startsWith('SN-08')) return '';
+          if (str.startsWith('TRX_') || str.startsWith('SN-TRX_')) return '';
           if (tx && tx.id && (str === tx.id || str === `SN-${tx.id.replace('TRX_', '')}`)) return '';
           const lower = str.toLowerCase();
-          if (lower.includes('ditolak') || lower.includes('requires_target') || lower.includes('invalid_') || lower.includes('gagal') || lower.includes('error')) return '';
+          if (lower === 'gagal' || lower === 'error' || lower.includes('ditolak oleh provider') || lower.includes('invalid_target')) return '';
           return str;
         };
 
@@ -11297,9 +11298,28 @@
           }
         }
 
-        // Check note or description field if not standard transfer text
-        const noteVal = getCleanVal(tx.note) || getCleanVal(tx.description);
+        // Check description or note field
+        const descVal = getCleanVal(tx.description);
+        if (descVal && !descVal.startsWith('Transfer saldo ke') && !descVal.startsWith('Terima saldo dari')) {
+          if (descVal.includes('SN:')) {
+            const parts = descVal.split('SN:');
+            if (parts[1]) {
+              let extracted = parts[1].split('.')[0].trim();
+              if (extracted && getCleanVal(extracted)) return extracted;
+            }
+          }
+          return descVal;
+        }
+
+        const noteVal = getCleanVal(tx.note);
         if (noteVal && !noteVal.startsWith('Transfer saldo ke') && !noteVal.startsWith('Terima saldo dari')) {
+          if (noteVal.includes('SN:')) {
+            const parts = noteVal.split('SN:');
+            if (parts[1]) {
+              let extracted = parts[1].split('.')[0].trim();
+              if (extracted && getCleanVal(extracted)) return extracted;
+            }
+          }
           return noteVal;
         }
 
@@ -11426,8 +11446,9 @@
       function isRawSystemCode(str) {
         if (!str || typeof str !== 'string') return false;
         const t = str.trim();
-        if (/^[A-Z0-9_]{5,}$/.test(t)) return true;
-        if (t.includes('POSTPAID_') || t.includes('INVALID_') || t.includes('REQUIRED_') || t.includes('TOKEN_') || t.includes('ERR_') || t.includes('SKU_')) return true;
+        // If it is a URL link, email credential, or multi-line text, it is NEVER a raw error code!
+        if (t.match(/https?:\/\/[^\s"']+/i) || /[@|]/.test(t) || t.includes('\n')) return false;
+        if (t.startsWith('POSTPAID_') || t.startsWith('INVALID_') || t.startsWith('REQUIRED_') || t.startsWith('ERR_') || t.startsWith('SKU_') || t.startsWith('PROVIDER_ERR_')) return true;
         return false;
       }
 
