@@ -10813,47 +10813,79 @@
       let currentFilter = 'semua';
 
       function getTxDisplayInfo(tx) {
-        const rawName = (tx.merchant || tx.product_name || tx.description || '').trim();
+        if (!tx) return { title: 'Transaksi', icon: 'receipt_long', iconClass: 'minus', amountClass: 'minus', prefix: '-', isMoneyIn: false };
+
+        const rawName = (tx.merchant || tx.product_name || tx.title || tx.description || '').trim();
         const upper = rawName.toUpperCase();
         const type = String(tx.type || '').toUpperCase();
-        const isMinus = tx.type === 'minus' || type === 'PPOB' || type === 'EWALLET' || type === 'WITHDRAW' || type === 'TRANSFER';
+        const txId = String(tx.id || tx.orderId || '').toUpperCase();
 
-        // Display Title: use exact product / merchant / description name from database
-        let title = rawName || (isMinus ? 'Pembelian Produk' : 'Top Up Saldo');
+        // 1. Determine if Money In (Deposit, Terima Transfer, Top Up Saldo) vs Money Out (PPOB, Withdraw, Transfer Ke, E-Wallet)
+        let isMoneyIn = false;
 
-        // Determine icon & sign (+ / -)
+        if (type === 'DEPOSIT' || type === 'RECEIVE' || type === 'IN' || type === 'PLUS') {
+          isMoneyIn = true;
+        } else if (type === 'TRANSFER' || type === 'PPOB' || type === 'EWALLET' || type === 'WITHDRAW' || type === 'OUT' || type === 'MINUS' || type === 'PAYMENT') {
+          isMoneyIn = false;
+        } else if (tx.type === 'plus') {
+          // Check legacy records where type was saved as 'plus' but is actually a withdrawal or ebelanja payment
+          if (txId.startsWith('WDR') || txId.startsWith('WD') || upper.includes('EBELANJA') || upper.includes('WITHDRAW') || upper.includes('PENARIKAN')) {
+            isMoneyIn = false;
+          } else {
+            isMoneyIn = true;
+          }
+        }
+
+        // Keyword overrides (highest priority to ensure exact classification)
+        if (upper.includes('TERIMA TRANSFER') || upper.includes('TERIMA SALDO') || upper.includes('TOP UP SALDO') || upper.includes('QRIS DEPOSIT') || upper.includes('PENCAIRAN QRIS') || upper.includes('ISI SALDO') || upper.includes('DEPOSIT SALDO') || upper.includes('REFUND SALDO')) {
+          isMoneyIn = true;
+        }
+
+        if (upper.includes('TRANSFER KE') || upper.includes('KIRIM SALDO') || upper.includes('PENARIKAN') || upper.includes('WITHDRAW') || upper.includes('EBELANJA') || txId.startsWith('WDR') || txId.startsWith('WD')) {
+          isMoneyIn = false;
+        }
+
+        const isMinus = !isMoneyIn;
+
+        // 2. Title
+        let title = rawName || (isMinus ? 'Pembelian / Transaksi' : 'Top Up Saldo');
+
+        // 3. Icon, Class & Sign (+ / -)
         let icon = 'receipt_long';
         let iconClass = isMinus ? 'minus' : 'plus';
         let amountClass = isMinus ? 'minus' : 'plus';
         let prefix = isMinus ? '-' : '+';
 
-        if (type === 'DEPOSIT' || upper.includes('TOP UP SALDO') || upper.includes('TERIMA TRANSFER') || upper.includes('QRIS DEPOSIT') || upper.includes('PENCAIRAN QRIS')) {
-          title = rawName || 'Top Up Saldo QRIS';
+        if (isMoneyIn) {
           icon = 'add_card';
+          if (upper.includes('TERIMA TRANSFER') || upper.includes('TERIMA SALDO')) icon = 'move_to_inbox';
           iconClass = 'plus';
           amountClass = 'plus';
           prefix = '+';
-        } else if (type === 'TRANSFER' || upper.includes('TRANSFER KE')) {
-          title = rawName || 'Transfer Saldo';
-          icon = 'send';
+        } else {
+          if (type === 'TRANSFER' || upper.includes('TRANSFER KE') || upper.includes('KIRIM SALDO')) {
+            icon = 'send';
+          } else if (type === 'WITHDRAW' || upper.includes('PENARIKAN') || txId.startsWith('WDR') || txId.startsWith('WD')) {
+            icon = 'payments';
+          } else if (upper.includes('DANA') || upper.includes('OVO') || upper.includes('GOPAY') || upper.includes('SHOPEEPAY') || upper.includes('LINKAJA') || upper.includes('E-WALLET')) {
+            icon = 'account_balance_wallet';
+          } else if (upper.includes('PLN') || upper.includes('TOKEN') || upper.includes('LISTRIK')) {
+            icon = 'bolt';
+          } else if (upper.includes('PULSA') || upper.includes('KUOTA') || upper.includes('TELKOMSEL') || upper.includes('INDOSAT') || upper.includes('XL') || upper.includes('AXIS') || upper.includes('TRI') || upper.includes('SMARTFREN') || upper.includes('BY.U')) {
+            icon = 'phone_iphone';
+          } else if (upper.includes('GAME') || upper.includes('LEGENDS') || upper.includes('FREE FIRE') || upper.includes('PUBG') || upper.includes('VALORANT') || upper.includes('GENSHIN') || upper.includes('DIAMOND') || upper.includes('VOUCHER')) {
+            icon = 'sports_esports';
+          } else if (upper.includes('PREMIUM') || upper.includes('CHATGPT') || upper.includes('NETFLIX') || upper.includes('SPOTIFY') || upper.includes('CANVA') || upper.includes('YOUTUBE') || upper.includes('AI') || upper.includes('APP')) {
+            icon = 'auto_awesome';
+          } else if (upper.includes('TIKTOK') || upper.includes('INSTAGRAM') || upper.includes('SMM') || upper.includes('FOLLOWERS') || upper.includes('LIKE')) {
+            icon = 'campaign';
+          }
           iconClass = 'minus';
           amountClass = 'minus';
           prefix = '-';
-        } else if (upper.includes('DANA') || upper.includes('OVO') || upper.includes('GOPAY') || upper.includes('SHOPEEPAY') || upper.includes('LINKAJA') || upper.includes('E-WALLET')) {
-          icon = 'account_balance_wallet';
-        } else if (upper.includes('PLN') || upper.includes('TOKEN') || upper.includes('LISTRIK')) {
-          icon = 'bolt';
-        } else if (upper.includes('PULSA') || upper.includes('KUOTA') || upper.includes('TELKOMSEL') || upper.includes('INDOSAT') || upper.includes('XL') || upper.includes('AXIS') || upper.includes('TRI') || upper.includes('SMARTFREN') || upper.includes('BY.U')) {
-          icon = 'phone_iphone';
-        } else if (upper.includes('GAME') || upper.includes('LEGENDS') || upper.includes('FREE FIRE') || upper.includes('PUBG') || upper.includes('VALORANT') || upper.includes('GENSHIN') || upper.includes('DIAMOND') || upper.includes('VOUCHER')) {
-          icon = 'sports_esports';
-        } else if (upper.includes('PREMIUM') || upper.includes('CHATGPT') || upper.includes('NETFLIX') || upper.includes('SPOTIFY') || upper.includes('CANVA') || upper.includes('YOUTUBE') || upper.includes('AI') || upper.includes('APP')) {
-          icon = 'auto_awesome';
-        } else if (upper.includes('TIKTOK') || upper.includes('INSTAGRAM') || upper.includes('SMM') || upper.includes('FOLLOWERS') || upper.includes('LIKE')) {
-          icon = 'campaign';
         }
 
-        return { title, icon, iconClass, amountClass, prefix };
+        return { title, icon, iconClass, amountClass, prefix, isMoneyIn };
       }
 
       function getStatusBadgeClass(status) {
@@ -11224,6 +11256,9 @@
           if (!val) return '';
           const str = String(val).trim();
           if (!str || str === '-' || isRawSystemCode(str)) return '';
+          // Exclude any transaction IDs or dummy ref numbers from being returned as product licenses
+          if (str.startsWith('TRX_') || str.startsWith('SN-TRX_') || str.startsWith('SN-08')) return '';
+          if (tx && tx.id && (str === tx.id || str === `SN-${tx.id.replace('TRX_', '')}`)) return '';
           const lower = str.toLowerCase();
           if (lower.includes('ditolak') || lower.includes('requires_target') || lower.includes('invalid_') || lower.includes('gagal') || lower.includes('error')) return '';
           return str;
@@ -11540,28 +11575,54 @@
         if (!isSekalipayProduct) {
           if (prodBox) prodBox.style.display = 'none';
         } else {
-          // Always display license / SN for SekaliPay products (PPOB / Game / Voucher / Lisensi)
-          const displaySN = snVal || tx.sn || tx.product_license || tx.license || tx.id || ('SN-' + (tx.id || Date.now()));
-
-          if (prodContent) {
-            if (_postCheckoutLinkUrl) {
-              prodContent.innerHTML = `<div style="color: #2563eb; margin-bottom: 6px; font-size: 11px; font-weight: 800;">LINK APLIKASI PREMIUM:</div><a href="${_postCheckoutLinkUrl}" target="_blank" style="color: #7B2D8E; text-decoration: underline; font-weight: 800; word-break: break-all;">${displaySN}</a>`;
-            } else {
-              prodContent.innerText = displaySN;
+          // Check if a real product license / account credential / link was extracted from provider
+          if (snVal && String(snVal).trim() !== '') {
+            if (prodContent) {
+              if (_postCheckoutLinkUrl) {
+                prodContent.innerHTML = `<div style="color: #2563eb; margin-bottom: 6px; font-size: 11px; font-weight: 800;">LINK APLIKASI PREMIUM / LISENSI:</div><a href="${_postCheckoutLinkUrl}" target="_blank" style="color: #7B2D8E; text-decoration: underline; font-weight: 800; word-break: break-all;">${snVal}</a>`;
+              } else {
+                prodContent.innerText = snVal;
+              }
             }
+            if (badgeEl) {
+              badgeEl.innerText = 'AKTIF / SELESAI';
+              badgeEl.style.background = '#ecfdf5';
+              badgeEl.style.color = '#059669';
+            }
+            if (btnCopyCode) btnCopyCode.style.display = 'flex';
+            if (_postCheckoutLinkUrl && btnOpenLink) {
+              btnOpenLink.style.display = 'flex';
+            } else if (btnOpenLink) {
+              btnOpenLink.style.display = 'none';
+            }
+            if (prodBox) prodBox.style.display = 'block';
+          } else if (status === 'BERHASIL' || status === 'PAID') {
+            if (prodContent) {
+              prodContent.innerHTML = `<span style="color: #475569; font-size: 12.5px; font-weight: 600;">⏳ Detail akun / lisensi sedang dikirimkan oleh provider...</span>`;
+            }
+            if (badgeEl) {
+              badgeEl.innerText = 'PROSES LISENSI';
+              badgeEl.style.background = '#fef3c7';
+              badgeEl.style.color = '#d97706';
+            }
+            if (btnCopyCode) btnCopyCode.style.display = 'none';
+            if (btnOpenLink) btnOpenLink.style.display = 'none';
+            if (prodBox) prodBox.style.display = 'block';
+          } else if (status === 'DIPROSES' || status === 'PENDING' || status === 'PROCESSING') {
+            if (prodContent) {
+              prodContent.innerHTML = `<span style="color: #d97706; font-size: 12.5px; font-weight: 600;">⏳ Detail akun / lisensi sedang diproses oleh provider...</span>`;
+            }
+            if (badgeEl) {
+              badgeEl.innerText = 'DIPROSES';
+              badgeEl.style.background = '#fef3c7';
+              badgeEl.style.color = '#d97706';
+            }
+            if (btnCopyCode) btnCopyCode.style.display = 'none';
+            if (btnOpenLink) btnOpenLink.style.display = 'none';
+            if (prodBox) prodBox.style.display = 'block';
+          } else {
+            if (prodBox) prodBox.style.display = 'none';
           }
-          if (badgeEl) {
-            badgeEl.innerText = (status === 'BERHASIL' || status === 'PAID') ? 'BERHASIL' : 'PROSES';
-            badgeEl.style.background = (status === 'BERHASIL' || status === 'PAID') ? '#ecfdf5' : '#fef3c7';
-            badgeEl.style.color = (status === 'BERHASIL' || status === 'PAID') ? '#059669' : '#d97706';
-          }
-          if (btnCopyCode) btnCopyCode.style.display = 'flex';
-          if (_postCheckoutLinkUrl && btnOpenLink) {
-            btnOpenLink.style.display = 'flex';
-          } else if (btnOpenLink) {
-            btnOpenLink.style.display = 'none';
-          }
-          if (prodBox) prodBox.style.display = 'block';
         }
 
         // 3. Fill transaction details
@@ -11714,9 +11775,8 @@
           setTextIfExists('receipt-sn-value', snVal.trim());
           if (snBox) snBox.style.display = 'block';
         } else if (isProductItem || tx.type === 'PPOB') {
-          // Guaranteed fallback SN for product items so it NEVER disappears
-          const fallbackSN = tx.sn || tx.product_license || tx.license || tx.id || tx.orderId || 'SN-' + (tx.id || Date.now());
-          setTextIfExists('receipt-sn-value', fallbackSN);
+          // Display status message if license is still being processed by provider (never show raw TRX ID)
+          setTextIfExists('receipt-sn-value', '⏳ Detail akun / lisensi sedang diproses provider...');
           if (snBox) snBox.style.display = 'block';
 
           // Background check-status fetch to retrieve live SN from SekaliPay if available
@@ -11726,9 +11786,11 @@
               .then(data => {
                 if (data && data.success && (data.sn || data.product_license)) {
                   const liveSN = data.sn || data.product_license;
-                  tx.sn = liveSN;
-                  tx.product_license = liveSN;
-                  setTextIfExists('receipt-sn-value', liveSN);
+                  if (liveSN && !liveSN.startsWith('TRX_') && !liveSN.startsWith('SN-TRX_')) {
+                    tx.sn = liveSN;
+                    tx.product_license = liveSN;
+                    setTextIfExists('receipt-sn-value', liveSN);
+                  }
                 }
               })
               .catch(() => {});
@@ -13832,9 +13894,9 @@
 
         let list = transactionHistory || [];
         if (currentMutasiFilter === 'kredit') {
-          list = list.filter(tx => (tx.type === 'DEPOSIT' || tx.type === 'RECEIVE' || (tx.category && tx.category.includes('Deposit')) || (tx.merchant && tx.merchant.includes('Terima'))));
+          list = list.filter(tx => getTxDisplayInfo(tx).isMoneyIn);
         } else if (currentMutasiFilter === 'debit') {
-          list = list.filter(tx => !(tx.type === 'DEPOSIT' || tx.type === 'RECEIVE' || (tx.category && tx.category.includes('Deposit')) || (tx.merchant && tx.merchant.includes('Terima'))));
+          list = list.filter(tx => !getTxDisplayInfo(tx).isMoneyIn);
         }
 
         if (list.length === 0) {
@@ -13849,7 +13911,7 @@
 
         list.forEach(tx => {
           const info = getTxDisplayInfo(tx);
-          const isMinus = info.prefix === '-';
+          const isMinus = !info.isMoneyIn;
           const fee = Number(tx.adminFee || tx.markup || 0);
 
           const card = document.createElement('div');
@@ -13880,10 +13942,14 @@
             } catch(e) {}
           }
 
+          const badgeText = isMinus ? 'UANG KELUAR' : 'UANG MASUK';
+          const badgeBg = isMinus ? '#fef2f2' : '#ecfdf5';
+          const badgeColor = isMinus ? '#dc2626' : '#059669';
+
           card.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
               <div style="display: flex; align-items: center; gap: 10px;">
-                <div style="width: 36px; height: 36px; border-radius: 10px; background: ${isMinus ? '#fef2f2' : '#ecfdf5'}; color: ${isMinus ? '#dc2626' : '#059669'}; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <div style="width: 38px; height: 38px; border-radius: 12px; background: ${badgeBg}; color: ${badgeColor}; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                   <span class="material-symbols-outlined" style="font-size: 20px;">${info.icon}</span>
                 </div>
                 <div>
@@ -13893,7 +13959,8 @@
                 </div>
               </div>
               <div style="text-align: right;">
-                <p style="font-size: 14px; font-weight: 800; color: ${isMinus ? '#dc2626' : '#059669'}; margin: 0 0 2px;">${info.prefix}${formatRupiah(tx.amount)}</p>
+                <p style="font-size: 14px; font-weight: 800; color: ${badgeColor}; margin: 0 0 2px;">${info.prefix}${formatRupiah(tx.amount)}</p>
+                <span style="font-size: 9.5px; font-weight: 800; color: ${badgeColor}; background: ${badgeBg}; padding: 2px 8px; border-radius: 10px; text-transform: uppercase;">${badgeText}</span>
                 ${feeBadge}
               </div>
             </div>

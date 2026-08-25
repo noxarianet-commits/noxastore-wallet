@@ -2099,7 +2099,8 @@ async function handlePpobCheckout(req, res) {
       orderResult = { success: false, message: apiErr.message };
     }
 
-    const serialNumber = extractSekalipayLicenseOrSN(orderResult.data) || extractSekalipayLicenseOrSN(orderResult) || `SN-${refId.replace('TRX_', '')}`;
+    const isOrderSuccess = orderResult && (orderResult.success || orderResult.status === true || orderResult.httpCode === 200 || orderResult.data);
+    const serialNumber = extractSekalipayLicenseOrSN(orderResult.data) || extractSekalipayLicenseOrSN(orderResult) || '';
     const accountName = req.body.account_name || req.body.customer_name || orderResult.data?.customer_name || orderResult.data?.account_name || '';
 
     if (isOrderSuccess) {
