@@ -3230,18 +3230,18 @@
       height: 100%;
       border-radius: 50%;
       aspect-ratio: 1 / 1;
-      background: radial-gradient(circle at 40% 35%, #9B4DB8, #7B2D8E);
+      background: linear-gradient(135deg, #9B4DB8 0%, #7B2D8E 100%);
       box-shadow: 0 0 30px rgba(123, 45, 142, 0.25);
       transform: scale(0.2);
       animation: popCircle 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.4) forwards;
       box-sizing: border-box;
     }
     .circle-solid-failed {
-      background: radial-gradient(circle at 40% 35%, #ef4444, #dc2626) !important;
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
       box-shadow: 0 0 30px rgba(239, 68, 68, 0.25) !important;
     }
     .circle-solid-process {
-      background: radial-gradient(circle at 40% 35%, #f59e0b, #d97706) !important;
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
       box-shadow: 0 0 30px rgba(245, 158, 11, 0.25) !important;
     }
 
@@ -3296,7 +3296,7 @@
       position: absolute;
       width: 6px;
       height: 6px;
-      background: radial-gradient(circle, #f5d0ff, #7B2D8E);
+      background: #7B2D8E;
       border-radius: 50%;
       box-shadow: 0 0 10px rgba(123, 45, 142, 0.6);
       opacity: 0;
@@ -3304,11 +3304,11 @@
       pointer-events: none;
     }
     .sparkle-failed {
-      background: radial-gradient(circle, #ffe4e6, #ef4444) !important;
+      background: #ef4444 !important;
       box-shadow: 0 0 10px rgba(239, 68, 68, 0.6) !important;
     }
     .sparkle-process {
-      background: radial-gradient(circle, #fef3c7, #f59e0b) !important;
+      background: #f59e0b !important;
       box-shadow: 0 0 10px rgba(245, 158, 11, 0.6) !important;
     }
 
@@ -3373,12 +3373,12 @@
     }
 
     .circle-solid-success {
-      background: radial-gradient(circle at 40% 35%, #22c55e, #16a34a) !important;
+      background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
       box-shadow: 0 0 36px rgba(34, 197, 94, 0.35) !important;
     }
 
     .sparkle-success {
-      background: radial-gradient(circle, #86efac, #22c55e) !important;
+      background: #22c55e !important;
       box-shadow: 0 0 12px rgba(34, 197, 94, 0.8) !important;
     }
 
@@ -3450,7 +3450,7 @@
       position: absolute;
       inset: 20%;
       border-radius: 50%;
-      background: radial-gradient(circle at 40% 35%, rgba(139, 92, 246, 0.25), rgba(139, 92, 246, 0.02));
+      background: rgba(139, 92, 246, 0.15);
       animation: glowPulse 2s ease-in-out infinite alternate;
     }
 
@@ -3469,7 +3469,7 @@
       position: absolute;
       width: 6px;
       height: 6px;
-      background: radial-gradient(circle, #c4b5fd, #8b5cf6);
+      background: #8b5cf6;
       border-radius: 50%;
       box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
       animation: dotPulse 1.5s ease-in-out infinite alternate;
@@ -12935,20 +12935,88 @@
         window.open(waUrl, '_blank');
       }
 
+      async function captureReceiptCardToCanvas(tx) {
+        if (!tx) throw new Error('Data transaksi tidak ditemukan.');
+
+        // Ensure receipt card fields are populated
+        if (!currentPrintTx || currentPrintTx.id !== tx.id) {
+          openTrxDetail(tx);
+        }
+
+        const sourceCard = document.getElementById('trx-receipt-card');
+        if (!sourceCard) throw new Error('Elemen struk tidak ditemukan.');
+
+        // Build an isolated offscreen render sandbox with fixed 380px geometry
+        const sandbox = document.createElement('div');
+        sandbox.style.cssText = 'position: fixed; left: -9999px; top: 0; width: 380px; background: #ffffff; z-index: -9999; display: block; opacity: 1; visibility: visible; pointer-events: none; padding: 0; margin: 0; box-sizing: border-box; overflow: hidden;';
+
+        const clone = sourceCard.cloneNode(true);
+        clone.style.width = '380px';
+        clone.style.maxWidth = '380px';
+        clone.style.margin = '0 auto';
+        clone.style.display = 'flex';
+        clone.style.flexDirection = 'column';
+        clone.style.boxSizing = 'border-box';
+        clone.style.background = '#ffffff';
+        clone.style.borderRadius = '28px';
+        clone.style.border = '1px solid rgba(123, 45, 142, 0.12)';
+        clone.style.boxShadow = 'none';
+
+        // Render clean, crisp static status badge in the clone (eliminates animation timing / radial gradient NaN errors)
+        const animContainer = clone.querySelector('#receipt-status-animation-container');
+        if (animContainer) {
+          const isFailed = String(tx.status || '').toUpperCase() === 'GAGAL' || String(tx.status || '').toUpperCase() === 'FAILED';
+          const isProcess = String(tx.status || '').toUpperCase() === 'DIPROSES' || String(tx.status || '').toUpperCase() === 'PENDING';
+          const badgeBg = isFailed ? '#ef4444' : (isProcess ? '#f59e0b' : '#22c55e');
+          const iconName = isFailed ? 'close' : (isProcess ? 'hourglass_top' : 'check');
+
+          animContainer.innerHTML = `
+            <div style="width: 72px; height: 72px; margin: 0 auto 10px; border-radius: 50%; background: ${badgeBg}; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(0,0,0,0.12);">
+              <span class="material-symbols-outlined" style="color: #ffffff; font-size: 38px; font-weight: 800; display: inline-block;">${iconName}</span>
+            </div>
+          `;
+        }
+
+        // Ensure watermark in clone is tiled neatly
+        const cloneWatermark = clone.querySelector('#watermarkGrid');
+        if (cloneWatermark) {
+          cloneWatermark.style.opacity = '0.04';
+          cloneWatermark.style.display = 'grid';
+          cloneWatermark.style.gridTemplateColumns = 'repeat(5, 1fr)';
+          cloneWatermark.style.gridTemplateRows = 'repeat(10, 1fr)';
+        }
+
+        sandbox.appendChild(clone);
+        document.body.appendChild(sandbox);
+
+        // Allow micro-tick for layout and font bounding box settlement
+        await new Promise(r => setTimeout(r, 60));
+
+        try {
+          const canvas = await html2canvas(clone, {
+            scale: 3,
+            useCORS: true,
+            backgroundColor: '#ffffff',
+            logging: false,
+            scrollX: 0,
+            scrollY: 0,
+            width: 380,
+            windowWidth: 380
+          });
+          return canvas;
+        } finally {
+          if (document.body.contains(sandbox)) {
+            document.body.removeChild(sandbox);
+          }
+        }
+      }
+
       async function downloadReceiptImage(txObj = null) {
         const tx = txObj || currentPrintTx || _currentPostCheckoutTx;
         if (!tx) {
           showNotification('❌ Data transaksi tidak ditemukan.', 'error');
           return;
         }
-
-        // If card is not yet populated with this tx, populate it
-        if (!currentPrintTx || currentPrintTx.id !== tx.id) {
-          openTrxDetail(tx);
-        }
-
-        const card = document.getElementById('trx-receipt-card');
-        if (!card) return;
 
         const btn = document.getElementById('download-receipt-btn');
         const originalHTML = btn ? btn.innerHTML : '';
@@ -12960,17 +13028,7 @@
         try {
           playAppNotificationSound('success');
 
-          const canvas = await html2canvas(card, {
-            scale: 3,
-            useCORS: true,
-            backgroundColor: '#ffffff',
-            logging: false,
-            scrollX: 0,
-            scrollY: -window.scrollY,
-            windowWidth: document.documentElement.clientWidth,
-            windowHeight: document.documentElement.clientHeight
-          });
-
+          const canvas = await captureReceiptCardToCanvas(tx);
           const dataUrl = canvas.toDataURL('image/png');
           const cleanTxId = (tx.id || tx.transactionId || 'TRX').replace(/[^a-zA-Z0-9_-]/g, '');
           const fileName = `Struk_NoxaPay_${cleanTxId}.png`;
@@ -13026,7 +13084,6 @@
             try {
               const file = new File([pngBlob], fileName, { type: 'image/png' });
               if (navigator.canShare({ files: [file] })) {
-                // On mobile this lets user directly tap 'Save Image' or 'Simpan ke Galeri'
                 navigator.share({
                   files: [file],
                   title: 'Struk Pembayaran NoxaPay',
@@ -13039,7 +13096,7 @@
           showNotification(nativeSaved ? '✅ Gambar struk berhasil disimpan ke galeri!' : '✅ Struk PNG berhasil dibuat & diunduh!');
         } catch (err) {
           console.error('[Download Struk Error]', err);
-          showNotification('❌ Gagal memproses struk: ' + err.message);
+          showNotification('❌ Gagal memproses struk: ' + (err.message || 'Terjadi kesalahan'));
         } finally {
           if (btn) {
             btn.disabled = false;
@@ -13270,9 +13327,6 @@
 
       async function shareReceiptToWA() {
         if (!currentPrintTx) return;
-        const card = document.getElementById('trx-receipt-card');
-        if (!card) return;
-
         const btn = document.getElementById('share-wa-btn');
         const originalHTML = btn ? btn.innerHTML : '';
         if (btn) {
@@ -13301,17 +13355,7 @@
             `----------------------------------------\n` +
             `*NoxariaNet Wallet — Transaksi Enkripsi Sah & Diterbitkan Resmi.*`;
 
-          const canvas = await html2canvas(card, {
-            scale: 3,
-            useCORS: true,
-            backgroundColor: '#ffffff',
-            logging: false,
-            scrollX: 0,
-            scrollY: -window.scrollY,
-            windowWidth: document.documentElement.clientWidth,
-            windowHeight: document.documentElement.clientHeight
-          });
-
+          const canvas = await captureReceiptCardToCanvas(currentPrintTx);
           const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
           const fileName = `Struk_NoxaPay_${currentPrintTx.id || 'TRX'}.png`;
           const file = new File([blob], fileName, { type: 'image/png' });
@@ -13342,7 +13386,7 @@
 
         } catch (err) {
           console.error('[Share WA Error]', err);
-          showNotification('❌ Gagal membagikan struk: ' + err.message);
+          showNotification('❌ Gagal membagikan struk: ' + (err.message || 'Terjadi kesalahan'));
         } finally {
           if (btn) {
             btn.disabled = false;
@@ -13352,23 +13396,13 @@
       }
 
       async function shareReceiptGeneral() {
-        if (!currentPrintTx) return;
-        const card = document.getElementById('trx-receipt-card');
-        if (!card) return;
+        const tx = currentPrintTx || _currentPostCheckoutTx;
+        if (!tx) return;
 
         try {
-          const canvas = await html2canvas(card, {
-            scale: 3,
-            useCORS: true,
-            backgroundColor: '#ffffff',
-            logging: false,
-            scrollX: 0,
-            scrollY: -window.scrollY, // Fix scroll shift bug in html2canvas
-            windowWidth: document.documentElement.clientWidth,
-            windowHeight: document.documentElement.clientHeight
-          });
+          const canvas = await captureReceiptCardToCanvas(tx);
           const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
-          const file = new File([blob], `Struk_NoxaPay_${currentPrintTx.id || 'TRX'}.png`, { type: 'image/png' });
+          const file = new File([blob], `Struk_NoxaPay_${tx.id || 'TRX'}.png`, { type: 'image/png' });
 
           const shareData = {
             title: 'Struk Transaksi NoxaPay',
