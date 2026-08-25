@@ -4881,8 +4881,18 @@
             <strong id="post-checkout-note" style="color: #7B2D8E; font-weight: 700; font-style: italic; word-break: break-word; text-align: right; max-width: 60%;"> - </strong>
           </div>
 
+          <div id="post-checkout-subtotal-row" style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #f1f5f9; font-size: 13px;">
+            <span style="color: #64748b;">Harga Produk (Subtotal)</span>
+            <strong id="post-checkout-subtotal" style="color: #0f172a; font-weight: 700;">Rp 0</strong>
+          </div>
+
+          <div id="post-checkout-fee-row" style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #f1f5f9; font-size: 13px;">
+            <span style="color: #64748b;">Biaya Admin</span>
+            <strong id="post-checkout-fee" style="color: #7B2D8E; font-weight: 700;">Rp 0</strong>
+          </div>
+
           <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #f1f5f9; font-size: 13px;">
-            <span style="color: #64748b;">Total Bayar</span>
+            <span style="color: #64748b;">Total Potong Saldo</span>
             <strong id="post-checkout-price" style="color: #059669; font-weight: 800; font-size: 14px;">Rp 0</strong>
           </div>
 
@@ -8008,7 +8018,6 @@
               closeTransferScreen();
               playSuccessSound();
               showNotification('✅ Berhasil mengirim Rp ' + _pendingTransferData.amount.toLocaleString('id-ID') + ' ke ' + _pendingTransferData.target + '!');
-              triggerSystemNotification('Transfer Berhasil', 'Rp ' + _pendingTransferData.amount.toLocaleString('id-ID') + ' dikirim ke ' + _pendingTransferData.target + '.');
               switchTab('home');
               applyBalanceUpdate(result.mainBalance, result.history, true);
             } else {
@@ -8570,7 +8579,6 @@
 
             playSuccessSound();
             showNotification(`✅ Berhasil mencairkan Rp ${amount.toLocaleString('id-ID')} ke DANA!`);
-            triggerSystemNotification('Pencairan DANA Berhasil', `Berhasil mencairkan Rp ${amount.toLocaleString('id-ID')} ke DANA ${phoneInput}.`);
 
             closeEwalletDanaScreen();
             closeEwalletListScreen();
@@ -8824,7 +8832,6 @@
 
             playSuccessSound();
             showNotification(`✅ Berhasil mencairkan Rp ${amount.toLocaleString('id-ID')} ke Akun Utama!`);
-            triggerSystemNotification('Pencairan Berhasil', `Berhasil mencairkan saldo QRIS Rp ${amount.toLocaleString('id-ID')} ke Akun Utama Anda.`);
 
             document.getElementById('merchant-saldo-text').innerText = formatRupiah(qrisBalance);
             const maxLabel = document.getElementById('merchant-max-withdraw-label');
@@ -9214,7 +9221,6 @@
             if (data.success) {
               closeTransferScreen();
               const displayName = data.recipientName ? `${data.recipientName} (@${data.recipientUsername || target})` : target;
-              triggerSystemNotification('💸 Transfer Berhasil', `Rp ${amount.toLocaleString('id-ID')} terkirim ke ${displayName}`);
               showNotification(`✅ Transfer Rp ${amount.toLocaleString('id-ID')} ke ${displayName} berhasil!`);
               syncServerState();
             } else {
@@ -10280,7 +10286,6 @@
             const data = JSON.parse(e.data);
             const myUname = localStorage.getItem('noxaUsername');
             if (!data.targetUsername || data.targetUsername === myUname || data.targetUsername === 'all') {
-              triggerSystemNotification(data.title || '⚡ Saldo Diperbarui', data.body || 'Saldo Anda telah diperbarui');
               syncServerState();
             }
           } catch(err) {}
@@ -10300,7 +10305,7 @@
             const data = JSON.parse(e.data);
             const myUname = localStorage.getItem('noxaUsername');
             if (!data.targetUsername || data.targetUsername === myUname || data.targetUsername === 'all') {
-              triggerSystemNotification(data.title || '✅ Transaksi Diperbarui', data.body || 'Status transaksi diperbarui');
+              triggerSystemNotification(data.title || '✅ Transaksi Berhasil', data.body || 'Transaksi Anda telah diproses.');
               showHistoryBadge();
               syncServerState();
             }
@@ -10312,7 +10317,6 @@
             const data = JSON.parse(e.data);
             const myUname = localStorage.getItem('noxaUsername');
             if (!data.targetUsername || data.targetUsername === myUname || data.targetUsername === 'all') {
-              triggerSystemNotification(data.title || '✅ Transaksi Diperbarui', data.body || 'Status transaksi diperbarui');
               showHistoryBadge();
               syncServerState();
             }
@@ -10653,31 +10657,44 @@
         });
       }
 
-      var _lastNotifTime = 0;
-      var _lastNotifKey = '';
+      // ============================================================
+      // STRICT ZERO-SPAM SINGLE STATUS BAR NOTIFICATION ENGINE
+      // ============================================================
+      let _lastStatusBarNotifTime = 0;
+      const _recentNotificationHashes = new Map();
 
       function triggerSystemNotification(title, body) {
         const now = Date.now();
-        // Strict anti-spam duplicate filter: cegah notifikasi dengan isi yang sama dalam 8 detik
-        const notifKey = String(title || '').trim() + '::' + String(body || '').trim();
-        if (_lastNotifKey === notifKey && (now - _lastNotifTime) < 8000) {
-          console.log('[Debouncer] Blocked duplicate notification:', notifKey);
-          return;
+        const cleanKey = (String(title || '') + '|' + String(body || '')).toLowerCase().replace(/[^a-z0-9]/g, '');
+
+        // 1. Strict duplicate suppression within 12 seconds
+        if (_recentNotificationHashes.has(cleanKey)) {
+          const lastTime = _recentNotificationHashes.get(cleanKey);
+          if (now - lastTime < 12000) {
+            console.log('[Anti-Spam] Suppressed duplicate status bar notification:', cleanKey);
+            return;
+          }
+        }
+        _recentNotificationHashes.set(cleanKey, now);
+
+        // Clean up old cache entries
+        if (_recentNotificationHashes.size > 25) {
+          for (const [k, t] of _recentNotificationHashes.entries()) {
+            if (now - t > 25000) _recentNotificationHashes.delete(k);
+          }
         }
 
-        // Global anti-spam rate limit: max 1 system notification banner per 2.0s
-        if (now - _lastNotifTime < 2000) {
-          console.log('[Debouncer] Rate limited notification display to avoid spam.');
+        // 2. Global rate limit: Exactly 1 system notification per 3.5 seconds
+        if (now - _lastStatusBarNotifTime < 3500) {
+          console.log('[Anti-Spam] Rate limited status bar notification.');
           return;
         }
+        _lastStatusBarNotifTime = now;
 
-        _lastNotifTime = now;
-        _lastNotifKey = notifKey;
-
-        // 1. Tampilkan notifikasi toast in-app
+        // 3. Show clean in-app toast
         showNotification(`${title}: ${body}`, 'success');
 
-        // 2. Tampilkan notifikasi via Android Native Bridge (Android APK WebView) jika ada
+        // 4. Dispatch to Android Native Bridge ONCE ONLY (Single Bridge, Single Method)
         let nativeNotified = false;
         const nativeBridges = [
           window.AndroidBridge,
@@ -10692,50 +10709,46 @@
           const notifMethods = ['showNotification', 'pushNotification', 'sendNotification', 'notify'];
           for (const m of notifMethods) {
             if (typeof bridge[m] === 'function') {
-              try { bridge[m](title, body); nativeNotified = true; break; } catch(e) {}
+              try {
+                bridge[m](title, body);
+                nativeNotified = true;
+                break; // STRICT BREAK: Never call more than 1 method on the same bridge!
+              } catch(e) {}
             }
           }
-          if (nativeNotified) break;
+          if (nativeNotified) break; // STRICT BREAK: Never call more than 1 native bridge!
         }
 
-        // 4. Jika izin belum pernah diminta, Minta Izin
-        if ('Notification' in window && Notification.permission === 'default') {
-          requestNotificationPermission();
-        }
+        // 5. If Android Native Bridge already handled it, DO NOT call Web Notification API (Prevents duplicate cards)
+        if (nativeNotified) return;
 
-        // 5. Tampilkan notifikasi sistem HP (Status Bar) HANYA jika aplikasi di background
-        // Jika aplikasi aktif/foreground, cukup tampilkan toast in-app saja (SSE sudah deliver)
-        // Web Push dari server akan handle notifikasi untuk user yang offline/background
-        const isAppForeground = !document.hidden && document.visibilityState === 'visible';
-        if (isAppForeground) {
-          // App sedang aktif — tidak perlu system notification, toast sudah cukup
-          return;
-        }
+        // 6. Web Push / Browser Notification (Fallback for Desktop/PWA when tab is in background)
+        if (document.hidden && 'Notification' in window && Notification.permission === 'granted') {
+          try {
+            const options = {
+              body: body,
+              icon: window.location.origin + '/loading screen noxa.png',
+              badge: window.location.origin + '/loading screen noxa.png',
+              vibrate: [200, 100, 200],
+              tag: 'noxa-single-notification',
+              renotify: false,
+              silent: false
+            };
 
-        if ('Notification' in window && Notification.permission === 'granted') {
-          const options = {
-            body: body,
-            icon: window.location.origin + '/loading screen noxa.png',
-            badge: window.location.origin + '/loading screen noxa.png',
-            vibrate: [200, 100, 200],
-            tag: 'noxa-global-notif',
-            renotify: false,
-            silent: false
-          };
-
-          if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistration().then(reg => {
-              if (reg && reg.showNotification) {
-                reg.showNotification(title, options);
-              } else {
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.getRegistration().then(reg => {
+                if (reg && reg.showNotification) {
+                  reg.showNotification(title, options);
+                } else {
+                  try { new Notification(title, options); } catch(e) {}
+                }
+              }).catch(() => {
                 try { new Notification(title, options); } catch(e) {}
-              }
-            }).catch(() => {
+              });
+            } else {
               try { new Notification(title, options); } catch(e) {}
-            });
-          } else {
-            try { new Notification(title, options); } catch(e) {}
-          }
+            }
+          } catch(e) {}
         }
       }
 
@@ -12082,8 +12095,18 @@
           if (accRow) accRow.style.display = 'none';
         }
 
-        const priceVal = tx.amount || tx.price || 0;
-        setTextIfExists('post-checkout-price', formatRupiah(priceVal));
+        const totalVal = Math.ceil(Number(tx.amount || tx.price || 0));
+        const feeVal = (tx.adminFee !== undefined && tx.adminFee !== null) ? Number(tx.adminFee) : Number(tx.markup || 0);
+        const subtotalVal = (tx.base_price !== undefined && tx.base_price > 0) ? Math.max(0, Number(tx.base_price)) : Math.max(0, totalVal - feeVal);
+
+        setTextIfExists('post-checkout-subtotal', formatRupiah(subtotalVal));
+        setTextIfExists('post-checkout-fee', formatRupiah(feeVal));
+        setTextIfExists('post-checkout-price', formatRupiah(totalVal));
+
+        const feeRow = document.getElementById('post-checkout-fee-row');
+        if (feeRow) feeRow.style.display = feeVal > 0 ? 'flex' : 'none';
+        const subtotalRow = document.getElementById('post-checkout-subtotal-row');
+        if (subtotalRow) subtotalRow.style.display = feeVal > 0 ? 'flex' : 'none';
 
         const transferNoteVal = tx.note || tx.description || '';
         const noteRow = document.getElementById('post-checkout-note-row');
@@ -12270,10 +12293,11 @@
         setTextIfExists('receipt-txid', tx.transactionId || tx.id || '-');
         setTextIfExists('receipt-orderid', tx.orderId || '-');
 
-        const total = tx.amount || 0;
+        const total = Math.ceil(Number(tx.amount || tx.price || 0));
         const fee = (tx.adminFee !== undefined && tx.adminFee !== null) ? Number(tx.adminFee) : Number(tx.markup || 0);
         const subtotal = (tx.base_price !== undefined && tx.base_price > 0) ? Math.max(0, Number(tx.base_price)) : Math.max(0, total - fee);
 
+        setTextIfExists('receipt-amount', formatRupiah(total));
         setTextIfExists('receipt-subtotal', formatRupiah(subtotal));
         setTextIfExists('receipt-fee', formatRupiah(fee));
         setTextIfExists('receipt-total-final', formatRupiah(total));

@@ -2517,11 +2517,12 @@ async function handleWithdrawEwallet(req, res) {
     filtered.sort((a, b) => a.price - b.price);
     const item = filtered[0] || null;
 
-    if (!item) {
-      return res.status(400).json({ success: false, error: `Produk ${method} nominal Rp ${nominal.toLocaleString('id-ID')} tidak tersedia di provider.` });
-    }
-
-    const totalPrice = Math.ceil(item.price);
+    const visMap = await db.getPpobVisibilityMap();
+    const itemSku = `SKL-${item.id}`;
+    const vis = visMap[itemSku] || visMap[String(item.id)];
+    const markup = vis ? Math.max(0, Math.ceil(Number(vis.markup) || 0)) : 0;
+    const basePrice = Math.ceil(Number(item.price) || 0);
+    const totalPrice = basePrice + markup;
     const currentBal = user.mainBalance !== undefined ? user.mainBalance : user.saldo || 0;
 
     if (currentBal < totalPrice) {
@@ -2558,6 +2559,9 @@ async function handleWithdrawEwallet(req, res) {
         product_name: productName,
         target: String(destination),
         account_name: accName,
+        base_price: basePrice,
+        adminFee: markup,
+        markup: markup,
         amount: totalPrice,
         status: 'BERHASIL',
         type: 'TOPUP_EWALLET',
@@ -2584,7 +2588,7 @@ async function handleWithdrawEwallet(req, res) {
         msg: `Berhasil Top Up ${method} Rp ${nominal.toLocaleString('id-ID')} ke ${destination}`,
         mainBalance: newBalance,
         history: userHistory,
-        data: { id: refId, merchant: productName, target: destination, account_name: accName, amount: totalPrice, sn }
+        data: { id: refId, merchant: productName, target: destination, account_name: accName, base_price: basePrice, adminFee: markup, markup: markup, amount: totalPrice, sn }
       });
     } else {
       const rawErr = (orderResult && (orderResult.message || orderResult.error)) || 'Respon gagal dari provider.';
@@ -2595,6 +2599,10 @@ async function handleWithdrawEwallet(req, res) {
         merchant: productName,
         product_name: productName,
         target: String(destination),
+        account_name: accName,
+        base_price: basePrice,
+        adminFee: markup,
+        markup: markup,
         amount: totalPrice,
         status: 'GAGAL',
         type: 'TOPUP_EWALLET',

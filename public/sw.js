@@ -37,7 +37,7 @@ self.addEventListener('push', (event) => {
     badge: '/loading screen noxa.png',
     vibrate: [200, 100, 200],
     tag: 'noxa-single-notification',
-    renotify: true,
+    renotify: false,
     data: {
       url: data.url || '/'
     }
