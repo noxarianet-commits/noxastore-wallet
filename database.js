@@ -1173,9 +1173,9 @@ async function deleteInformation(id) {
 
 // PPOB VISIBILITY & MARKUP FUNCTIONS
 async function getPpobVisibilityMap() {
+  const map = {};
   if (!sqlite3) {
     const rawMap = readJSONFile(PPOB_FILE, {});
-    const map = {};
     for (const [k, v] of Object.entries(rawMap)) {
       const rawSku = String(k || '').trim();
       const sklSku = rawSku.startsWith('SKL-') ? rawSku : `SKL-${rawSku}`;
@@ -1187,14 +1187,17 @@ async function getPpobVisibilityMap() {
         brand: v.brand || '',
         markup: Math.max(0, Math.ceil(Number(v.markup) || 0))
       };
-      map[rawSku] = entry;
-      map[sklSku] = entry;
-      map[numSku] = entry;
+      const existing = map[sklSku];
+      if (!existing || entry.markup >= existing.markup) {
+        map[rawSku] = entry;
+        map[sklSku] = entry;
+        map[numSku] = entry;
+      }
     }
     return map;
   }
+
   const rows = await all('SELECT * FROM ppob_visibility');
-  const map = {};
   for (const r of rows) {
     const rawSku = String(r.sku || '').trim();
     const sklSku = rawSku.startsWith('SKL-') ? rawSku : `SKL-${rawSku}`;
@@ -1206,9 +1209,13 @@ async function getPpobVisibilityMap() {
       brand: r.brand || '',
       markup: Math.max(0, Math.ceil(Number(r.markup) || 0))
     };
-    map[rawSku] = entry;
-    map[sklSku] = entry;
-    map[numSku] = entry;
+
+    const existing = map[sklSku];
+    if (!existing || entry.markup >= existing.markup) {
+      map[rawSku] = entry;
+      map[sklSku] = entry;
+      map[numSku] = entry;
+    }
   }
   return map;
 }
@@ -1219,14 +1226,16 @@ async function setPpobVisibility(sku, active, category = '', brand = '', markup 
   const sklSku = rawSku.startsWith('SKL-') ? rawSku : `SKL-${rawSku}`;
   const numSku = rawSku.replace(/^SKL-/, '');
 
+  const existingMap = await getPpobVisibilityMap();
+  const existing = existingMap[sklSku] || existingMap[numSku] || existingMap[rawSku] || {};
+
+  const newActive = active !== undefined && active !== null ? (active ? true : false) : (existing.active !== undefined ? existing.active : true);
+  const newCat = category || existing.category || '';
+  const newBrand = brand || existing.brand || '';
+  const newMarkup = markup !== undefined && markup !== null ? Math.max(0, Math.ceil(Number(markup) || 0)) : (existing.markup || 0);
+
   if (!sqlite3) {
     const map = readJSONFile(PPOB_FILE, {});
-    const existing = map[sklSku] || map[rawSku] || map[numSku] || {};
-    const newActive = active !== undefined && active !== null ? (active ? true : false) : (existing.active !== undefined ? existing.active : true);
-    const newCat = category || existing.category || '';
-    const newBrand = brand || existing.brand || '';
-    const newMarkup = markup !== undefined && markup !== null ? Math.max(0, Math.ceil(Number(markup) || 0)) : (existing.markup || 0);
-
     const val = {
       sku: sklSku,
       active: newActive,
@@ -1242,41 +1251,18 @@ async function setPpobVisibility(sku, active, category = '', brand = '', markup 
     return val;
   }
 
-  const existing = await get('SELECT * FROM ppob_visibility WHERE sku = ? OR sku = ? OR sku = ?', [sklSku, numSku, rawSku]);
-  const newActive = active !== undefined && active !== null ? (active ? 1 : 0) : (existing ? existing.active : 1);
-  const newCat = category || (existing ? existing.category : '');
-  const newBrand = brand || (existing ? existing.brand : '');
-  const newMarkup = markup !== undefined && markup !== null ? Math.max(0, Math.ceil(Number(markup) || 0)) : (existing ? Number(existing.markup) || 0 : 0);
+  // Clean duplicate non-canonical SKU rows first
+  await run('DELETE FROM ppob_visibility WHERE sku = ? OR sku = ? OR sku = ?', [sklSku, numSku, rawSku]);
 
-  // Save under sklSku
+  // Insert canonical row
   await run(`
     INSERT INTO ppob_visibility (sku, active, category, brand, markup, updatedAt)
     VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-    ON CONFLICT(sku) DO UPDATE SET
-      active = excluded.active,
-      category = excluded.category,
-      brand = excluded.brand,
-      markup = excluded.markup,
-      updatedAt = CURRENT_TIMESTAMP;
-  `, [sklSku, newActive, newCat, newBrand, newMarkup]);
-
-  // Also save under numSku if different
-  if (numSku !== sklSku) {
-    await run(`
-      INSERT INTO ppob_visibility (sku, active, category, brand, markup, updatedAt)
-      VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-      ON CONFLICT(sku) DO UPDATE SET
-        active = excluded.active,
-        category = excluded.category,
-        brand = excluded.brand,
-        markup = excluded.markup,
-        updatedAt = CURRENT_TIMESTAMP;
-    `, [numSku, newActive, newCat, newBrand, newMarkup]);
-  }
+  `, [sklSku, newActive ? 1 : 0, newCat, newBrand, newMarkup]);
 
   return {
     sku: sklSku,
-    active: newActive !== 0,
+    active: newActive,
     category: newCat,
     brand: newBrand,
     markup: newMarkup

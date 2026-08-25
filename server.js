@@ -1475,7 +1475,7 @@ app.get('/api/ppob/products', async (req, res) => {
 
       const formatted = items.map(item => {
         const itemSku = `SKL-${item.id}`;
-        const vis = visMap[itemSku] || visMap[String(item.id)];
+        const vis = visMap[itemSku] || visMap[String(item.id)] || (item.sku ? visMap[String(item.sku)] : undefined);
         const markup = vis ? Math.max(0, Math.ceil(Number(vis.markup) || 0)) : 0;
         const basePrice = Math.ceil(Number(item.price) || 0);
         return {
