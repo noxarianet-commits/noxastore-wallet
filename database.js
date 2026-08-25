@@ -146,6 +146,8 @@ async function initDb() {
       qrisBalance INTEGER DEFAULT 0,
       role TEXT DEFAULT 'MEMBER',
       transactionPin TEXT,
+      isSuspended INTEGER DEFAULT 0,
+      suspendReason TEXT,
       lastIp TEXT,
       lastDevice TEXT,
       lastLocation TEXT,
@@ -153,6 +155,10 @@ async function initDb() {
       updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
+
+  // Schema migrations
+  try { await run('ALTER TABLE users ADD COLUMN isSuspended INTEGER DEFAULT 0'); } catch(e) {}
+  try { await run('ALTER TABLE users ADD COLUMN suspendReason TEXT'); } catch(e) {}
 
   await run(`
     CREATE TABLE IF NOT EXISTS transactions (
@@ -375,6 +381,8 @@ async function getUser(username) {
     ...userRow,
     saldo: userRow.mainBalance,
     pin: userRow.transactionPin,
+    isSuspended: !!(userRow.isSuspended === 1 || userRow.isSuspended === true),
+    suspendReason: userRow.suspendReason || '',
     history: formattedHistory,
     usedTransactions: [],
     usedRRNs: []
@@ -1438,6 +1446,40 @@ async function markConversationAsRead(conversationId, readerType = 'cs') {
   await run('UPDATE chat_messages SET readStatus = 1 WHERE conversationId = ? AND sender = ?', [cId, targetSender]);
 }
 
+async function setUserSuspension(username, isSuspended, reason = '') {
+  if (!username) return null;
+  const target = String(username).trim();
+  const suspVal = isSuspended ? 1 : 0;
+  const suspReason = String(reason || '').trim();
+
+  if (!sqlite3) {
+    let users = readJSONUsers();
+    const idx = users.findIndex(u => u.username === target || u.name === target);
+    if (idx !== -1) {
+      users[idx].isSuspended = isSuspended;
+      users[idx].suspendReason = suspReason;
+      writeJSONUsers(users);
+      return await getUser(target);
+    }
+    return null;
+  }
+
+  await run('UPDATE users SET isSuspended = ?, suspendReason = ?, updatedAt = CURRENT_TIMESTAMP WHERE username = ?', [suspVal, suspReason, target]);
+
+  // Sync to JSON cache
+  try {
+    let users = readJSONUsers();
+    const idx = users.findIndex(u => u.username === target || u.name === target);
+    if (idx !== -1) {
+      users[idx].isSuspended = isSuspended;
+      users[idx].suspendReason = suspReason;
+      writeJSONUsers(users);
+    }
+  } catch (e) {}
+
+  return await getUser(target);
+}
+
 module.exports = {
   initDb,
   getWibDateTime,
@@ -1484,5 +1526,6 @@ module.exports = {
   saveChatMessage,
   getChatHistory,
   getAllConversationsSummary,
-  markConversationAsRead
+  markConversationAsRead,
+  setUserSuspension
 };

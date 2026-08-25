@@ -303,6 +303,98 @@
       }
     });
 
+    // Handle CS Login
+    async function handleCsLogin(e) {
+      e.preventDefault();
+      const username = document.getElementById('cs-login-username').value.trim();
+      const password = document.getElementById('cs-login-password').value.trim();
+      const errEl = document.getElementById('cs-login-error');
+      const btn = document.getElementById('cs-login-btn');
+
+      errEl.classList.add('hidden');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-lg">autorenew</span> Masuk...';
+
+      try {
+        const res = await fetch('/api/chat/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+
+        if (data.success && data.token) {
+          csToken = data.token;
+          localStorage.setItem('noxaCsToken', csToken);
+          document.getElementById('cs-login-view').classList.add('hidden');
+          initCsWebSocket();
+          loadConversations();
+        } else {
+          errEl.innerText = data.error || 'Username atau Password salah.';
+          errEl.classList.remove('hidden');
+        }
+      } catch (err) {
+        errEl.innerText = 'Gagal terhubung ke server: ' + err.message;
+        errEl.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>Masuk ke CS Console</span><span class="material-symbols-outlined text-lg">arrow_forward</span>';
+      }
+    }
+
+    // Handle CS Logout
+    function handleCsLogout() {
+      if (!confirm('Apakah Anda yakin ingin keluar dari CS Console?')) return;
+      localStorage.removeItem('noxaCsToken');
+      csToken = '';
+      if (ws) ws.close();
+      document.getElementById('cs-login-view').classList.remove('hidden');
+    }
+
+    // WebSocket Initialization
+    function initCsWebSocket() {
+      if (ws && ws.readyState === WebSocket.OPEN) return;
+
+      const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${location.host}`;
+      ws = new WebSocket(wsUrl);
+
+      ws.onopen = () => {
+        console.log('[WS] Connected to CS Gateway');
+        const badge = document.getElementById('ws-status-badge');
+        if (badge) {
+          badge.className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+          badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Live WebSocket';
+        }
+
+        // Authenticate socket as CS
+        ws.send(JSON.stringify({ type: 'auth', role: 'cs', token: csToken, isCs: true }));
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data);
+          handleIncomingWsEvent(payload);
+        } catch (e) {
+          console.warn('[WS Parse Error]:', e);
+        }
+      };
+
+      ws.onclose = () => {
+        console.log('[WS] Disconnected. Retrying in 3s...');
+        const badge = document.getElementById('ws-status-badge');
+        if (badge) {
+          badge.className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/30';
+          badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Menghubungkan ulang...';
+        }
+        setTimeout(() => { if (csToken) initCsWebSocket(); }, 3000);
+      };
+
+      ws.onerror = (e) => {
+        console.warn('[WS Error]:', e);
+      };
+    }
+
     // Anti-Spam Sound & Notification Manager
     let lastCsChimeTime = 0;
     const CS_CHIME_THROTTLE_MS = 2200; // Anti-spam: max 1 chime per 2.2 seconds

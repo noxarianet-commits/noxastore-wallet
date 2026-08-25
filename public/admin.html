@@ -2582,7 +2582,10 @@
         card.innerHTML = `
           <div class="user-card-header">
             <span class="user-card-name" title="${user.fullname}">${user.fullname}</span>
-            <span class="user-card-uid">${user.userId || 'NO-ID'}</span>
+            <div style="display: flex; align-items: center; gap: 4px;">
+              ${user.isSuspended ? `<span style="font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 4px; background: #fee2e2; color: #dc2626; border: 1px solid #fecaca;">SUSPENDED</span>` : ''}
+              <span class="user-card-uid">${user.userId || 'NO-ID'}</span>
+            </div>
           </div>
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <div class="user-card-brand" style="margin-bottom: 0;">${user.brand}</div>
@@ -2663,17 +2666,28 @@
           Kembali ke Daftar Anggota
         </button>
 
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
           <div>
             <h2 style="font-family: var(--font-outfit); font-size: 24px; font-weight: 800; color: var(--text-main);">${user.fullname}</h2>
             <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">User ID: <span style="font-family: monospace; color: var(--primary); font-weight: 700;">${user.userId || 'NO-ID'}</span></p>
           </div>
-          <div style="text-align: right;">
+          <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
             <span style="font-size: 12px; font-weight: 800; padding: 4px 12px; border-radius: 20px; ${badgeStyle}">
               ${roleText}
             </span>
+            ${user.isSuspended ? `<span style="font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 6px; background: #fee2e2; color: #dc2626; border: 1px solid #fecaca;">🚫 STATUS: SUSPENDED</span>` : ''}
           </div>
         </div>
+
+        ${user.isSuspended ? `
+          <div style="background: #fef2f2; border: 1.5px solid #fecaca; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; color: #991b1b;">
+            <span class="material-symbols-outlined" style="font-size: 26px; color: #dc2626; flex-shrink: 0;">gpp_bad</span>
+            <div>
+              <strong style="font-size: 13px; display: block;">Akun Ini Sedang Ditangguhkan (SUSPENDED)</strong>
+              <span style="font-size: 12px; color: #b91c1c;">Alasan: ${user.suspendReason || 'Aktivitas akun dinonaktifkan oleh Administrator.'}</span>
+            </div>
+          </div>
+        ` : ''}
 
         <div class="detail-tabs">
           <button class="detail-tab ${currentTab === 'profile' ? 'active' : ''}" onclick="switchDetailTab('profile')">Profil & Saldo</button>
@@ -2790,7 +2804,18 @@
                 <span class="material-symbols-outlined">delete_forever</span>
                 Hapus Akun User
               </button>
-              <button type="button" class="btn-primary" onclick="loginAsUser()" style="background: linear-gradient(135deg, #10b981, #059669); border: none; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);">
+              ${user.isSuspended ? `
+                <button type="button" class="btn-primary" onclick="toggleSuspendUser(false)" style="background: linear-gradient(135deg, #10b981, #059669); border: none; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);">
+                  <span class="material-symbols-outlined">lock_open</span>
+                  Aktifkan / Unsuspend Akun
+                </button>
+              ` : `
+                <button type="button" class="btn-danger" onclick="toggleSuspendUser(true)" style="background: linear-gradient(135deg, #ef4444, #dc2626); border: none; box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);">
+                  <span class="material-symbols-outlined">block</span>
+                  Suspend Akun User
+                </button>
+              `}
+              <button type="button" class="btn-primary" onclick="loginAsUser()" style="background: linear-gradient(135deg, #3b82f6, #2563eb); border: none; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);">
                 <span class="material-symbols-outlined">login</span>
                 Masuk ke Dashboard
               </button>
@@ -2971,10 +2996,46 @@
       });
 
       if (res.success) {
-        showNotification('✅ Akun user berhasil dihapus dari sistem.', 'delete');
+        showNotification('✅ User berhasil dihapus!', 'verified');
         selectedUsername = null;
-        const layout = document.querySelector('.dashboard-layout');
-        if (layout) layout.classList.remove('show-detail');
+        await loadAdminDashboard();
+        renderUserDetailPanel();
+      } else {
+        showNotification('❌ Gagal menghapus user: ' + (res.error || 'Terjadi kesalahan'), 'error');
+      }
+    }
+
+    // Action: Suspend / Unsuspend User
+    async function toggleSuspendUser(isSuspended) {
+      if (!selectedUsername) return;
+      const user = usersData[selectedUsername];
+      if (!user) return;
+
+      let reason = '';
+      if (isSuspended) {
+        reason = prompt(`Masukkan alasan suspend untuk user ${user.fullname || selectedUsername}:`, 'Aktivitas akun dinonaktifkan demi keamanan dan kepatuhan sistem.');
+        if (reason === null) return; // user cancelled prompt
+      } else {
+        if (!confirm(`Aktifkan kembali akun ${user.fullname || selectedUsername}?`)) return;
+      }
+
+      showNotification(isSuspended ? '⏳ Memproses suspend akun...' : '⏳ Mengaktifkan akun...');
+
+      const res = await adminFetch('/admin/users/suspend', {
+        method: 'POST',
+        body: {
+          username: selectedUsername,
+          suspended: isSuspended,
+          reason: reason
+        }
+      });
+
+      if (res.success) {
+        showNotification(res.message || (isSuspended ? '✅ Akun berhasil disuspend!' : '✅ Akun berhasil diaktifkan kembali!'), 'verified');
+        if (usersData[selectedUsername]) {
+          usersData[selectedUsername].isSuspended = isSuspended;
+          usersData[selectedUsername].suspendReason = reason;
+        }
         await loadAdminDashboard();
         renderUserDetailPanel();
       } else {

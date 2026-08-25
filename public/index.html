@@ -6354,11 +6354,45 @@
       <span class="material-symbols-outlined" style="color: #c084fc; font-size: 20px; flex-shrink: 0;">chevron_right</span>
     </div>
 
+    <!-- Fullscreen Emergency Lockdown Overlay for Suspended Accounts -->
+    <div id="suspend-lockdown-modal"
+      style="display: none; position: fixed; inset: 0; background: rgba(15, 10, 26, 0.96); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); z-index: 999999; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; color: white;">
+      
+      <div style="width: 84px; height: 84px; border-radius: 50%; background: linear-gradient(135deg, #ef4444, #b91c1c); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 40px rgba(239, 68, 68, 0.6); margin-bottom: 20px;">
+        <span class="material-symbols-outlined" style="font-size: 44px; color: white;">gpp_bad</span>
+      </div>
+
+      <div style="background: rgba(239, 68, 68, 0.15); border: 1.5px solid rgba(239, 68, 68, 0.4); border-radius: 20px; padding: 24px 20px; max-width: 380px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <h2 style="font-size: 18px; font-weight: 900; color: #fecaca; margin: 0 0 10px; letter-spacing: 0.5px; text-transform: uppercase;">
+          AKUN DINONAKTIFKAN
+        </h2>
+        <p style="font-size: 13px; color: #cbd5e1; line-height: 1.5; margin: 0 0 14px;">
+          Akun Anda telah ditangguhkan (disuspend) oleh Administrator sistem.
+        </p>
+        
+        <div style="background: rgba(0,0,0,0.35); border-radius: 12px; padding: 10px 14px; margin-bottom: 18px; text-align: left;">
+          <span style="font-size: 10.5px; font-weight: 800; color: #f87171; text-transform: uppercase; display: block; margin-bottom: 2px;">Alasan Penangguhan:</span>
+          <p id="suspend-reason-display" style="font-size: 12px; color: #f1f5f9; margin: 0; word-break: break-word;">Aktivitas akun dinonaktifkan oleh Administrator.</p>
+        </div>
+
+        <div style="background: #1e1b4b; border: 1.5px solid #4338ca; border-radius: 14px; padding: 12px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+          <span class="material-symbols-outlined" style="font-size: 20px; color: #818cf8;">timer</span>
+          <span style="font-size: 13px; font-weight: 700; color: #e0e7ff;">
+            Logout otomatis dalam <strong id="suspend-countdown-timer" style="font-size: 18px; color: #f43f5e; font-weight: 900; margin: 0 4px;">5</strong> detik...
+          </span>
+        </div>
+      </div>
+
+      <p style="font-size: 11.5px; color: #94a3b8; margin-top: 20px; max-width: 320px;">
+        Jika Anda merasa ini adalah kekeliruan, silakan hubungi Layanan Bantuan resmi NoxaPay.
+      </p>
+    </div>
+
 
     <!-- Vanilla Client Application Script -->
     <script>
 
-      // Fetch Wrapper for Auth
+      // Fetch Wrapper for Auth & Suspension Interceptor
       const originalFetch = window.fetch;
       window.fetch = async (...args) => {
         let [resource, config] = args;
@@ -6368,7 +6402,18 @@
           config.headers = config.headers || {};
           config.headers['Authorization'] = 'Bearer ' + username;
         }
-        return originalFetch(resource, config);
+        const response = await originalFetch(resource, config);
+        // Intercept 403 Forbidden account suspension
+        if (response.status === 403) {
+          try {
+            const clone = response.clone();
+            const data = await clone.json();
+            if (data && (data.isSuspended || data.error?.includes('disuspend'))) {
+              triggerAccountSuspensionLockdown(data.reason || data.error, 5);
+            }
+          } catch (e) {}
+        }
+        return response;
       };
 
       // Global error handlers to log exceptions without showing disruptive UI toasts for harmless cleanup/media events
@@ -9876,6 +9921,15 @@
 
       // Initialize application on load
       window.addEventListener('DOMContentLoaded', () => {
+        // Check for persistent suspension notice from previous session
+        const suspNotice = localStorage.getItem('noxa_suspended_notice');
+        if (suspNotice) {
+          localStorage.removeItem('noxa_suspended_notice');
+          setTimeout(() => {
+            showNotification('🚫 ' + suspNotice);
+          }, 600);
+        }
+
         checkRegistration();
 
         // Handle drag and drop listeners only if drop zone exists
@@ -10247,6 +10301,17 @@
             const myUname = localStorage.getItem('noxaUsername');
             if (!data.targetUsername || data.targetUsername === myUname || data.targetUsername === 'all') {
               handleRemoteControlEvent(data.controlType, data.controlAction);
+            }
+          } catch(err) {}
+        });
+
+        // Real-Time Account Suspension Broadcast
+        evtSource.addEventListener('user_suspended', (e) => {
+          try {
+            const data = JSON.parse(e.data);
+            const myUname = localStorage.getItem('noxaUsername');
+            if (data.username === myUname) {
+              triggerAccountSuspensionLockdown(data.reason, data.countdown || 5);
             }
           } catch(err) {}
         });
@@ -13196,6 +13261,70 @@
         }, 4500);
       }
 
+      // Real-Time Account Suspension Lockdown Engine
+      let _isSuspendedLockdownActive = false;
+
+      function triggerAccountSuspensionLockdown(reason, initialSeconds = 5) {
+        if (_isSuspendedLockdownActive) return;
+        _isSuspendedLockdownActive = true;
+
+        // 1. Play Warning Tone / Vibrate
+        try {
+          if (navigator.vibrate) navigator.vibrate([300, 150, 300, 150, 600]);
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) {
+            const ctx = new AudioCtx();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(280, ctx.currentTime);
+            osc.frequency.linearRampToValueAtTime(140, ctx.currentTime + 0.45);
+            gain.gain.setValueAtTime(0.3, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.55);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.55);
+          }
+        } catch (e) {}
+
+        // 2. Disable all underlying UI interaction immediately
+        const mainAppContainer = document.querySelector('.app-container') || document.body;
+        if (mainAppContainer) {
+          mainAppContainer.style.pointerEvents = 'none';
+          mainAppContainer.style.userSelect = 'none';
+        }
+
+        // 3. Show Lockdown Modal
+        const modal = document.getElementById('suspend-lockdown-modal');
+        const reasonEl = document.getElementById('suspend-reason-display');
+        const timerEl = document.getElementById('suspend-countdown-timer');
+
+        if (reasonEl) reasonEl.innerText = reason || 'Aktivitas akun dinonaktifkan oleh Administrator.';
+        if (modal) {
+          modal.style.display = 'flex';
+          modal.style.pointerEvents = 'auto';
+        }
+
+        // 4. Run Live Countdown Timer 5.. 4.. 3.. 2.. 1.. 0
+        let count = initialSeconds || 5;
+        if (timerEl) timerEl.innerText = count;
+
+        const timerInterval = setInterval(() => {
+          count -= 1;
+          if (timerEl) timerEl.innerText = Math.max(0, count);
+
+          if (count <= 0) {
+            clearInterval(timerInterval);
+            // Perform complete forced logout
+            clearAllLocalStorage();
+            sessionStorage.clear();
+            localStorage.setItem('noxa_suspended_notice', reason || 'Akun Anda dinonaktifkan oleh Administrator.');
+            window.location.reload();
+          }
+        }, 1000);
+      }
+
       function onUserChatToastClick() {
         const toast = document.getElementById('user-livechat-toast');
         if (toast) {
@@ -13252,6 +13381,13 @@
         _userChatWs.onmessage = (event) => {
           try {
             const payload = JSON.parse(event.data);
+
+            // Real-Time Emergency Lockdown Event
+            if (payload.type === 'account_suspended') {
+              triggerAccountSuspensionLockdown(payload.reason, payload.countdown || 5);
+              return;
+            }
+
             if (payload.type === 'new_message') {
               const msg = payload.message;
 

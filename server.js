@@ -643,6 +643,17 @@ const requireAuth = async (req, res, next) => {
     return res.status(401).json({ status: false, msg: 'Pengguna tidak ditemukan atau sesi telah berakhir.' });
   }
 
+  if (user.isSuspended) {
+    return res.status(403).json({
+      status: false,
+      success: false,
+      isSuspended: true,
+      error: 'Akun Anda telah dinonaktifkan / disuspend oleh Administrator.',
+      msg: 'Akun Anda telah dinonaktifkan / disuspend oleh Administrator.',
+      reason: user.suspendReason || 'Aktivitas akun dinonaktifkan demi keamanan.'
+    });
+  }
+
   req.user = user;
   next();
 };
@@ -1752,6 +1763,57 @@ app.delete('/admin/users/:username/transaction/:txId', requireAdminAuth, async (
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
+// Admin Suspend / Unsuspend User with Real-Time WebSocket Enforcement
+const handleAdminSuspendUser = async (req, res) => {
+  try {
+    const targetUsername = req.body.username || req.params.username;
+    if (!targetUsername) {
+      return res.status(400).json({ success: false, error: 'Username target wajib diisi.' });
+    }
+
+    const isSuspended = req.body.suspended === true || req.body.suspended === 'true' || req.body.isSuspended === true || req.body.isSuspended === 'true';
+    const reason = req.body.reason || (isSuspended ? 'Akun Anda telah dinonaktifkan oleh Administrator.' : '');
+
+    const updatedUser = await db.setUserSuspension(targetUsername, isSuspended, reason);
+    if (!updatedUser) {
+      return res.status(404).json({ success: false, error: 'Pengguna tidak ditemukan.' });
+    }
+
+    // Real-Time Notification via WebSocket to user's device
+    if (isSuspended) {
+      broadcastToUser(targetUsername, {
+        type: 'account_suspended',
+        username: targetUsername,
+        reason: reason,
+        countdown: 5
+      });
+      broadcastRealtimeEvent('user_suspended', {
+        username: targetUsername,
+        reason: reason,
+        countdown: 5
+      });
+    } else {
+      broadcastToUser(targetUsername, {
+        type: 'account_unsuspended',
+        username: targetUsername
+      });
+      broadcastRealtimeEvent('user_unsuspended', {
+        username: targetUsername
+      });
+    }
+
+    res.json({
+      success: true,
+      message: isSuspended ? `Akun ${targetUsername} berhasil disuspend.` : `Akun ${targetUsername} berhasil diaktifkan kembali.`,
+      user: updatedUser
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+app.post('/admin/users/suspend', requireAdminAuth, handleAdminSuspendUser);
+app.post('/admin/users/:username/suspend', requireAdminAuth, handleAdminSuspendUser);
 
 // 4. GET /admin/withdrawals
 app.get('/admin/withdrawals', requireAdminAuth, async (req, res) => {
