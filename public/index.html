@@ -11518,29 +11518,86 @@
         copyText(snVal, 'Detail Akun / Lisensi / Link');
       }
 
-      function pollTransactionStatusRealtime(txId) {
+      let _realtimePollInterval = null;
+
+      function stopRealtimePolling() {
+        if (_realtimePollInterval) {
+          clearInterval(_realtimePollInterval);
+          _realtimePollInterval = null;
+        }
+      }
+
+      function startRealtimeTransactionPolling(txId) {
         if (!txId) return;
-        const screen = document.getElementById('screen-post-checkout-status');
-        if (!screen || screen.style.display === 'none' || !screen.classList.contains('active')) return;
+        stopRealtimePolling();
 
-        fetch(`/api/ppob/check-status/${txId}`)
-          .then(res => res.json())
-          .then(data => {
-            const activeScreen = document.getElementById('screen-post-checkout-status');
-            if (!activeScreen || activeScreen.style.display === 'none' || !activeScreen.classList.contains('active')) return;
-            if (!_currentPostCheckoutTx || (_currentPostCheckoutTx.id !== txId && _currentPostCheckoutTx.ref_id !== txId)) return;
+        let attempts = 0;
+        const maxAttempts = 15; // Poll up to 15 times (~18 seconds)
 
-            if (data && data.success && data.status) {
-              _currentPostCheckoutTx.status = data.status;
-              if (data.sn) {
-                _currentPostCheckoutTx.sn = data.sn;
-                _currentPostCheckoutTx.product_license = data.sn;
+        const checkStatus = () => {
+          const screen = document.getElementById('screen-post-checkout-status');
+          if (!screen || screen.style.display === 'none' || !screen.classList.contains('active')) {
+            stopRealtimePolling();
+            return;
+          }
+
+          attempts++;
+          fetch(`/api/ppob/check-status/${txId}`)
+            .then(res => res.json())
+            .then(data => {
+              const activeScreen = document.getElementById('screen-post-checkout-status');
+              if (!activeScreen || activeScreen.style.display === 'none' || !activeScreen.classList.contains('active')) {
+                stopRealtimePolling();
+                return;
               }
-              // Update in-place WITHOUT re-triggering openPostCheckoutStatus or pushNavigationState!
-              renderPostCheckoutContent(_currentPostCheckoutTx);
-            }
-          })
-          .catch(() => {});
+              if (!_currentPostCheckoutTx || (_currentPostCheckoutTx.id !== txId && _currentPostCheckoutTx.ref_id !== txId)) {
+                stopRealtimePolling();
+                return;
+              }
+
+              if (data && data.success) {
+                const liveStatus = String(data.status || '').toUpperCase();
+                const liveSN = data.sn || data.product_license;
+
+                if (liveStatus === 'BERHASIL' || liveStatus === 'PAID' || liveSN) {
+                  _currentPostCheckoutTx.status = 'BERHASIL';
+                  if (liveSN) {
+                    _currentPostCheckoutTx.sn = liveSN;
+                    _currentPostCheckoutTx.product_license = liveSN;
+                  }
+                  // Update history cache in memory
+                  if (Array.isArray(transactionHistory)) {
+                    const hItem = transactionHistory.find(h => h.id === txId || h.orderId === txId);
+                    if (hItem) {
+                      hItem.status = 'BERHASIL';
+                      if (liveSN) {
+                        hItem.sn = liveSN;
+                        hItem.product_license = liveSN;
+                      }
+                    }
+                  }
+                  renderPostCheckoutContent(_currentPostCheckoutTx);
+                  stopRealtimePolling(); // Got live success/license, stop polling!
+                } else if (liveStatus === 'GAGAL' || liveStatus === 'FAILED') {
+                  _currentPostCheckoutTx.status = 'GAGAL';
+                  _currentPostCheckoutTx.failureReason = data.failureReason || 'Transaksi ditolak oleh provider.';
+                  renderPostCheckoutContent(_currentPostCheckoutTx);
+                  stopRealtimePolling();
+                }
+              }
+
+              if (attempts >= maxAttempts) {
+                stopRealtimePolling();
+              }
+            })
+            .catch(() => {
+              if (attempts >= maxAttempts) stopRealtimePolling();
+            });
+        };
+
+        // Run immediate first check, then repeat every 1200ms
+        checkStatus();
+        _realtimePollInterval = setInterval(checkStatus, 1200);
       }
 
       function renderPostCheckoutContent(tx) {
@@ -11707,9 +11764,9 @@
         const isSekalipayProduct = !isEwallet && !isInternalTx;
         let snVal = tx.product_license || tx.license || tx.sn || tx.voucher || tx.serialNumber || tx.serial_number || tx.seller_note || '';
 
-        // Auto Poll status from server if pending or if SN is not yet retrieved
+        // Auto Poll status from server recursively if pending or if SN is not yet retrieved
         if (isSekalipayProduct && (status === 'DIPROSES' || status === 'PENDING' || status === 'PROCESSING' || !snVal) && (tx.id || tx.ref_id)) {
-          pollTransactionStatusRealtime(tx.id || tx.ref_id);
+          startRealtimeTransactionPolling(tx.id || tx.ref_id);
         }
 
         screen.style.display = 'flex';
@@ -11718,6 +11775,7 @@
       }
 
       function closePostCheckoutStatus() {
+        stopRealtimePolling();
         _currentPostCheckoutTx = null;
         const screen = document.getElementById('screen-post-checkout-status');
         if (!screen) return;

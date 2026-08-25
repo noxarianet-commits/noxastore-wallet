@@ -2100,8 +2100,22 @@ async function handlePpobCheckout(req, res) {
     }
 
     const isOrderSuccess = orderResult && (orderResult.success || orderResult.status === true || orderResult.httpCode === 200 || orderResult.data);
-    const serialNumber = extractSekalipayLicenseOrSN(orderResult.data) || extractSekalipayLicenseOrSN(orderResult) || '';
+    let serialNumber = extractSekalipayLicenseOrSN(orderResult.data) || extractSekalipayLicenseOrSN(orderResult) || '';
     const accountName = req.body.account_name || req.body.customer_name || orderResult.data?.customer_name || orderResult.data?.account_name || '';
+
+    // If order succeeded but SN/license wasn't in initial payload, wait 600ms and check live SekaliPay detail immediately!
+    if (isOrderSuccess && !serialNumber) {
+      await new Promise(resolve => setTimeout(resolve, 600));
+      try {
+        const liveDetail = await sekalipayService.getTransactionDetail(refId);
+        if (liveDetail && (liveDetail.success || liveDetail.data)) {
+          const liveSN = extractSekalipayLicenseOrSN(liveDetail.data || liveDetail);
+          if (liveSN) serialNumber = liveSN;
+        }
+      } catch (e) {
+        console.warn('[PPOB Immediate Status Check Error]', e.message);
+      }
+    }
 
     if (isOrderSuccess) {
       // Deduct balance upon successful submission
