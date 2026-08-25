@@ -9806,39 +9806,68 @@
         document.body.removeChild(link);
       }
 
-      function playSuccessSound() {
+      // ==========================================
+      // UNIVERSAL ANTI-SPAM AUDIO NOTIFICATION SYNTHESIS
+      // ==========================================
+      let _lastGlobalSoundTime = 0;
+      const GLOBAL_SOUND_COOLDOWN_MS = 1800; // Anti-spam: max 1 chime per 1.8s
+
+      function playAppNotificationSound(type = 'success') {
+        const now = Date.now();
+        if (now - _lastGlobalSoundTime < GLOBAL_SOUND_COOLDOWN_MS) return;
+        _lastGlobalSoundTime = now;
+
         try {
-          const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-          const now = audioCtx.currentTime;
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtx) return;
+          const ctx = new AudioCtx();
+          const t = ctx.currentTime;
 
-          // Helper function for a crisp digital bell/marimba note
-          function playNote(freq, startTime, duration, type = 'sine') {
-            const osc = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            osc.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, startTime);
-
-            // Amplop suara: attack cepat, decay sangat mulus
-            gainNode.gain.setValueAtTime(0, startTime);
-            gainNode.gain.linearRampToValueAtTime(0.15, startTime + 0.02); // Lembut agar tidak pecah
-            gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
-
-            osc.start(startTime);
-            osc.stop(startTime + duration);
+          if (type === 'success' || type === 'ppob' || type === 'topup' || type === 'transfer') {
+            // Elegant Apple Pay / WhatsApp harmonic crystal chime (880Hz -> 1320Hz)
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, t);
+            osc.frequency.exponentialRampToValueAtTime(1320, t + 0.14);
+            gain.gain.setValueAtTime(0.18, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.38);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(t);
+            osc.stop(t + 0.38);
+          } else if (type === 'info' || type === 'announcement') {
+            // Modern subtle ping (750Hz -> 1000Hz)
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(750, t);
+            osc.frequency.exponentialRampToValueAtTime(1000, t + 0.12);
+            gain.gain.setValueAtTime(0.15, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.32);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(t);
+            osc.stop(t + 0.32);
+          } else if (type === 'error' || type === 'warning') {
+            // Subtle low double-tap (300Hz -> 220Hz)
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(300, t);
+            osc.frequency.exponentialRampToValueAtTime(220, t + 0.15);
+            gain.gain.setValueAtTime(0.15, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(t);
+            osc.stop(t + 0.25);
           }
+        } catch (e) {}
+      }
 
-          // Memainkan arpeggio (nada berurutan sangat cepat) ala Apple Pay / Modern App
-          playNote(523.25, now, 0.6, 'sine');          // C5
-          playNote(659.25, now + 0.08, 0.6, 'sine');   // E5
-          playNote(783.99, now + 0.16, 0.8, 'sine');   // G5
-          playNote(1046.50, now + 0.24, 1.2, 'triangle'); // C6 (Puncak manis)
-
-        } catch (e) {
-          console.error("Audio API tidak didukung di browser ini", e);
-        }
+      function playSuccessSound() {
+        playAppNotificationSound('success');
       }
 
       function openWithdrawModal() {
@@ -10629,29 +10658,26 @@
 
       function triggerSystemNotification(title, body) {
         const now = Date.now();
-        // Global anti-spam rate limit: Jangan tampilkan notifikasi sistem/suara beruntun jika baru saja berbunyi dalam 4 detik terakhir
-        if (now - _lastNotifTime < 4000) {
-          console.log('[Debouncer] Rate limited notification display to avoid spam.');
+        // Strict anti-spam duplicate filter: cegah notifikasi dengan isi yang sama dalam 8 detik
+        const notifKey = String(title || '').trim() + '::' + String(body || '').trim();
+        if (_lastNotifKey === notifKey && (now - _lastNotifTime) < 8000) {
+          console.log('[Debouncer] Blocked duplicate notification:', notifKey);
           return;
         }
 
-        // Strict duplicate filter: cegah notifikasi dengan isi yang sama persis dalam 15 detik
-        const notifKey = title + '::' + body;
-        if (_lastNotifKey === notifKey && (now - _lastNotifTime) < 15000) {
-          console.log('[Debouncer] Blocked duplicate notification:', notifKey);
+        // Global anti-spam rate limit: max 1 system notification banner per 2.0s
+        if (now - _lastNotifTime < 2000) {
+          console.log('[Debouncer] Rate limited notification display to avoid spam.');
           return;
         }
 
         _lastNotifTime = now;
         _lastNotifKey = notifKey;
 
-        // 1. Selalu tampilkan notifikasi toast in-app
-        showNotification(`✅ ${title}: ${body}`, 'success');
+        // 1. Tampilkan notifikasi toast in-app
+        showNotification(`${title}: ${body}`, 'success');
 
-        // 2. Putar suara sukses
-        playSuccessSound();
-
-        // 3. Tampilkan notifikasi via Android Native Bridge (Android APK WebView) jika ada
+        // 2. Tampilkan notifikasi via Android Native Bridge (Android APK WebView) jika ada
         let nativeNotified = false;
         const nativeBridges = [
           window.AndroidBridge,
@@ -10937,6 +10963,9 @@
             banner.style.right = '16px';
             banner.style.opacity = '1';
             banner.style.transform = 'translateX(0) scale(1)';
+
+            // Play anti-spam synthetic sound
+            playAppNotificationSound(type);
 
             clearTimeout(banner._hideTimer);
             banner._hideTimer = setTimeout(() => {

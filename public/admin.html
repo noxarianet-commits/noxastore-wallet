@@ -1995,17 +1995,86 @@
       }
     });
 
+    // Anti-Spam Sound & Notification Manager (Admin)
+    let _lastAdminSoundTime = 0;
+    let _lastAdminToastTime = 0;
+    let _lastAdminToastMsg = '';
+    let _adminToastHideTimer = null;
+
+    function playAdminNotificationSound(type = 'info') {
+      const now = Date.now();
+      if (now - _lastAdminSoundTime < 1800) return;
+      _lastAdminSoundTime = now;
+
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const t = ctx.currentTime;
+
+        if (type === 'verified' || type === 'success' || type === 'check_circle') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(880, t);
+          osc.frequency.exponentialRampToValueAtTime(1320, t + 0.14);
+          gain.gain.setValueAtTime(0.18, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.38);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.38);
+        } else if (type === 'error' || type === 'delete') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(300, t);
+          osc.frequency.exponentialRampToValueAtTime(200, t + 0.15);
+          gain.gain.setValueAtTime(0.15, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.25);
+        } else {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(750, t);
+          osc.frequency.exponentialRampToValueAtTime(1000, t + 0.12);
+          gain.gain.setValueAtTime(0.15, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.32);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.32);
+        }
+      } catch (e) {}
+    }
+
     function showNotification(message, icon = 'info') {
+      if (!message) return;
+      const now = Date.now();
+      const cleanMsg = String(message).trim();
+      if (cleanMsg === _lastAdminToastMsg && (now - _lastAdminToastTime) < 2000) {
+        return;
+      }
+      _lastAdminToastTime = now;
+      _lastAdminToastMsg = cleanMsg;
+
       const banner = document.getElementById('toast-banner');
       const messageEl = document.getElementById('toast-message');
       const iconEl = document.getElementById('toast-icon');
 
-      messageEl.innerText = message;
-      iconEl.innerText = icon;
-      banner.style.top = '16px';
+      if (messageEl) messageEl.innerText = message;
+      if (iconEl) iconEl.innerText = icon;
+      if (banner) banner.style.top = '16px';
 
-      setTimeout(() => {
-        banner.style.top = '-80px';
+      playAdminNotificationSound(icon);
+
+      clearTimeout(_adminToastHideTimer);
+      _adminToastHideTimer = setTimeout(() => {
+        if (banner) banner.style.top = '-80px';
       }, 3500);
     }
 
@@ -3021,16 +3090,47 @@
 
       showNotification(isSuspended ? '⏳ Memproses suspend akun...' : '⏳ Mengaktifkan akun...');
 
-      const res = await adminFetch('/admin/users/suspend', {
+      // 1. Try dedicated /admin/users/:username/suspend
+      let res = await adminFetch(`/admin/users/${encodeURIComponent(selectedUsername)}/suspend`, {
         method: 'POST',
         body: {
           username: selectedUsername,
           suspended: isSuspended,
-          reason: reason
+          isSuspended: isSuspended,
+          reason: reason,
+          suspendReason: reason
         }
       });
 
-      if (res.success) {
+      // 2. Fallback to /admin/users/suspend if needed
+      if (!res || !res.success) {
+        res = await adminFetch('/admin/users/suspend', {
+          method: 'POST',
+          body: {
+            username: selectedUsername,
+            suspended: isSuspended,
+            isSuspended: isSuspended,
+            reason: reason,
+            suspendReason: reason
+          }
+        });
+      }
+
+      // 3. Fallback to PUT /admin/users/:username
+      if (!res || !res.success) {
+        res = await adminFetch(`/admin/users/${encodeURIComponent(selectedUsername)}`, {
+          method: 'PUT',
+          body: {
+            ...user,
+            isSuspended: isSuspended,
+            suspended: isSuspended,
+            suspendReason: reason,
+            reason: reason
+          }
+        });
+      }
+
+      if (res && res.success) {
         showNotification(res.message || (isSuspended ? '✅ Akun berhasil disuspend!' : '✅ Akun berhasil diaktifkan kembali!'), 'verified');
         if (usersData[selectedUsername]) {
           usersData[selectedUsername].isSuspended = isSuspended;
@@ -3039,7 +3139,7 @@
         await loadAdminDashboard();
         renderUserDetailPanel();
       } else {
-        showNotification('❌ Gagal: ' + (res.error || 'Terjadi kesalahan'), 'error');
+        showNotification('❌ Gagal: ' + (res?.error || 'Terjadi kesalahan saat memproses suspend.'), 'error');
       }
     }
 

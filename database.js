@@ -598,6 +598,10 @@ async function updateUser(username, updateFields) {
     role: 'role',
     transactionPin: 'transactionPin',
     pin: 'transactionPin',
+    isSuspended: 'isSuspended',
+    suspended: 'isSuspended',
+    suspendReason: 'suspendReason',
+    reason: 'suspendReason',
     lastIp: 'lastIp',
     lastDevice: 'lastDevice',
     lastLocation: 'lastLocation'
@@ -610,7 +614,11 @@ async function updateUser(username, updateFields) {
     const col = fieldMapping[k];
     if (col) {
       updates.push(`${col} = ?`);
-      params.push(v);
+      if (col === 'isSuspended') {
+        params.push(v === true || v === 'true' || v === 1 ? 1 : 0);
+      } else {
+        params.push(v);
+      }
     }
   }
 

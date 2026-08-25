@@ -1712,6 +1712,21 @@ const handleAdminUpdateUser = async (req, res) => {
       await db.updateUser(username, updateFields);
     }
 
+    // Handle suspension update via standard user update route if passed
+    if (updateFields.isSuspended !== undefined || updateFields.suspended !== undefined) {
+      const isSusp = updateFields.isSuspended === true || updateFields.isSuspended === 'true' || updateFields.suspended === true || updateFields.suspended === 'true';
+      const suspReason = updateFields.suspendReason || updateFields.reason || (isSusp ? 'Akun Anda dinonaktifkan oleh Administrator.' : '');
+      const targetU = newWaContact && newWaContact !== username ? newWaContact : username;
+      await db.setUserSuspension(targetU, isSusp, suspReason);
+      if (isSusp) {
+        broadcastToUser(targetU, { type: 'account_suspended', username: targetU, reason: suspReason, countdown: 5 });
+        broadcastRealtimeEvent('user_suspended', { username: targetU, reason: suspReason, countdown: 5 });
+      } else {
+        broadcastToUser(targetU, { type: 'account_unsuspended', username: targetU });
+        broadcastRealtimeEvent('user_unsuspended', { username: targetU });
+      }
+    }
+
     res.json({ success: true, message: 'User berhasil diperbarui' });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -1813,7 +1828,11 @@ const handleAdminSuspendUser = async (req, res) => {
   }
 };
 app.post('/admin/users/suspend', requireAdminAuth, handleAdminSuspendUser);
+app.put('/admin/users/suspend', requireAdminAuth, handleAdminSuspendUser);
 app.post('/admin/users/:username/suspend', requireAdminAuth, handleAdminSuspendUser);
+app.put('/admin/users/:username/suspend', requireAdminAuth, handleAdminSuspendUser);
+app.post('/admin/suspend', requireAdminAuth, handleAdminSuspendUser);
+app.post('/admin/suspend-user', requireAdminAuth, handleAdminSuspendUser);
 
 // 4. GET /admin/withdrawals
 app.get('/admin/withdrawals', requireAdminAuth, async (req, res) => {
