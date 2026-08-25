@@ -975,6 +975,13 @@
       transform: translateX(20px);
     }
 
+    /* 60 FPS Hardware Acceleration for Table Rendering */
+    .trx-table tbody tr {
+      content-visibility: auto;
+      contain-intrinsic-size: 0 50px;
+      will-change: transform;
+    }
+
     @keyframes spin {
       from { transform: rotate(0deg); }
       to   { transform: rotate(360deg); }
@@ -1391,6 +1398,31 @@
             <span style="font-size: 12px; font-weight: 700; color: #4338ca;">Set Fee Bulk:</span>
             <input id="ppob-bulk-markup-input" type="number" placeholder="Rp Fee" style="width: 100px; padding: 6px 10px; border-radius: 8px; border: 1px solid #a5b4fc; font-size: 12px; font-weight: 700; outline: none;" />
             <button onclick="applyBulkPpobMarkup()" style="background: #4f46e5; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; transition: background 0.2s;" onmouseover="this.style.background='#4338ca'" onmouseout="this.style.background='#4f46e5'">Terapkan Ke Semua</button>
+          </div>
+        </div>
+
+        <!-- Fast Filter & High-Performance Pagination Controls Bar -->
+        <div id="ppob-pagination-bar" style="display: none; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; background: #f8fafc; padding: 12px 16px; border-radius: 14px; border: 1px solid var(--border-color);">
+          <!-- Live Search Input -->
+          <div style="position: relative; flex: 1; min-width: 240px;">
+            <span class="material-symbols-outlined" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 18px;">search</span>
+            <input type="text" id="ppob-search-input" placeholder="🔍 Cari nama produk, SKU, atau subkategori..." oninput="onPpobSearchInput()" style="width: 100%; padding: 8px 12px 8px 36px; border: 1px solid var(--border-color); border-radius: 10px; font-size: 13px; outline: none; background: white; font-family: inherit;" />
+          </div>
+
+          <!-- Page Size Selector -->
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <label style="font-size: 12px; font-weight: 700; color: var(--text-muted);">Tampilkan:</label>
+            <select id="ppob-page-size" onchange="onPpobPageSizeChange()" style="padding: 7px 10px; border-radius: 10px; border: 1px solid var(--border-color); font-size: 12px; font-weight: 700; background: white; cursor: pointer; outline: none; font-family: inherit;">
+              <option value="50" selected>50 per hal (Ringan - 60 FPS)</option>
+              <option value="100">100 per hal</option>
+              <option value="250">250 per hal</option>
+              <option value="all">Tampilkan Semua</option>
+            </select>
+          </div>
+
+          <!-- Page Navigation Buttons -->
+          <div id="ppob-pagination-controls" style="display: flex; align-items: center; gap: 6px;">
+            <!-- Rendered dynamically -->
           </div>
         </div>
 
@@ -2787,10 +2819,51 @@
       brandSel.innerHTML = brands.map(b => `<option value="${b}">${b ? b : '-- Semua Provider --'}</option>`).join('');
     }
 
+    let _ppobFilteredData = [];
+    let ppobCurrentPage = 1;
+    let ppobPageSize = 50;
+
+    function onPpobSearchInput() {
+      ppobCurrentPage = 1;
+      applyPpobFilterAndRender();
+    }
+
+    function onPpobPageSizeChange() {
+      const val = document.getElementById('ppob-page-size').value;
+      ppobPageSize = val === 'all' ? 999999 : parseInt(val, 10);
+      ppobCurrentPage = 1;
+      applyPpobFilterAndRender();
+    }
+
+    function changePpobPage(newPage) {
+      const totalPages = Math.ceil(_ppobFilteredData.length / ppobPageSize) || 1;
+      if (newPage < 1 || newPage > totalPages) return;
+      ppobCurrentPage = newPage;
+      renderPpobProductsTable();
+    }
+
+    function applyPpobFilterAndRender() {
+      const query = (document.getElementById('ppob-search-input')?.value || '').toLowerCase().trim();
+      if (!query) {
+        _ppobFilteredData = ppobProductsData || [];
+      } else {
+        _ppobFilteredData = (ppobProductsData || []).filter(p => {
+          const nameMatch = (p.product_name || p.name || p.sku || '').toLowerCase().includes(query);
+          const skuMatch = (p.sku || '').toLowerCase().includes(query);
+          const subMatch = (p.subcategory || p.category || '').toLowerCase().includes(query);
+          const brandMatch = (p.brand || '').toLowerCase().includes(query);
+          return nameMatch || skuMatch || subMatch || brandMatch;
+        });
+      }
+      renderPpobProductsTable();
+    }
+
     async function loadPpobAdmin() {
       const category = document.getElementById('ppob-admin-category').value;
       const brand = document.getElementById('ppob-admin-brand').value;
       const tbody = document.getElementById('ppob-products-tbody');
+      const statsBar = document.getElementById('ppob-stats-bar');
+      const paginationBar = document.getElementById('ppob-pagination-bar');
 
       tbody.innerHTML = `
         <tr>
@@ -2805,45 +2878,88 @@
       if (!res.success || !Array.isArray(res.products)) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="6" style="text-align: center; padding: 30px; color: var(--danger); font-weight: 600;">
+            <td colspan="8" style="text-align: center; padding: 30px; color: var(--danger); font-weight: 600;">
               ❌ Gagal memuat produk: ${res.error || 'Server tidak merespons. Cache mungkin belum tersedia.'}
             </td>
           </tr>`;
+        if (statsBar) statsBar.style.display = 'none';
+        if (paginationBar) paginationBar.style.display = 'none';
         return;
       }
 
       ppobProductsData = res.products;
+      _ppobFilteredData = res.products;
+      ppobCurrentPage = 1;
+
+      // Clear search input on fresh load
+      const searchInput = document.getElementById('ppob-search-input');
+      if (searchInput) searchInput.value = '';
+
       renderPpobProductsTable();
     }
 
     function renderPpobProductsTable() {
       const tbody = document.getElementById('ppob-products-tbody');
       const statsBar = document.getElementById('ppob-stats-bar');
+      const paginationBar = document.getElementById('ppob-pagination-bar');
+      const controlsContainer = document.getElementById('ppob-pagination-controls');
 
-      if (ppobProductsData.length === 0) {
+      if (!ppobProductsData || ppobProductsData.length === 0) {
         tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 30px; color: var(--text-muted);">Tidak ada produk ditemukan untuk kombinasi ini.</td></tr>`;
-        statsBar.style.display = 'none';
+        if (statsBar) statsBar.style.display = 'none';
+        if (paginationBar) paginationBar.style.display = 'none';
         return;
       }
 
+      // Stats Update
       const activeCount = ppobProductsData.filter(p => p.active !== false).length;
       const inactiveCount = ppobProductsData.length - activeCount;
       document.getElementById('ppob-count-active').innerText = activeCount;
       document.getElementById('ppob-count-inactive').innerText = inactiveCount;
       document.getElementById('ppob-count-total').innerText = ppobProductsData.length;
-      statsBar.style.display = 'flex';
 
-      tbody.innerHTML = '';
-      ppobProductsData.forEach((p, idx) => {
+      if (statsBar) statsBar.style.display = 'flex';
+      if (paginationBar) paginationBar.style.display = 'flex';
+
+      const totalItems = _ppobFilteredData.length;
+      const totalPages = Math.ceil(totalItems / ppobPageSize) || 1;
+      if (ppobCurrentPage > totalPages) ppobCurrentPage = totalPages;
+
+      const startIdx = (ppobCurrentPage - 1) * ppobPageSize;
+      const endIdx = Math.min(startIdx + ppobPageSize, totalItems);
+      const pageSlice = _ppobFilteredData.slice(startIdx, endIdx);
+
+      // Render Pagination Buttons
+      if (controlsContainer) {
+        controlsContainer.innerHTML = `
+          <button onclick="changePpobPage(1)" ${ppobCurrentPage === 1 ? 'disabled' : ''} style="padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-color); background: white; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit;">&laquo;</button>
+          <button onclick="changePpobPage(${ppobCurrentPage - 1})" ${ppobCurrentPage === 1 ? 'disabled' : ''} style="padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-color); background: white; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit;">&lt;</button>
+          <span style="font-size: 12px; font-weight: 800; color: var(--primary); padding: 0 8px;">Hal ${ppobCurrentPage} / ${totalPages} (${totalItems} produk)</span>
+          <button onclick="changePpobPage(${ppobCurrentPage + 1})" ${ppobCurrentPage === totalPages ? 'disabled' : ''} style="padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-color); background: white; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit;">&gt;</button>
+          <button onclick="changePpobPage(${totalPages})" ${ppobCurrentPage === totalPages ? 'disabled' : ''} style="padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-color); background: white; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit;">&raquo;</button>
+        `;
+      }
+
+      if (pageSlice.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 30px; color: var(--text-muted);">Tidak ada produk yang cocok dengan kata kunci pencarian.</td></tr>`;
+        return;
+      }
+
+      // Fast Document Fragment for GPU 60-FPS rendering
+      const fragment = document.createDocumentFragment();
+
+      pageSlice.forEach((p, sliceIdx) => {
+        const globalIdx = startIdx + sliceIdx;
         const isActive = p.active !== false;
         const basePrice = p.base_price || p.price || 0;
         const markup = p.markup || 0;
         const sellingPrice = p.selling_price || (basePrice + markup);
 
         const row = document.createElement('tr');
-        row.id = `ppob-row-${idx}`;
-        row.style.transition = 'opacity 0.2s';
+        row.id = `ppob-row-${globalIdx}`;
+        row.style.transition = 'opacity 0.15s ease';
         row.style.opacity = isActive ? '1' : '0.5';
+
         row.innerHTML = `
           <td>
             <span style="
@@ -2852,38 +2968,41 @@
               color: ${isActive ? '#059669' : '#dc2626'};
               border: 1px solid ${isActive ? 'rgba(5,150,105,0.25)' : 'rgba(220,38,38,0.2)'};
               padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800;
-            " id="ppob-badge-${idx}">
+            " id="ppob-badge-${globalIdx}">
               <span class="material-symbols-outlined" style="font-size: 14px;">${isActive ? 'visibility' : 'visibility_off'}</span>
               ${isActive ? 'AKTIF' : 'HIDDEN'}
             </span>
           </td>
-          <td style="font-weight: 600; color: var(--text-main); font-size: 13px;">${p.product_name || p.sku}</td>
+          <td style="font-weight: 600; color: var(--text-main); font-size: 13px;">${p.product_name || p.name || p.sku}</td>
           <td style="font-family: monospace; font-size: 11px; color: var(--text-muted);">${p.sku}</td>
           <td style="font-weight: 700; color: #475569; font-size: 12px;">Rp ${basePrice.toLocaleString('id-ID')}</td>
           <td>
             <div style="display: flex; align-items: center; gap: 6px;">
               <span style="font-size: 11px; font-weight: 700; color: var(--text-muted);">+</span>
-              <input type="number" id="ppob-markup-input-${idx}" value="${markup}" min="0" step="50"
-                oninput="updateRowSellingPrice(${idx}, ${basePrice})"
-                onchange="savePpobMarkup('${p.sku}', this.value, ${idx})"
+              <input type="number" id="ppob-markup-input-${globalIdx}" value="${markup}" min="0" step="50"
+                oninput="updateRowSellingPrice(${globalIdx}, ${basePrice})"
+                onchange="savePpobMarkup('${p.sku}', this.value, ${globalIdx})"
                 placeholder="0"
                 style="width: 85px; padding: 5px 8px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-weight: 700; font-size: 12px; color: #1e293b; outline: none; transition: border-color 0.2s;"
                 onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#cbd5e1'" />
             </div>
           </td>
           <td style="font-weight: 800; color: #059669; font-size: 13px;">
-            <span id="ppob-selling-price-${idx}">Rp ${sellingPrice.toLocaleString('id-ID')}</span>
+            <span id="ppob-selling-price-${globalIdx}">Rp ${sellingPrice.toLocaleString('id-ID')}</span>
           </td>
           <td style="font-size: 12px; color: var(--text-muted);">${p.subcategory || p.category || '-'}</td>
           <td style="text-align: center;">
             <label class="ppob-switch">
-              <input type="checkbox" ${isActive ? 'checked' : ''} onchange="togglePpobProduct('${p.sku}', this.checked, ${idx})">
+              <input type="checkbox" ${isActive ? 'checked' : ''} onchange="togglePpobProduct('${p.sku}', this.checked, ${globalIdx})">
               <span class="ppob-slider"></span>
             </label>
           </td>
         `;
-        tbody.appendChild(row);
+        fragment.appendChild(row);
       });
+
+      tbody.innerHTML = '';
+      tbody.appendChild(fragment);
     }
 
     function updateRowSellingPrice(idx, basePrice) {
