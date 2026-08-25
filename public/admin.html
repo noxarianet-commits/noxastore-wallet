@@ -1057,6 +1057,11 @@
       <button class="admin-nav-tab" id="tab-ppob-btn" onclick="switchAdminView('ppob')">
         <span class="material-symbols-outlined">settings_input_component</span> Layanan PPOB
       </button>
+      <a href="/chat-admin.html" target="_blank" class="admin-nav-tab" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 8px; background: linear-gradient(135deg, rgba(123,45,142,0.08), rgba(99,102,241,0.08)); border-color: rgba(123,45,142,0.25);">
+        <span class="material-symbols-outlined" style="color: #7B2D8E;">support_agent</span>
+        <span style="font-weight: 800; color: #7B2D8E;">Buka CS Live Chat</span>
+        <span style="font-size: 9px; background: #22c55e; color: white; padding: 1px 6px; border-radius: 20px; font-weight: 900;">LIVE</span>
+      </a>
     </div>
 
     <!-- VIEW 1: USER MANAGEMENT -->
@@ -3042,15 +3047,20 @@
         return;
       }
 
-      if (ppobProductsData.length === 0) {
-        showNotification('⚠️ Muat produk terlebih dahulu.', 'warning');
+      const targetData = (_ppobFilteredData && _ppobFilteredData.length > 0) ? _ppobFilteredData : ppobProductsData;
+
+      if (!targetData || targetData.length === 0) {
+        showNotification('⚠️ Tidak ada produk yang sedang dicari/ditampilkan untuk diatur markup.', 'warning');
         return;
       }
 
-      if (!confirm(`Apakah Anda yakin ingin mengatur Fee Rp ${val.toLocaleString('id-ID')} untuk SEMUA ${ppobProductsData.length} produk yang sedang ditampilkan?`)) return;
+      const query = (document.getElementById('ppob-search-input')?.value || '').trim();
+      const scopeLabel = query ? `kata kunci "${query}" (${targetData.length} produk)` : `${targetData.length} produk yang sedang ditampilkan`;
 
-      const skus = ppobProductsData.map(p => p.sku);
-      showNotification(`⏳ Memperbarui fee untuk ${skus.length} produk...`, 'hourglass_empty');
+      if (!confirm(`Apakah Anda yakin ingin mengatur Fee Rp ${val.toLocaleString('id-ID')} untuk SEMUA ${scopeLabel}?`)) return;
+
+      const skus = targetData.map(p => p.sku);
+      showNotification(`⏳ Memperbarui fee Rp ${val.toLocaleString('id-ID')} untuk ${skus.length} produk...`, 'hourglass_empty');
 
       const res = await adminFetch('/admin/ppob/products/bulk-markup', {
         method: 'POST',
@@ -3058,10 +3068,24 @@
       });
 
       if (res.success) {
+        const skuSet = new Set(skus);
+
         ppobProductsData.forEach(p => {
-          p.markup = val;
-          p.selling_price = (p.base_price || p.price || 0) + val;
+          if (skuSet.has(p.sku)) {
+            p.markup = val;
+            p.selling_price = (p.base_price || p.price || 0) + val;
+          }
         });
+
+        if (_ppobFilteredData && _ppobFilteredData.length > 0) {
+          _ppobFilteredData.forEach(p => {
+            if (skuSet.has(p.sku)) {
+              p.markup = val;
+              p.selling_price = (p.base_price || p.price || 0) + val;
+            }
+          });
+        }
+
         renderPpobProductsTable();
         showNotification(`✅ Fee Rp ${val.toLocaleString('id-ID')} berhasil diterapkan ke ${res.updatedCount} produk.`, 'verified');
       } else {

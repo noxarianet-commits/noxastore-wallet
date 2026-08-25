@@ -1,5 +1,7 @@
 require('dotenv').config();
 const express = require('express');
+const http = require('http');
+const WebSocket = require('ws');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
@@ -12,6 +14,7 @@ const db = require('./database');
 const orkutService = require('./orkutService');
 
 const app = express();
+const server = http.createServer(app);
 
 const JWT_SECRET = process.env.JWT_SECRET || 'noxa_jwt_secret_key_8f93e1029c874b2a91e03c';
 
@@ -1931,11 +1934,11 @@ app.post('/admin/ppob/products/bulk-markup', requireAdminAuth, async (req, res) 
     const numMarkup = Math.max(0, Math.ceil(Number(markup) || 0));
     let updatedCount = 0;
 
-    if (Array.isArray(skus)) {
+    if (Array.isArray(skus) && skus.length > 0) {
+      const visMap = await db.getPpobVisibilityMap();
       for (const sku of skus) {
-        const visMap = await db.getPpobVisibilityMap();
         const current = visMap[sku] || {};
-        await db.setPpobVisibility(sku, current.active !== false, current.category || category, current.brand || brand, numMarkup);
+        await db.setPpobVisibility(sku, current.active !== false, current.category || category || '', current.brand || brand || '', numMarkup);
         updatedCount++;
       }
     }
@@ -2837,14 +2840,312 @@ setInterval(() => {
   orkutService.checkMutations(TOPUP_FILE, USERS_FILE, db, updateUserSaldo);
 }, 15000);
 
+// ==========================================
+// REAL-TIME WEBSOCKET LIVE CHAT ENGINE
+// ==========================================
+const wss = new WebSocket.Server({ server });
+
+// Map: username -> Set<WebSocket>
+const userChatSockets = new Map();
+// Set: CS Admin Sockets
+const csChatSockets = new Set();
+
+function registerUserSocket(username, ws) {
+  const u = String(username || '').trim();
+  if (!u) return;
+  if (!userChatSockets.has(u)) {
+    userChatSockets.set(u, new Set());
+  }
+  userChatSockets.get(u).add(ws);
+}
+
+function unregisterUserSocket(username, ws) {
+  const u = String(username || '').trim();
+  if (!u || !userChatSockets.has(u)) return;
+  const set = userChatSockets.get(u);
+  set.delete(ws);
+  if (set.size === 0) {
+    userChatSockets.delete(u);
+  }
+}
+
+function broadcastToCs(payload) {
+  const str = JSON.stringify(payload);
+  for (const csWs of csChatSockets) {
+    if (csWs.readyState === WebSocket.OPEN) {
+      csWs.send(str);
+    }
+  }
+}
+
+function broadcastToUser(username, payload) {
+  const u = String(username || '').trim();
+  if (!userChatSockets.has(u)) return;
+  const str = JSON.stringify(payload);
+  for (const uWs of userChatSockets.get(u)) {
+    if (uWs.readyState === WebSocket.OPEN) {
+      uWs.send(str);
+    }
+  }
+}
+
+wss.on('connection', (ws, req) => {
+  let authenticatedUser = null;
+  let isCsAgent = false;
+
+  ws.on('message', async (messageData) => {
+    try {
+      const data = JSON.parse(messageData.toString());
+      if (!data || !data.type) return;
+
+      // 1. Client Authentication
+      if (data.type === 'auth') {
+        if (data.role === 'cs' || data.token === 'andika123' || data.isCs === true) {
+          isCsAgent = true;
+          csChatSockets.add(ws);
+          ws.send(JSON.stringify({ type: 'auth_success', role: 'cs' }));
+        } else if (data.username) {
+          authenticatedUser = String(data.username).trim();
+          registerUserSocket(authenticatedUser, ws);
+          ws.send(JSON.stringify({ type: 'auth_success', role: 'user', username: authenticatedUser }));
+        }
+        return;
+      }
+
+      // 2. User Sends Message to CS
+      if (data.type === 'chat_message') {
+        const cId = String(data.conversationId || authenticatedUser || data.username || '').trim();
+        const text = String(data.message || '').trim();
+        if (!cId || !text) return;
+
+        const savedMsg = await db.saveChatMessage({
+          conversationId: cId,
+          sender: 'user',
+          senderName: data.senderName || cId,
+          message: text
+        });
+
+        if (savedMsg) {
+          // Push to all active CS agents
+          broadcastToCs({
+            type: 'new_message',
+            conversationId: cId,
+            message: savedMsg
+          });
+
+          // Echo back to sender
+          broadcastToUser(cId, {
+            type: 'new_message',
+            conversationId: cId,
+            message: savedMsg
+          });
+        }
+        return;
+      }
+
+      // 3. CS Sends Reply to User
+      if (data.type === 'cs_reply') {
+        const cId = String(data.conversationId || '').trim();
+        const text = String(data.message || '').trim();
+        if (!cId || !text) return;
+
+        const savedMsg = await db.saveChatMessage({
+          conversationId: cId,
+          sender: 'cs',
+          senderName: data.senderName || 'Customer Service',
+          message: text
+        });
+
+        if (savedMsg) {
+          // Push to target user
+          broadcastToUser(cId, {
+            type: 'new_message',
+            conversationId: cId,
+            message: savedMsg
+          });
+
+          // Broadcast to all CS agents to sync UI
+          broadcastToCs({
+            type: 'new_message',
+            conversationId: cId,
+            message: savedMsg
+          });
+        }
+        return;
+      }
+
+      // 4. Typing Indicator
+      if (data.type === 'typing') {
+        const cId = String(data.conversationId || authenticatedUser || '').trim();
+        if (data.isCs) {
+          broadcastToUser(cId, { type: 'cs_typing', conversationId: cId, isTyping: !!data.isTyping });
+        } else {
+          broadcastToCs({ type: 'user_typing', conversationId: cId, isTyping: !!data.isTyping });
+        }
+        return;
+      }
+
+      // 5. Mark Conversation as Read
+      if (data.type === 'mark_read') {
+        const cId = String(data.conversationId || '').trim();
+        const reader = data.readerType || (isCsAgent ? 'cs' : 'user');
+        if (cId) {
+          await db.markConversationAsRead(cId, reader);
+          broadcastToCs({ type: 'messages_read', conversationId: cId, readerType: reader });
+          broadcastToUser(cId, { type: 'messages_read', conversationId: cId, readerType: reader });
+        }
+        return;
+      }
+    } catch (err) {
+      console.warn('[WS Message Error]:', err.message);
+    }
+  });
+
+  ws.on('close', () => {
+    if (isCsAgent) {
+      csChatSockets.delete(ws);
+    }
+    if (authenticatedUser) {
+      unregisterUserSocket(authenticatedUser, ws);
+    }
+  });
+
+  ws.on('error', () => {
+    if (isCsAgent) csChatSockets.delete(ws);
+    if (authenticatedUser) unregisterUserSocket(authenticatedUser, ws);
+  });
+});
+
+// ==========================================
+// REST API FOR LIVE CHAT & CS AUTH
+// ==========================================
+// Dedicated CS Login Endpoint
+app.post('/api/chat/login', (req, res) => {
+  const { username, password } = req.body;
+  const u = String(username || '').trim();
+  const p = String(password || '').trim();
+
+  // Validate CS Credentials (cs1@noxa / customernoxa@1 OR admin andika123)
+  if ((u === 'cs1@noxa' && p === 'customernoxa@1') || (u === 'admin' && p === 'andika123')) {
+    const token = jwt.sign(
+      { username: u, role: 'CS_AGENT', fullname: 'Customer Service 1' },
+      JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+    return res.json({
+      success: true,
+      token: token,
+      user: {
+        username: u,
+        fullname: 'Customer Service 1',
+        role: 'CS_AGENT'
+      }
+    });
+  }
+
+  return res.status(401).json({
+    success: false,
+    error: 'Username atau Password Customer Service salah.'
+  });
+});
+
+// CS Authentication Middleware
+const requireCsAuth = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  if (!authHeader) return res.status(401).json({ success: false, error: 'Unauthorized' });
+
+  const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+  if (token === 'andika123') return next();
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    if (decoded.role === 'CS_AGENT' || decoded.role === 'ADMIN') {
+      req.csUser = decoded;
+      return next();
+    }
+    return res.status(403).json({ success: false, error: 'Akses ditolak.' });
+  } catch (err) {
+    return res.status(401).json({ success: false, error: 'Sesi CS kedaluwarsa.' });
+  }
+};
+
+// Get All Active Conversations Summary for CS Admin Console
+app.get('/api/chat/conversations', requireCsAuth, async (req, res) => {
+  try {
+    const conversations = await db.getAllConversationsSummary();
+    res.json({ success: true, conversations });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Get Message History for specific conversation (Accessible by CS or authenticated user)
+app.get('/api/chat/history/:conversationId', async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const history = await db.getChatHistory(conversationId);
+    res.json({ success: true, history });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Send Chat Message via HTTP POST (Fallback)
+app.post('/api/chat/send', async (req, res) => {
+  try {
+    const { conversationId, sender, senderName, message } = req.body;
+    if (!conversationId || !message) {
+      return res.status(400).json({ success: false, error: 'conversationId dan message wajib diisi.' });
+    }
+
+    const savedMsg = await db.saveChatMessage({
+      conversationId,
+      sender: sender === 'cs' ? 'cs' : 'user',
+      senderName,
+      message
+    });
+
+    if (savedMsg) {
+      // Broadcast via WebSocket
+      if (sender === 'cs') {
+        broadcastToUser(conversationId, { type: 'new_message', conversationId, message: savedMsg });
+        broadcastToCs({ type: 'new_message', conversationId, message: savedMsg });
+      } else {
+        broadcastToCs({ type: 'new_message', conversationId, message: savedMsg });
+        broadcastToUser(conversationId, { type: 'new_message', conversationId, message: savedMsg });
+      }
+    }
+
+    res.json({ success: true, message: savedMsg });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Mark messages as read via HTTP
+app.post('/api/chat/read', async (req, res) => {
+  try {
+    const { conversationId, readerType } = req.body;
+    if (!conversationId) return res.status(400).json({ success: false, error: 'conversationId wajib diisi.' });
+
+    await db.markConversationAsRead(conversationId, readerType || 'cs');
+    broadcastToCs({ type: 'messages_read', conversationId, readerType: readerType || 'cs' });
+    broadcastToUser(conversationId, { type: 'messages_read', conversationId, readerType: readerType || 'cs' });
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Initialize DB Files
 readJSON(USERS_FILE, []);
 readJSON(TOPUP_FILE, []);
 readJSON(CONFIG_FILE, { last_user_id: 0, last_topup_id: 0 });
 db.initDb();
 
-// Start Combined Server
-app.listen(PORT, HOST, () => {
+// Start Combined Server (HTTP + WebSocket)
+server.listen(PORT, HOST, () => {
   console.log(`================================================================`);
   console.log(`✅ NoxaPay & SekaliPay Top-Up Server ONLINE`);
   console.log(`   Internal  : http://localhost:${PORT}`);

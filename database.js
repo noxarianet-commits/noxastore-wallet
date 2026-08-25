@@ -36,6 +36,7 @@ const PAYMENTS_FILE = path.join(__dirname, 'payments.json');
 const WITHDRAWALS_FILE = path.join(__dirname, 'withdrawals.json');
 const PPOB_FILE = path.join(__dirname, 'ppob_visibility.json');
 const PUSH_SUBS_FILE = path.join(__dirname, 'push_subscriptions.json');
+const CHAT_FILE = path.join(__dirname, 'chat_messages.json');
 
 function readJSONUsers() {
   return readJSONFile(USERS_FILE, []);
@@ -257,6 +258,22 @@ async function initDb() {
       markup INTEGER DEFAULT 0,
       updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
     );
+  `);
+
+  await run(`
+    CREATE TABLE IF NOT EXISTS chat_messages (
+      id TEXT PRIMARY KEY,
+      conversationId TEXT NOT NULL,
+      sender TEXT NOT NULL,
+      senderName TEXT,
+      message TEXT NOT NULL,
+      readStatus INTEGER DEFAULT 0,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  await run(`
+    CREATE INDEX IF NOT EXISTS idx_chat_conversation ON chat_messages(conversationId);
   `);
 
   await run(`
@@ -1310,6 +1327,117 @@ async function removePushSubscription(endpoint) {
   writeJSONFile(PUSH_SUBS_FILE, subs);
 }
 
+// ============================================
+// LIVE CHAT MESSAGE FUNCTIONS
+// ============================================
+async function saveChatMessage({ conversationId, sender, senderName, message }) {
+  if (!conversationId || !message) return null;
+  const id = `msg_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  const nowISO = new Date().toISOString();
+  const msgObj = {
+    id,
+    conversationId: String(conversationId).trim(),
+    sender: sender === 'cs' ? 'cs' : 'user',
+    senderName: senderName || (sender === 'cs' ? 'Customer Service' : conversationId),
+    message: String(message).trim(),
+    readStatus: 0,
+    createdAt: nowISO
+  };
+
+  if (!sqlite3) {
+    const list = readJSONFile(CHAT_FILE, []);
+    list.push(msgObj);
+    writeJSONFile(CHAT_FILE, list);
+    return msgObj;
+  }
+
+  await run(`
+    INSERT INTO chat_messages (id, conversationId, sender, senderName, message, readStatus, createdAt)
+    VALUES (?, ?, ?, ?, ?, 0, ?)
+  `, [msgObj.id, msgObj.conversationId, msgObj.sender, msgObj.senderName, msgObj.message, msgObj.createdAt]);
+
+  return msgObj;
+}
+
+async function getChatHistory(conversationId) {
+  if (!conversationId) return [];
+  const cId = String(conversationId).trim();
+  if (!sqlite3) {
+    const list = readJSONFile(CHAT_FILE, []);
+    return list.filter(m => String(m.conversationId).trim() === cId).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+  }
+  const rows = await all('SELECT * FROM chat_messages WHERE conversationId = ? ORDER BY createdAt ASC', [cId]);
+  return rows || [];
+}
+
+async function getAllConversationsSummary() {
+  const usersMap = await getAllUsersMap();
+  let messages = [];
+
+  if (!sqlite3) {
+    messages = readJSONFile(CHAT_FILE, []);
+  } else {
+    messages = await all('SELECT * FROM chat_messages ORDER BY createdAt ASC') || [];
+  }
+
+  const convMap = {};
+  for (const m of messages) {
+    const cId = String(m.conversationId).trim();
+    if (!convMap[cId]) {
+      const user = usersMap[cId] || {};
+      convMap[cId] = {
+        conversationId: cId,
+        username: cId,
+        fullname: user.fullname || cId,
+        brand: user.brand || '',
+        mainBalance: user.mainBalance !== undefined ? user.mainBalance : (user.saldo || 0),
+        role: user.role || 'MEMBER',
+        status: user.status || 'active',
+        isSuspended: user.isSuspended === true,
+        lastMessage: '',
+        lastMessageSender: '',
+        lastMessageTime: '',
+        unreadCount: 0,
+        totalMessages: 0
+      };
+    }
+
+    convMap[cId].lastMessage = m.message;
+    convMap[cId].lastMessageSender = m.sender;
+    convMap[cId].lastMessageTime = m.createdAt;
+    convMap[cId].totalMessages += 1;
+
+    if (m.sender === 'user' && (m.readStatus === 0 || m.readStatus === '0')) {
+      convMap[cId].unreadCount += 1;
+    }
+  }
+
+  const summaries = Object.values(convMap);
+  summaries.sort((a, b) => new Date(b.lastMessageTime) - new Date(a.lastMessageTime));
+  return summaries;
+}
+
+async function markConversationAsRead(conversationId, readerType = 'cs') {
+  if (!conversationId) return;
+  const cId = String(conversationId).trim();
+  const targetSender = readerType === 'cs' ? 'user' : 'cs';
+
+  if (!sqlite3) {
+    const list = readJSONFile(CHAT_FILE, []);
+    let changed = false;
+    for (const m of list) {
+      if (String(m.conversationId).trim() === cId && m.sender === targetSender && (m.readStatus === 0 || m.readStatus === '0')) {
+        m.readStatus = 1;
+        changed = true;
+      }
+    }
+    if (changed) writeJSONFile(CHAT_FILE, list);
+    return;
+  }
+
+  await run('UPDATE chat_messages SET readStatus = 1 WHERE conversationId = ? AND sender = ?', [cId, targetSender]);
+}
+
 module.exports = {
   initDb,
   getWibDateTime,
@@ -1352,5 +1480,9 @@ module.exports = {
   setPpobVisibility,
   savePushSubscription,
   getPushSubscriptions,
-  removePushSubscription
+  removePushSubscription,
+  saveChatMessage,
+  getChatHistory,
+  getAllConversationsSummary,
+  markConversationAsRead
 };
