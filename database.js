@@ -1302,6 +1302,49 @@ async function setPpobVisibility(sku, active, category = '', brand = '', markup 
   };
 }
 
+async function bulkSetPpobMarkup(skus, markup) {
+  const numMarkup = Math.max(0, Math.ceil(Number(markup) || 0));
+  const visMap = await getPpobVisibilityMap();
+  let targetSkus = skus;
+
+  if (!targetSkus || targetSkus === 'ALL' || (Array.isArray(targetSkus) && targetSkus.length === 0)) {
+    targetSkus = Object.keys(visMap);
+  }
+
+  if (!Array.isArray(targetSkus) || targetSkus.length === 0) {
+    return { updatedCount: 0, markup: numMarkup };
+  }
+
+  let updatedCount = 0;
+  for (const rawSku of targetSkus) {
+    if (!rawSku) continue;
+    const sklSku = rawSku.startsWith('SKL-') ? rawSku : `SKL-${rawSku}`;
+    const numSku = rawSku.replace(/^SKL-/, '');
+    const existing = visMap[sklSku] || visMap[numSku] || visMap[rawSku] || {};
+    const newActive = existing.active !== false;
+    const newCat = existing.category || '';
+    const newBrand = existing.brand || '';
+
+    if (!sqlite3) {
+      const map = readJSONFile(PPOB_FILE, {});
+      const val = { sku: sklSku, active: newActive, category: newCat, brand: newBrand, markup: numMarkup };
+      map[sklSku] = val;
+      map[numSku] = val;
+      map[rawSku] = val;
+      writeJSONFile(PPOB_FILE, map);
+    } else {
+      await run('DELETE FROM ppob_visibility WHERE sku = ? OR sku = ? OR sku = ?', [sklSku, numSku, rawSku]);
+      await run(`
+        INSERT INTO ppob_visibility (sku, active, category, brand, markup, updatedAt)
+        VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+      `, [sklSku, newActive ? 1 : 0, newCat, newBrand, numMarkup]);
+    }
+    updatedCount++;
+  }
+
+  return { updatedCount, markup: numMarkup };
+}
+
 // WEB PUSH SUBSCRIPTIONS
 async function savePushSubscription(username, subscription) {
   if (!subscription || !subscription.endpoint) return;
@@ -1528,6 +1571,7 @@ module.exports = {
   deleteInformation,
   getPpobVisibilityMap,
   setPpobVisibility,
+  bulkSetPpobMarkup,
   savePushSubscription,
   getPushSubscriptions,
   removePushSubscription,

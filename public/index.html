@@ -237,12 +237,37 @@
       overflow: hidden;
     }
 
-    /* Auth Input Fields styling */
+    /* Deluxe Auth & Input Fields Styling */
+    .auth-bg-ambient {
+      background: radial-gradient(1200px circle at 15% 10%, rgba(123, 45, 142, 0.08) 0%, transparent 45%),
+                  radial-gradient(1000px circle at 85% 85%, rgba(99, 102, 241, 0.07) 0%, transparent 45%),
+                  #f8fafc;
+    }
+
+    .auth-glass-card {
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1.5px solid rgba(226, 232, 240, 0.9);
+      border-radius: 28px;
+      box-shadow: 0 25px 60px -15px rgba(123, 45, 142, 0.12), 0 4px 20px rgba(0, 0, 0, 0.03);
+      padding: 32px 28px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @media (max-width: 480px) {
+      .auth-glass-card {
+        padding: 24px 18px;
+        border-radius: 24px;
+        box-shadow: 0 15px 35px -10px rgba(123, 45, 142, 0.1);
+      }
+    }
+
     .auth-input-group input:-webkit-autofill,
     .auth-input-group input:-webkit-autofill:hover, 
     .auth-input-group input:-webkit-autofill:focus, 
     .auth-input-group input:-webkit-autofill:active {
-      -webkit-box-shadow: 0 0 0 30px #f8fafc inset !important;
+      -webkit-box-shadow: 0 0 0 30px #ffffff inset !important;
       -webkit-text-fill-color: #0f172a !important;
     }
 
@@ -250,42 +275,95 @@
       display: flex;
       align-items: center;
       border: 1.5px solid #e2e8f0;
-      border-radius: 12px;
-      padding: 0 14px;
-      background: #f8fafc;
+      border-radius: 15px;
+      padding: 0 12px;
+      background: #ffffff;
       transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
       width: 100%;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+    }
+
+    .auth-input-group:hover {
+      border-color: #cbd5e1;
     }
 
     .auth-input-group:focus-within {
       border-color: #7B2D8E !important;
       background: #ffffff !important;
-      box-shadow: 0 0 0 3.5px rgba(123, 45, 142, 0.12), 0 2px 8px rgba(0, 0, 0, 0.04);
+      box-shadow: 0 0 0 4px rgba(123, 45, 142, 0.12), 0 2px 10px rgba(123, 45, 142, 0.06);
     }
 
-    .auth-input-group span {
-      font-size: 20px;
-      color: #94a3b8;
+    .auth-input-group .input-icon-box {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: rgba(123, 45, 142, 0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
       margin-right: 10px;
       flex-shrink: 0;
+      transition: all 0.2s ease;
+    }
+
+    .auth-input-group:focus-within .input-icon-box {
+      background: #7B2D8E;
+    }
+
+    .auth-input-group .input-icon-box span {
+      font-size: 19px;
+      color: #7B2D8E;
+      margin-right: 0;
       transition: color 0.2s ease;
     }
 
-    .auth-input-group:focus-within span {
-      color: #7B2D8E;
+    .auth-input-group:focus-within .input-icon-box span {
+      color: #ffffff;
     }
 
     .auth-input-group input {
       flex: 1;
       border: none;
       outline: none;
-      padding: 11px 0;
+      padding: 13px 0;
       font-family: inherit;
       font-size: 13.5px;
       font-weight: 600;
       color: #0f172a;
       background: transparent;
       width: 100%;
+    }
+
+    .auth-btn-primary {
+      width: 100%;
+      height: 52px;
+      margin-top: 24px;
+      background: linear-gradient(135deg, #7B2D8E 0%, #9B4DB8 100%);
+      color: white;
+      border: none;
+      border-radius: 16px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 8px 24px rgba(123, 45, 142, 0.28);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      letter-spacing: 0.3px;
+    }
+
+    .auth-btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(123, 45, 142, 0.38);
+      filter: brightness(1.05);
+    }
+
+    .auth-btn-primary:active {
+      transform: translateY(0);
+      box-shadow: 0 4px 14px rgba(123, 45, 142, 0.25);
     }
 
     /* Container responsive style */
@@ -5520,7 +5598,7 @@
 
 
     <!-- Full-Screen Auth Screen (Register / Login) -->
-    <div id="setup-modal" style="position: fixed; inset: 0; z-index: 9999; display: none; background: #f8f9fa; overflow-y: auto;">
+    <div id="setup-modal" class="auth-bg-ambient" style="position: fixed; inset: 0; z-index: 9999; display: none; overflow-y: auto;">
 
       <!-- Desktop: Split Layout / Mobile: Stacked -->
       <div style="display: flex; min-height: 100vh; min-height: 100dvh; width: 100%; flex-direction: column;">
@@ -5529,8 +5607,8 @@
         <div id="auth-brand-panel" style="display: none; background: #0f172a; position: relative; overflow: hidden; flex-direction: column; align-items: center; justify-content: center; padding: 40px;">
           
           <!-- Decorative Background Elements -->
-          <div style="position: absolute; top: -100px; left: -80px; width: 300px; height: 300px; border-radius: 50%; background: rgba(123,45,142,0.25); filter: blur(60px);"></div>
-          <div style="position: absolute; bottom: -100px; right: -80px; width: 350px; height: 350px; border-radius: 50%; background: rgba(155,77,184,0.2); filter: blur(70px);"></div>
+          <div style="position: absolute; top: -100px; left: -80px; width: 320px; height: 320px; border-radius: 50%; background: rgba(123,45,142,0.3); filter: blur(70px);"></div>
+          <div style="position: absolute; bottom: -100px; right: -80px; width: 380px; height: 380px; border-radius: 50%; background: rgba(155,77,184,0.25); filter: blur(80px);"></div>
 
           <!-- Banner Slider Wrapper (Landscape 16:9 Aspect Ratio) -->
           <div style="position: relative; z-index: 2; width: 100%; max-width: 540px;">
@@ -5538,14 +5616,14 @@
             <!-- Header Title above slider -->
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
               <div style="display: flex; align-items: center; gap: 10px;">
-                <img src="loading%20screen%20noxa.png" alt="NoxaPay Logo" style="width: 32px; height: 32px; object-fit: contain; border-radius: 8px;" />
-                <span style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 16px; font-weight: 800; color: white;">NoxaPay Banner Slider</span>
+                <img src="loading%20screen%20noxa.png" alt="NoxaPay Logo" style="width: 36px; height: 36px; object-fit: contain; border-radius: 10px; box-shadow: 0 4px 12px rgba(123,45,142,0.3);" />
+                <span style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 17px; font-weight: 800; color: white; letter-spacing: -0.2px;">NoxaPay Platform</span>
               </div>
-              <span style="font-family: monospace; font-size: 10px; background: rgba(123,45,142,0.3); color: #c4b5fd; border: 1px solid rgba(123,45,142,0.5); padding: 3px 8px; border-radius: 6px; font-weight: 700;">16:9 LANDSCAPE</span>
+              <span style="font-family: monospace; font-size: 10px; background: rgba(123,45,142,0.35); color: #c4b5fd; border: 1px solid rgba(123,45,142,0.5); padding: 4px 10px; border-radius: 8px; font-weight: 700;">16:9 LANDSCAPE</span>
             </div>
 
             <!-- Carousel Box -->
-            <div id="auth-carousel-box" style="position: relative; width: 100%; aspect-ratio: 16 / 9; background: #1e293b; border-radius: 20px; overflow: hidden; border: 1.5px solid rgba(255,255,255,0.1); box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
+            <div id="auth-carousel-box" style="position: relative; width: 100%; aspect-ratio: 16 / 9; background: #1e293b; border-radius: 24px; overflow: hidden; border: 1.5px solid rgba(255,255,255,0.12); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6);">
               
               <!-- Slide 1 -->
               <div class="auth-slide active" style="position: absolute; inset: 0; opacity: 1; transition: opacity 0.5s ease-in-out; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #4a0e6b 0%, #7B2D8E 100%);">
@@ -5576,28 +5654,28 @@
               </div>
 
               <!-- Controls: Prev / Next Buttons -->
-              <button onclick="moveAuthSlide(-1)" style="position: absolute; top: 50%; left: 12px; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.2); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; transition: background 0.2s;" onmouseover="this.style.background='rgba(123,45,142,0.8)'" onmouseout="this.style.background='rgba(0,0,0,0.5)'">
-                <span class="material-symbols-outlined" style="font-size: 20px;">chevron_left</span>
+              <button onclick="moveAuthSlide(-1)" style="position: absolute; top: 50%; left: 12px; transform: translateY(-50%); width: 38px; height: 38px; border-radius: 50%; background: rgba(0,0,0,0.5); backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,0.25); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; transition: all 0.2s;" onmouseover="this.style.background='rgba(123,45,142,0.9)'; this.style.transform='translateY(-50%) scale(1.08)';" onmouseout="this.style.background='rgba(0,0,0,0.5)'; this.style.transform='translateY(-50%) scale(1)';">
+                <span class="material-symbols-outlined" style="font-size: 22px;">chevron_left</span>
               </button>
-              <button onclick="moveAuthSlide(1)" style="position: absolute; top: 50%; right: 12px; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.2); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; transition: background 0.2s;" onmouseover="this.style.background='rgba(123,45,142,0.8)'" onmouseout="this.style.background='rgba(0,0,0,0.5)'">
-                <span class="material-symbols-outlined" style="font-size: 20px;">chevron_right</span>
+              <button onclick="moveAuthSlide(1)" style="position: absolute; top: 50%; right: 12px; transform: translateY(-50%); width: 38px; height: 38px; border-radius: 50%; background: rgba(0,0,0,0.5); backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,0.25); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; transition: all 0.2s;" onmouseover="this.style.background='rgba(123,45,142,0.9)'; this.style.transform='translateY(-50%) scale(1.08)';" onmouseout="this.style.background='rgba(0,0,0,0.5)'; this.style.transform='translateY(-50%) scale(1)';">
+                <span class="material-symbols-outlined" style="font-size: 22px;">chevron_right</span>
               </button>
 
               <!-- Indicators (Dots) -->
               <div style="position: absolute; bottom: 12px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; z-index: 10;">
-                <span class="auth-dot active" onclick="setAuthSlide(0)" style="width: 24px; height: 8px; border-radius: 4px; background: #7B2D8E; cursor: pointer; transition: all 0.3s ease;"></span>
-                <span class="auth-dot" onclick="setAuthSlide(1)" style="width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.4); cursor: pointer; transition: all 0.3s ease;"></span>
-                <span class="auth-dot" onclick="setAuthSlide(2)" style="width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.4); cursor: pointer; transition: all 0.3s ease;"></span>
+                <span class="auth-dot active" onclick="setAuthSlide(0)" style="width: 26px; height: 8px; border-radius: 4px; background: #7B2D8E; cursor: pointer; transition: all 0.3s ease;"></span>
+                <span class="auth-dot" onclick="setAuthSlide(1)" style="width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.3s ease;"></span>
+                <span class="auth-dot" onclick="setAuthSlide(2)" style="width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.3s ease;"></span>
               </div>
             </div>
 
             <!-- Banner Specification Helper Card below carousel -->
-            <div style="margin-top: 20px; background: rgba(255,255,255,0.05); border: 1.5px dashed rgba(255,255,255,0.15); border-radius: 14px; padding: 14px 18px; display: flex; align-items: center; gap: 12px;">
+            <div style="margin-top: 20px; background: rgba(255,255,255,0.06); border: 1.5px dashed rgba(255,255,255,0.18); border-radius: 16px; padding: 14px 18px; display: flex; align-items: center; gap: 12px;">
               <span class="material-symbols-outlined" style="color: #c4b5fd; font-size: 24px; flex-shrink: 0;">add_photo_alternate</span>
               <div style="flex: 1;">
                 <div style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 800; color: white; margin-bottom: 2px;">Ukuran Gambar Banner Landscape</div>
                 <div style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; color: #94a3b8; line-height: 1.4;">
-                  Disarankan resolusi <strong>1200 × 675 px</strong> (Rasio <strong>16:9</strong>) atau <strong>800 × 450 px</strong> dengan format PNG / JPG.
+                  Disarankan resolusi <strong>1200 × 675 px</strong> (Rasio <strong>16:9</strong>) dengan format PNG / JPG.
                 </div>
               </div>
             </div>
@@ -5609,168 +5687,197 @@
         </div>
 
         <!-- RIGHT PANEL: Auth Form -->
-        <div id="auth-form-panel" style="width: 100%; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 20px; background: #f8f9fa; min-height: 100vh; min-height: 100dvh; overflow-y: auto;">
+        <div id="auth-form-panel" style="width: 100%; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 20px; min-height: 100vh; min-height: 100dvh; overflow-y: auto;">
 
-          <div style="width: 100%; max-width: 420px;">
+          <div style="width: 100%; max-width: 440px;">
 
-            <!-- Mobile Brand Header (hidden on desktop) -->
-            <div id="auth-mobile-header" style="text-align: center; margin-bottom: 28px;">
-              <img src="loading%20screen%20noxa.png" alt="Logo NOXA" style="width: 56px; height: 56px; object-fit: contain; margin: 0 auto 14px; filter: drop-shadow(0 4px 12px rgba(123,45,142,0.2)); border-radius: 14px;" />
-              <h1 id="auth-main-title" style="font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; font-size: 22px; font-weight: 800; color: #0f172a; margin: 0 0 6px; letter-spacing: -0.3px;">Buat Akun Baru</h1>
-              <p id="auth-main-subtitle" style="font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; font-size: 13px; font-weight: 500; color: #64748b; margin: 0; line-height: 1.4;">Mulai kelola bisnis Anda dengan sistem yang lebih cerdas.</p>
+            <!-- Mobile Brand Header -->
+            <div id="auth-mobile-header" style="text-align: center; margin-bottom: 24px;">
+              <div style="position: relative; display: inline-block; margin-bottom: 14px;">
+                <div style="position: absolute; inset: -4px; border-radius: 20px; background: linear-gradient(135deg, #7B2D8E, #9B4DB8); filter: blur(10px); opacity: 0.35;"></div>
+                <img src="loading%20screen%20noxa.png" alt="Logo NOXA" style="position: relative; width: 62px; height: 62px; object-fit: contain; border-radius: 18px; box-shadow: 0 8px 20px rgba(123,45,142,0.2);" />
+              </div>
+              <h1 id="auth-main-title" style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 24px; font-weight: 800; color: #0f172a; margin: 0 0 6px; letter-spacing: -0.4px;">Buat Akun Baru</h1>
+              <p id="auth-main-subtitle" style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13.5px; font-weight: 500; color: #64748b; margin: 0; line-height: 1.45;">Mulai kelola transaksi dan bisnis Anda lebih mudah &amp; cepat.</p>
             </div>
 
-            <!-- Tab Switcher -->
-            <div style="display: flex; background: #e2e8f0; border-radius: 14px; padding: 4px; margin-bottom: 28px; gap: 4px;">
-              <button id="tab-register-btn" type="button" onclick="switchAuthTab('register')" style="flex: 1; padding: 11px 16px; border-radius: 11px; border: none; font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.25s ease; background: #7B2D8E; color: white; box-shadow: 0 2px 8px rgba(123,45,142,0.3);">
-                Daftar
-              </button>
-              <button id="tab-login-btn" type="button" onclick="switchAuthTab('login')" style="flex: 1; padding: 11px 16px; border-radius: 11px; border: none; font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.25s ease; background: transparent; color: #64748b;">
-                Masuk
-              </button>
-            </div>
+            <!-- Glass Card Container -->
+            <div class="auth-glass-card">
 
-            <!-- ============ FORM DAFTAR ============ -->
-            <div id="auth-register-form" style="display: block;">
-              <div style="display: flex; flex-direction: column; gap: 16px;">
-
-                <!-- Nama Lengkap -->
-                <div style="display: flex; flex-direction: column; gap: 6px;">
-                  <label style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; padding-left: 4px;">Nama Lengkap</label>
-                  <div class="auth-input-group">
-                    <span class="material-symbols-outlined">person</span>
-                    <input id="reg-fullname" type="text" placeholder="Contoh: Budi Santoso" />
-                  </div>
-                </div>
-
-                <!-- Nomor WA -->
-                <div style="display: flex; flex-direction: column; gap: 6px;">
-                  <label style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; padding-left: 4px;">Nomor WhatsApp</label>
-                  <div class="auth-input-group">
-                    <span class="material-symbols-outlined">call</span>
-                    <input id="reg-username" type="tel" placeholder="0812xxxx" />
-                  </div>
-                </div>
-
-                <!-- Email -->
-                <div style="display: flex; flex-direction: column; gap: 6px;">
-                  <label style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; padding-left: 4px;">Email</label>
-                  <div class="auth-input-group">
-                    <span class="material-symbols-outlined">mail</span>
-                    <input id="reg-email" type="email" placeholder="nama@toko.com" />
-                  </div>
-                </div>
-
-                <!-- Kata Sandi -->
-                <div style="display: flex; flex-direction: column; gap: 6px;">
-                  <label style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; padding-left: 4px;">Kata Sandi</label>
-                  <div class="auth-input-group" style="padding-right: 6px;">
-                    <span class="material-symbols-outlined">lock</span>
-                    <input id="reg-password" type="password" placeholder="Min. 8 karakter" />
-                    <button type="button" onclick="togglePassword('reg-password', this)" style="background: none; border: none; cursor: pointer; padding: 8px; display: flex; align-items: center;">
-                      <span class="material-symbols-outlined" id="passwordIcon" style="font-size: 20px; color: #94a3b8; transition: color 0.2s;">visibility</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Submit -->
-              <button type="button" onclick="saveRegistration()" style="width: 100%; height: 52px; margin-top: 24px; background: linear-gradient(135deg, #7B2D8E 0%, #9B4DB8 100%); color: white; border: none; border-radius: 14px; font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 6px 20px rgba(123,45,142,0.3); transition: all 0.25s ease; letter-spacing: 0.2px;"
-                onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 8px 25px rgba(123,45,142,0.4)'"
-                onmouseout="this.style.transform='none';this.style.boxShadow='0 6px 20px rgba(123,45,142,0.3)'">
-                <span>Daftar Sekarang</span>
-                <span class="material-symbols-outlined" style="font-size: 20px;">arrow_forward</span>
-              <div style="text-align: center; margin-top: 16px;">
-                <span style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; color: #64748b;">Sudah punya akun? </span>
-                <span onclick="switchAuthTab('login')" style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; font-weight: 700; color: #7B2D8E; cursor: pointer; text-decoration: underline; text-underline-offset: 3px;">Masuk di sini</span>
-              </div>
-            </div>
-
-            <!-- ============ FORM OTP VERIFICATION ============ -->
-            <div id="auth-otp-form" style="display: none;">
-              <div style="text-align: center; margin-bottom: 20px;">
-                <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(123,45,142,0.1); border: 1.5px solid rgba(123,45,142,0.3); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px;">
-                  <span class="material-symbols-outlined" style="font-size: 28px; color: #7B2D8E;">mark_chat_unread</span>
-                </div>
-                <h3 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 18px; font-weight: 800; color: #0f172a; margin: 0 0 6px;">Verifikasi WhatsApp</h3>
-                <p style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; color: #64748b; margin: 0; line-height: 1.5;">
-                  Kode OTP 6-digit telah dikirim via WhatsApp ke:<br>
-                  <strong id="otp-target-phone" style="color: #7B2D8E; font-size: 13px;">0812xxxx</strong>
-                </p>
-              </div>
-
-              <!-- Input OTP 6-digit (Stylized digit boxes) -->
-              <div style="display: flex; flex-direction: column; gap: 12px;">
-                <div style="display: flex; justify-content: center; gap: 8px;" id="otp-inputs-container">
-                  <input type="tel" maxlength="1" class="otp-digit-input" id="otp-d1" oninput="handleOtpInput(this, 1)" onkeydown="handleOtpKeydown(this, 1)" style="width: 42px; height: 50px; text-align: center; font-size: 20px; font-weight: 800; font-family: monospace; border: 1.5px solid #cbd5e1; border-radius: 12px; outline: none; transition: all 0.2s; background: white;" />
-                  <input type="tel" maxlength="1" class="otp-digit-input" id="otp-d2" oninput="handleOtpInput(this, 2)" onkeydown="handleOtpKeydown(this, 2)" style="width: 42px; height: 50px; text-align: center; font-size: 20px; font-weight: 800; font-family: monospace; border: 1.5px solid #cbd5e1; border-radius: 12px; outline: none; transition: all 0.2s; background: white;" />
-                  <input type="tel" maxlength="1" class="otp-digit-input" id="otp-d3" oninput="handleOtpInput(this, 3)" onkeydown="handleOtpKeydown(this, 3)" style="width: 42px; height: 50px; text-align: center; font-size: 20px; font-weight: 800; font-family: monospace; border: 1.5px solid #cbd5e1; border-radius: 12px; outline: none; transition: all 0.2s; background: white;" />
-                  <input type="tel" maxlength="1" class="otp-digit-input" id="otp-d4" oninput="handleOtpInput(this, 4)" onkeydown="handleOtpKeydown(this, 4)" style="width: 42px; height: 50px; text-align: center; font-size: 20px; font-weight: 800; font-family: monospace; border: 1.5px solid #cbd5e1; border-radius: 12px; outline: none; transition: all 0.2s; background: white;" />
-                  <input type="tel" maxlength="1" class="otp-digit-input" id="otp-d5" oninput="handleOtpInput(this, 5)" onkeydown="handleOtpKeydown(this, 5)" style="width: 42px; height: 50px; text-align: center; font-size: 20px; font-weight: 800; font-family: monospace; border: 1.5px solid #cbd5e1; border-radius: 12px; outline: none; transition: all 0.2s; background: white;" />
-                  <input type="tel" maxlength="1" class="otp-digit-input" id="otp-d6" oninput="handleOtpInput(this, 6)" onkeydown="handleOtpKeydown(this, 6)" style="width: 42px; height: 50px; text-align: center; font-size: 20px; font-weight: 800; font-family: monospace; border: 1.5px solid #cbd5e1; border-radius: 12px; outline: none; transition: all 0.2s; background: white;" />
-                </div>
-              </div>
-
-              <!-- Submit Verification -->
-              <button id="btn-verify-otp" type="button" onclick="submitOtpVerification()" style="width: 100%; height: 52px; margin-top: 20px; background: linear-gradient(135deg, #7B2D8E 0%, #9B4DB8 100%); color: white; border: none; border-radius: 14px; font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 6px 20px rgba(123,45,142,0.3); transition: all 0.25s ease;">
-                <span>Verifikasi OTP</span>
-                <span class="material-symbols-outlined" style="font-size: 20px;">verified</span>
-              </button>
-
-              <!-- Resend / Back to Register -->
-              <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 16px;">
-                <button type="button" onclick="cancelOtpVerification()" style="background: none; border: none; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 600; color: #64748b; cursor: pointer; display: flex; align-items: center; gap: 4px;">
-                  <span class="material-symbols-outlined" style="font-size: 16px;">arrow_back</span>
-                  <span>Ubah Nomor</span>
+              <!-- Tab Switcher -->
+              <div style="display: flex; background: #f1f5f9; border-radius: 16px; padding: 5px; margin-bottom: 24px; gap: 6px; border: 1px solid #e2e8f0;">
+                <button id="tab-register-btn" type="button" onclick="switchAuthTab('register')" style="flex: 1; padding: 11px 16px; border-radius: 12px; border: none; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13.5px; font-weight: 800; cursor: pointer; transition: all 0.25s ease; background: #7B2D8E; color: white; box-shadow: 0 4px 12px rgba(123,45,142,0.3);">
+                  Daftar Akun
                 </button>
-                <button id="btn-resend-otp" type="button" onclick="resendOtpCode()" disabled style="background: none; border: none; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 700; color: #94a3b8; cursor: pointer;">
-                  Kirim Ulang (<span id="otp-timer">60</span>s)
+                <button id="tab-login-btn" type="button" onclick="switchAuthTab('login')" style="flex: 1; padding: 11px 16px; border-radius: 12px; border: none; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13.5px; font-weight: 700; cursor: pointer; transition: all 0.25s ease; background: transparent; color: #64748b;">
+                  Masuk Akun
                 </button>
               </div>
-            </div>
 
-            <!-- ============ FORM MASUK ============ -->
-            <div id="auth-login-form" style="display: none;">
-              <div style="display: flex; flex-direction: column; gap: 16px;">
+              <!-- ============ FORM DAFTAR ============ -->
+              <div id="auth-register-form" style="display: block;">
+                <div style="display: flex; flex-direction: column; gap: 16px;">
 
-                <!-- Nomor WA -->
-                <div style="display: flex; flex-direction: column; gap: 6px;">
-                  <label style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; padding-left: 4px;">Nomor WhatsApp</label>
-                  <div class="auth-input-group">
-                    <span class="material-symbols-outlined">call</span>
-                    <input id="login-username" type="tel" placeholder="0812xxxx" />
+                  <!-- Nama Lengkap -->
+                  <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <label style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; padding-left: 2px;">Nama Lengkap</label>
+                    <div class="auth-input-group">
+                      <div class="input-icon-box">
+                        <span class="material-symbols-outlined">person</span>
+                      </div>
+                      <input id="reg-fullname" type="text" placeholder="Contoh: Budi Santoso" />
+                    </div>
+                  </div>
+
+                  <!-- Nomor WA -->
+                  <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <label style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; padding-left: 2px;">Nomor WhatsApp (Aktif)</label>
+                    <div class="auth-input-group">
+                      <div class="input-icon-box">
+                        <span class="material-symbols-outlined">call</span>
+                      </div>
+                      <input id="reg-username" type="tel" placeholder="Contoh: 081234567890" />
+                    </div>
+                  </div>
+
+                  <!-- Email -->
+                  <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <label style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; padding-left: 2px;">Alamat Email</label>
+                    <div class="auth-input-group">
+                      <div class="input-icon-box">
+                        <span class="material-symbols-outlined">mail</span>
+                      </div>
+                      <input id="reg-email" type="email" placeholder="nama@email.com" />
+                    </div>
+                  </div>
+
+                  <!-- Kata Sandi -->
+                  <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <label style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; padding-left: 2px;">Kata Sandi</label>
+                    <div class="auth-input-group" style="padding-right: 6px;">
+                      <div class="input-icon-box">
+                        <span class="material-symbols-outlined">lock</span>
+                      </div>
+                      <input id="reg-password" type="password" placeholder="Minimal 8 karakter" />
+                      <button type="button" onclick="togglePassword('reg-password', this)" style="background: none; border: none; cursor: pointer; padding: 8px; display: flex; align-items: center;">
+                        <span class="material-symbols-outlined" id="passwordIcon" style="font-size: 20px; color: #94a3b8; transition: color 0.2s;">visibility</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                <!-- Kata Sandi -->
-                <div style="display: flex; flex-direction: column; gap: 6px;">
-                  <label style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; padding-left: 4px;">Kata Sandi</label>
-                  <div class="auth-input-group" style="padding-right: 6px;">
-                    <span class="material-symbols-outlined">lock</span>
-                    <input id="login-password" type="password" placeholder="Masukkan kata sandi Anda" />
-                    <button type="button" onclick="togglePassword('login-password', this)" style="background: none; border: none; cursor: pointer; padding: 8px; display: flex; align-items: center;">
-                      <span class="material-symbols-outlined" style="font-size: 20px; color: #94a3b8; transition: color 0.2s;">visibility</span>
-                    </button>
-                  </div>
+                <!-- Submit -->
+                <button type="button" class="auth-btn-primary" onclick="saveRegistration()">
+                  <span>Daftar Akun Sekarang</span>
+                  <span class="material-symbols-outlined" style="font-size: 20px;">arrow_forward</span>
+                </button>
+
+                <div style="text-align: center; margin-top: 18px;">
+                  <span style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; color: #64748b;">Sudah punya akun? </span>
+                  <span onclick="switchAuthTab('login')" style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; font-weight: 800; color: #7B2D8E; cursor: pointer; text-decoration: underline; text-underline-offset: 3px;">Masuk di sini</span>
                 </div>
               </div>
 
-              <!-- Submit -->
-              <button id="login-submit" type="button" onclick="doLogin()" style="width: 100%; height: 52px; margin-top: 24px; background: linear-gradient(135deg, #7B2D8E 0%, #9B4DB8 100%); color: white; border: none; border-radius: 14px; font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 6px 20px rgba(123,45,142,0.3); transition: all 0.25s ease; letter-spacing: 0.2px;"
-                onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 8px 25px rgba(123,45,142,0.4)'"
-                onmouseout="this.style.transform='none';this.style.boxShadow='0 6px 20px rgba(123,45,142,0.3)'">
-                <span>Masuk Sekarang</span>
-                <span class="material-symbols-outlined" style="font-size: 20px;">arrow_forward</span>
-              </button>
+              <!-- ============ FORM OTP VERIFICATION ============ -->
+              <div id="auth-otp-form" style="display: none;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                  <div style="width: 58px; height: 58px; border-radius: 50%; background: rgba(123,45,142,0.08); border: 1.5px solid rgba(123,45,142,0.25); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+                    <span class="material-symbols-outlined" style="font-size: 28px; color: #7B2D8E;">mark_chat_unread</span>
+                  </div>
+                  <h3 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 19px; font-weight: 800; color: #0f172a; margin: 0 0 6px;">Verifikasi WhatsApp</h3>
+                  <p style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12.5px; color: #64748b; margin: 0; line-height: 1.5;">
+                    Kode OTP 6-digit telah dikirim via WhatsApp ke:<br>
+                    <strong id="otp-target-phone" style="color: #7B2D8E; font-size: 13.5px; font-weight: 800;">0812xxxx</strong>
+                  </p>
+                </div>
 
-              <div style="text-align: center; margin-top: 16px;">
-                <span style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; color: #64748b;">Belum punya akun? </span>
-                <span onclick="switchAuthTab('register')" style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; font-weight: 700; color: #7B2D8E; cursor: pointer; text-decoration: underline; text-underline-offset: 3px;">Daftar di sini</span>
+                <!-- Input OTP 6-digit (Stylized digit boxes) -->
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                  <div style="display: flex; justify-content: center; gap: 8px;" id="otp-inputs-container">
+                    <input type="tel" maxlength="1" class="otp-digit-input" id="otp-d1" oninput="handleOtpInput(this, 1)" onkeydown="handleOtpKeydown(this, 1)" style="width: 44px; height: 52px; text-align: center; font-size: 20px; font-weight: 800; font-family: monospace; border: 1.5px solid #cbd5e1; border-radius: 14px; outline: none; transition: all 0.2s; background: white; box-shadow: 0 2px 6px rgba(0,0,0,0.03);" />
+                    <input type="tel" maxlength="1" class="otp-digit-input" id="otp-d2" oninput="handleOtpInput(this, 2)" onkeydown="handleOtpKeydown(this, 2)" style="width: 44px; height: 52px; text-align: center; font-size: 20px; font-weight: 800; font-family: monospace; border: 1.5px solid #cbd5e1; border-radius: 14px; outline: none; transition: all 0.2s; background: white; box-shadow: 0 2px 6px rgba(0,0,0,0.03);" />
+                    <input type="tel" maxlength="1" class="otp-digit-input" id="otp-d3" oninput="handleOtpInput(this, 3)" onkeydown="handleOtpKeydown(this, 3)" style="width: 44px; height: 52px; text-align: center; font-size: 20px; font-weight: 800; font-family: monospace; border: 1.5px solid #cbd5e1; border-radius: 14px; outline: none; transition: all 0.2s; background: white; box-shadow: 0 2px 6px rgba(0,0,0,0.03);" />
+                    <input type="tel" maxlength="1" class="otp-digit-input" id="otp-d4" oninput="handleOtpInput(this, 4)" onkeydown="handleOtpKeydown(this, 4)" style="width: 44px; height: 52px; text-align: center; font-size: 20px; font-weight: 800; font-family: monospace; border: 1.5px solid #cbd5e1; border-radius: 14px; outline: none; transition: all 0.2s; background: white; box-shadow: 0 2px 6px rgba(0,0,0,0.03);" />
+                    <input type="tel" maxlength="1" class="otp-digit-input" id="otp-d5" oninput="handleOtpInput(this, 5)" onkeydown="handleOtpKeydown(this, 5)" style="width: 44px; height: 52px; text-align: center; font-size: 20px; font-weight: 800; font-family: monospace; border: 1.5px solid #cbd5e1; border-radius: 14px; outline: none; transition: all 0.2s; background: white; box-shadow: 0 2px 6px rgba(0,0,0,0.03);" />
+                    <input type="tel" maxlength="1" class="otp-digit-input" id="otp-d6" oninput="handleOtpInput(this, 6)" onkeydown="handleOtpKeydown(this, 6)" style="width: 44px; height: 52px; text-align: center; font-size: 20px; font-weight: 800; font-family: monospace; border: 1.5px solid #cbd5e1; border-radius: 14px; outline: none; transition: all 0.2s; background: white; box-shadow: 0 2px 6px rgba(0,0,0,0.03);" />
+                  </div>
+                </div>
+
+                <!-- Submit Verification -->
+                <button id="btn-verify-otp" type="button" class="auth-btn-primary" onclick="submitOtpVerification()" style="margin-top: 20px;">
+                  <span>Verifikasi Kode OTP</span>
+                  <span class="material-symbols-outlined" style="font-size: 20px;">verified</span>
+                </button>
+
+                <!-- Resend / Back to Register -->
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 18px;">
+                  <button type="button" onclick="cancelOtpVerification()" style="background: none; border: none; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12.5px; font-weight: 700; color: #64748b; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                    <span class="material-symbols-outlined" style="font-size: 16px;">arrow_back</span>
+                    <span>Ubah Nomor</span>
+                  </button>
+                  <button id="btn-resend-otp" type="button" onclick="resendOtpCode()" disabled style="background: none; border: none; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12.5px; font-weight: 800; color: #94a3b8; cursor: pointer;">
+                    Kirim Ulang (<span id="otp-timer">60</span>s)
+                  </button>
+                </div>
               </div>
+
+              <!-- ============ FORM MASUK ============ -->
+              <div id="auth-login-form" style="display: none;">
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+
+                  <!-- Nomor WA -->
+                  <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <label style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; padding-left: 2px;">Nomor WhatsApp</label>
+                    <div class="auth-input-group">
+                      <div class="input-icon-box">
+                        <span class="material-symbols-outlined">call</span>
+                      </div>
+                      <input id="login-username" type="tel" placeholder="Masukkan nomor WhatsApp Anda" />
+                    </div>
+                  </div>
+
+                  <!-- Kata Sandi -->
+                  <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <label style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; padding-left: 2px;">Kata Sandi</label>
+                    <div class="auth-input-group" style="padding-right: 6px;">
+                      <div class="input-icon-box">
+                        <span class="material-symbols-outlined">lock</span>
+                      </div>
+                      <input id="login-password" type="password" placeholder="Masukkan kata sandi Anda" />
+                      <button type="button" onclick="togglePassword('login-password', this)" style="background: none; border: none; cursor: pointer; padding: 8px; display: flex; align-items: center;">
+                        <span class="material-symbols-outlined" style="font-size: 20px; color: #94a3b8; transition: color 0.2s;">visibility</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Submit -->
+                <button id="login-submit" type="button" class="auth-btn-primary" onclick="doLogin()">
+                  <span>Masuk ke Akun Saya</span>
+                  <span class="material-symbols-outlined" style="font-size: 20px;">arrow_forward</span>
+                </button>
+
+                <div style="text-align: center; margin-top: 18px;">
+                  <span style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; color: #64748b;">Belum punya akun? </span>
+                  <span onclick="switchAuthTab('register')" style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; font-weight: 800; color: #7B2D8E; cursor: pointer; text-decoration: underline; text-underline-offset: 3px;">Daftar di sini</span>
+                </div>
+              </div>
+
+            </div> <!-- end auth-glass-card -->
+
+            <!-- Trust & Security Badges -->
+            <div style="display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 24px; color: #94a3b8; font-size: 11.5px; font-weight: 700; flex-wrap: wrap;">
+              <span style="display: inline-flex; align-items: center; gap: 4px;">
+                <span class="material-symbols-outlined" style="font-size: 16px; color: #7B2D8E;">verified_user</span> 256-Bit SSL Enkripsi
+              </span>
+              <span>•</span>
+              <span style="display: inline-flex; align-items: center; gap: 4px;">
+                <span class="material-symbols-outlined" style="font-size: 16px; color: #059669;">bolt</span> Akses Cepat 24 Jam
+              </span>
             </div>
 
             <!-- Footer -->
-            <p id="auth-footer-mobile" style="text-align: center; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; color: #94a3b8; margin-top: 32px;">© 2026 NoxaPay · All Rights Reserved</p>
+            <p id="auth-footer-mobile" style="text-align: center; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; color: #94a3b8; margin-top: 18px;">© 2026 NoxaPay · All Rights Reserved</p>
 
           </div>
         </div>
@@ -6553,8 +6660,8 @@
         const mainTitle = document.getElementById('auth-main-title');
         const mainSubtitle = document.getElementById('auth-main-subtitle');
 
-        const activeStyle = 'flex: 1; padding: 11px 16px; border-radius: 11px; border: none; font-family: "Plus Jakarta Sans", "Inter", sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.25s ease; background: #7B2D8E; color: white; box-shadow: 0 2px 8px rgba(123,45,142,0.3);';
-        const inactiveStyle = 'flex: 1; padding: 11px 16px; border-radius: 11px; border: none; font-family: "Plus Jakarta Sans", "Inter", sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.25s ease; background: transparent; color: #64748b; box-shadow: none;';
+        const activeStyle = 'flex: 1; padding: 11px 16px; border-radius: 12px; border: none; font-family: "Plus Jakarta Sans", sans-serif; font-size: 13.5px; font-weight: 800; cursor: pointer; transition: all 0.25s ease; background: #7B2D8E; color: white; box-shadow: 0 4px 12px rgba(123,45,142,0.3);';
+        const inactiveStyle = 'flex: 1; padding: 11px 16px; border-radius: 12px; border: none; font-family: "Plus Jakarta Sans", sans-serif; font-size: 13.5px; font-weight: 700; cursor: pointer; transition: all 0.25s ease; background: transparent; color: #64748b; box-shadow: none;';
 
         if (otpForm) otpForm.style.display = 'none';
 
@@ -6564,7 +6671,7 @@
           if (regBtn) regBtn.style.cssText = activeStyle;
           if (loginBtn) loginBtn.style.cssText = inactiveStyle;
           if (mainTitle) mainTitle.innerText = 'Buat Akun Baru';
-          if (mainSubtitle) mainSubtitle.innerText = 'Mulai kelola bisnis Anda dengan sistem yang lebih cerdas.';
+          if (mainSubtitle) mainSubtitle.innerText = 'Mulai kelola transaksi dan bisnis Anda lebih mudah & cepat.';
         } else {
           if (loginForm) loginForm.style.display = 'block';
           if (regForm) regForm.style.display = 'none';
@@ -9829,46 +9936,18 @@
           const ctx = new AudioCtx();
           const t = ctx.currentTime;
 
-          if (type === 'success' || type === 'ppob' || type === 'topup' || type === 'transfer') {
-            // Elegant Apple Pay / WhatsApp harmonic crystal chime (880Hz -> 1320Hz)
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(880, t);
-            osc.frequency.exponentialRampToValueAtTime(1320, t + 0.14);
-            gain.gain.setValueAtTime(0.18, t);
-            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.38);
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.start(t);
-            osc.stop(t + 0.38);
-          } else if (type === 'info' || type === 'announcement') {
-            // Modern subtle ping (750Hz -> 1000Hz)
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(750, t);
-            osc.frequency.exponentialRampToValueAtTime(1000, t + 0.12);
-            gain.gain.setValueAtTime(0.15, t);
-            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.32);
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.start(t);
-            osc.stop(t + 0.32);
-          } else if (type === 'error' || type === 'warning') {
-            // Subtle low double-tap (300Hz -> 220Hz)
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(300, t);
-            osc.frequency.exponentialRampToValueAtTime(220, t + 0.15);
-            gain.gain.setValueAtTime(0.15, t);
-            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.start(t);
-            osc.stop(t + 0.25);
-          }
+          // Universal Soft Crystal Chime (Standard Nada Lembut Admin & CS Chat)
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(880, t);
+          osc.frequency.exponentialRampToValueAtTime(1320, t + 0.12);
+          gain.gain.setValueAtTime(0.18, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.35);
         } catch (e) {}
       }
 
@@ -9929,9 +10008,8 @@
             saveHistoryCache();
 
             closeWithdrawModal();
-            playSuccessSound(); // Panggil notifikasi bunyi
+            playSuccessSound(); // Panggil notifikasi bunyi lembut
             showNotification(`✅ Berhasil mencairkan Rp ${amount.toLocaleString('id-ID')} ke Akun Utama!`);
-            triggerSystemNotification('Pencairan Berhasil', `Berhasil mencairkan saldo QRIS Rp ${amount.toLocaleString('id-ID')} ke Akun Utama Anda.`);
 
             document.getElementById('merchant-saldo-text').innerText = formatRupiah(qrisBalance);
 
@@ -10244,16 +10322,12 @@
               console.log('[SW] Service Worker registered scope:', reg.scope);
               if ('Notification' in window && Notification.permission === 'granted') {
                 subscribeUserToWebPush(reg);
-              } else if ('Notification' in window && Notification.permission === 'default') {
-                setTimeout(requestNotificationPermission, 1200);
               }
             })
             .catch(err => {
               window._serviceWorkerInitialized = false;
               console.warn('[SW] Service Worker registration failed:', err);
             });
-        } else if ('Notification' in window && Notification.permission === 'default') {
-          setTimeout(requestNotificationPermission, 1200);
         }
       }
 
@@ -10652,13 +10726,12 @@
             if ('serviceWorker' in navigator) {
               navigator.serviceWorker.ready.then(reg => subscribeUserToWebPush(reg));
             }
-            triggerSystemNotification('NoxariaNet Wallet', 'Notifikasi sistem aktif. Anda akan menerima pemberitahuan di status bar.');
           }
         });
       }
 
       // ============================================================
-      // STRICT ZERO-SPAM SINGLE STATUS BAR NOTIFICATION ENGINE
+      // ZERO-SPAM STATUS BAR NOTIFICATION CONTROLLER
       // ============================================================
       let _lastStatusBarNotifTime = 0;
       const _recentNotificationHashes = new Map();
@@ -10667,11 +10740,11 @@
         const now = Date.now();
         const cleanKey = (String(title || '') + '|' + String(body || '')).toLowerCase().replace(/[^a-z0-9]/g, '');
 
-        // 1. Strict duplicate suppression within 12 seconds
+        // 1. Strict duplicate suppression within 15 seconds
         if (_recentNotificationHashes.has(cleanKey)) {
           const lastTime = _recentNotificationHashes.get(cleanKey);
-          if (now - lastTime < 12000) {
-            console.log('[Anti-Spam] Suppressed duplicate status bar notification:', cleanKey);
+          if (now - lastTime < 15000) {
+            console.log('[Anti-Spam] Suppressed duplicate notification:', cleanKey);
             return;
           }
         }
@@ -10680,21 +10753,29 @@
         // Clean up old cache entries
         if (_recentNotificationHashes.size > 25) {
           for (const [k, t] of _recentNotificationHashes.entries()) {
-            if (now - t > 25000) _recentNotificationHashes.delete(k);
+            if (now - t > 30000) _recentNotificationHashes.delete(k);
           }
         }
 
-        // 2. Global rate limit: Exactly 1 system notification per 3.5 seconds
-        if (now - _lastStatusBarNotifTime < 3500) {
-          console.log('[Anti-Spam] Rate limited status bar notification.');
+        // 2. Global rate limit: Exactly 1 system notification per 4.0 seconds
+        if (now - _lastStatusBarNotifTime < 4000) {
+          console.log('[Anti-Spam] Rate limited notification.');
           return;
         }
         _lastStatusBarNotifTime = now;
 
-        // 3. Show clean in-app toast
+        // 3. Tampilkan in-app toast jika user sedang di dalam aplikasi
         showNotification(`${title}: ${body}`, 'success');
 
-        // 4. Dispatch to Android Native Bridge ONCE ONLY (Single Bridge, Single Method)
+        // 4. JIKA APLIKASI SEDANG DIBUKA / AKTIF DI LAYAR (FOREGROUND):
+        // JANGAN KIRIM KE NOTIFICATION BAR HP!
+        // Notifikasi status bar HP HANYA untuk kondisi background / saat layar tertutup.
+        const isAppForeground = !document.hidden && document.visibilityState === 'visible';
+        if (isAppForeground) {
+          return; // Selesai — toast in-app sudah muncul, bar HP tetap bersih!
+        }
+
+        // 5. Kondisi BACKGROUND: Kirim 1 kartu ke Android Native Bridge
         let nativeNotified = false;
         const nativeBridges = [
           window.AndroidBridge,
@@ -10712,18 +10793,18 @@
               try {
                 bridge[m](title, body);
                 nativeNotified = true;
-                break; // STRICT BREAK: Never call more than 1 method on the same bridge!
+                break; // STRICT BREAK: 1 method saja
               } catch(e) {}
             }
           }
-          if (nativeNotified) break; // STRICT BREAK: Never call more than 1 native bridge!
+          if (nativeNotified) break; // STRICT BREAK: 1 bridge saja
         }
 
-        // 5. If Android Native Bridge already handled it, DO NOT call Web Notification API (Prevents duplicate cards)
+        // 6. Jika Android Bridge sudah menangani, jangan panggil Web Notification
         if (nativeNotified) return;
 
-        // 6. Web Push / Browser Notification (Fallback for Desktop/PWA when tab is in background)
-        if (document.hidden && 'Notification' in window && Notification.permission === 'granted') {
+        // 7. Web Push fallback saat background di browser / PWA
+        if ('Notification' in window && Notification.permission === 'granted') {
           try {
             const options = {
               body: body,

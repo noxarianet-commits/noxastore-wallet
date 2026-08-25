@@ -1668,7 +1668,7 @@
           </div>
           <div style="display: flex; flex-direction: column; gap: 6px; min-width: 180px; flex: 1;">
             <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Provider / Brand</label>
-            <select id="ppob-admin-brand" style="background: white; border: 1px solid var(--border-color); color: var(--text-main); padding: 10px 12px; border-radius: 10px; outline: none; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;">
+            <select id="ppob-admin-brand" onchange="loadPpobAdmin()" style="background: white; border: 1px solid var(--border-color); color: var(--text-main); padding: 10px 12px; border-radius: 10px; outline: none; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;">
               <option value="">-- Semua Provider --</option>
               <option value="TELKOMSEL">Telkomsel</option>
               <option value="INDOSAT">Indosat</option>
@@ -2164,8 +2164,9 @@
       } else if (view === 'withdrawals') {
         loadWithdrawals();
       } else if (view === 'ppob') {
-        // Reset to default state when switching to PPOB tab
+        // Auto-load all SekaliPay products immediately when opening PPOB tab
         onPpobCategoryChange();
+        loadPpobAdmin();
       }
     }
 
@@ -3310,6 +3311,7 @@
       const brandSel = document.getElementById('ppob-admin-brand');
       const brands = PPOB_BRAND_MAP[cat] || [''];
       brandSel.innerHTML = brands.map(b => `<option value="${b}">${b ? b : '-- Semua Provider --'}</option>`).join('');
+      loadPpobAdmin();
     }
 
     let _ppobFilteredData = [];
@@ -3536,46 +3538,51 @@
       }
 
       const targetData = (_ppobFilteredData && _ppobFilteredData.length > 0) ? _ppobFilteredData : ppobProductsData;
+      const hasSpecificFilter = targetData && targetData.length > 0 && targetData.length < ppobProductsData.length;
+      const scopeLabel = hasSpecificFilter ? `${targetData.length} produk yang sedang difilter` : `SEMUA produk SekaliPay`;
 
-      if (!targetData || targetData.length === 0) {
-        showNotification('⚠️ Tidak ada produk yang sedang dicari/ditampilkan untuk diatur markup.', 'warning');
-        return;
-      }
+      if (!confirm(`Apakah Anda yakin ingin menerapkan Fee/Markup Rp ${val.toLocaleString('id-ID')} untuk ${scopeLabel}?`)) return;
 
-      const query = (document.getElementById('ppob-search-input')?.value || '').trim();
-      const scopeLabel = query ? `kata kunci "${query}" (${targetData.length} produk)` : `${targetData.length} produk yang sedang ditampilkan`;
-
-      if (!confirm(`Apakah Anda yakin ingin mengatur Fee Rp ${val.toLocaleString('id-ID')} untuk SEMUA ${scopeLabel}?`)) return;
-
-      const skus = targetData.map(p => p.sku);
-      showNotification(`⏳ Memperbarui fee Rp ${val.toLocaleString('id-ID')} untuk ${skus.length} produk...`, 'hourglass_empty');
+      const skus = (targetData && targetData.length > 0) ? targetData.map(p => p.sku) : [];
+      showNotification(`⏳ Menerapkan fee Rp ${val.toLocaleString('id-ID')} ke sistem...`, 'hourglass_empty');
 
       const res = await adminFetch('/admin/ppob/products/bulk-markup', {
         method: 'POST',
-        body: { skus, markup: val }
+        body: { skus, markup: val, applyAll: !hasSpecificFilter }
       });
 
       if (res.success) {
-        const skuSet = new Set(skus);
-
-        ppobProductsData.forEach(p => {
-          if (skuSet.has(p.sku)) {
+        if (!hasSpecificFilter) {
+          ppobProductsData.forEach(p => {
             p.markup = val;
             p.selling_price = (p.base_price || p.price || 0) + val;
+          });
+          if (_ppobFilteredData) {
+            _ppobFilteredData.forEach(p => {
+              p.markup = val;
+              p.selling_price = (p.base_price || p.price || 0) + val;
+            });
           }
-        });
-
-        if (_ppobFilteredData && _ppobFilteredData.length > 0) {
-          _ppobFilteredData.forEach(p => {
+        } else {
+          const skuSet = new Set(skus);
+          ppobProductsData.forEach(p => {
             if (skuSet.has(p.sku)) {
               p.markup = val;
               p.selling_price = (p.base_price || p.price || 0) + val;
             }
           });
+          if (_ppobFilteredData) {
+            _ppobFilteredData.forEach(p => {
+              if (skuSet.has(p.sku)) {
+                p.markup = val;
+                p.selling_price = (p.base_price || p.price || 0) + val;
+              }
+            });
+          }
         }
 
         renderPpobProductsTable();
-        showNotification(`✅ Fee Rp ${val.toLocaleString('id-ID')} berhasil diterapkan ke ${res.updatedCount} produk.`, 'verified');
+        showNotification(`✅ Fee Rp ${val.toLocaleString('id-ID')} berhasil diterapkan ke ${res.updatedCount || 'semua'} produk.`, 'verified');
       } else {
         showNotification('❌ Gagal menerapkan bulk markup: ' + (res.error || 'Error'), 'error');
       }

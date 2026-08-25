@@ -321,7 +321,7 @@ function isDuplicateBroadcast(event, data) {
   const now = Date.now();
   const lastTime = recentBroadcastHashes.get(hashKey) || 0;
   
-  if (now - lastTime < 5000) {
+  if (now - lastTime < 12000) {
     console.log(`[Anti-Spam] Dropped duplicate event broadcast: ${hashKey}`);
     return true;
   }
@@ -331,7 +331,7 @@ function isDuplicateBroadcast(event, data) {
   // Housekeeping old hashes
   if (recentBroadcastHashes.size > 200) {
     for (const [k, t] of recentBroadcastHashes.entries()) {
-      if (now - t > 10000) recentBroadcastHashes.delete(k);
+      if (now - t > 20000) recentBroadcastHashes.delete(k);
     }
   }
   return false;
@@ -344,8 +344,8 @@ async function sendBackgroundWebPush(targetUsername, payload) {
     const payloadHash = `${key}:${payload.title || ''}:${payload.body || ''}`;
     const lastTime = lastNotificationSent.get(payloadHash) || 0;
     
-    // Prevent spamming push notifications: 10 seconds payload TTL per user/payload
-    if (now - lastTime < 10000) {
+    // Prevent spamming push notifications: 15 seconds payload TTL per user/payload
+    if (now - lastTime < 15000) {
       console.log(`[WebPush Rate Limit] Suppressed duplicate push notification to ${targetUsername}: ${payload.title}`);
       return;
     }
@@ -353,7 +353,7 @@ async function sendBackgroundWebPush(targetUsername, payload) {
 
     if (lastNotificationSent.size > 200) {
       for (const [k, t] of lastNotificationSent.entries()) {
-        if (now - t > 15000) lastNotificationSent.delete(k);
+        if (now - t > 25000) lastNotificationSent.delete(k);
       }
     }
 
@@ -373,7 +373,7 @@ async function sendBackgroundWebPush(targetUsername, payload) {
     const finalPayload = Object.assign({
       tag: 'noxa-single-notification',
       timestamp: Date.now()
-    }, payload);
+    }, payload, { tag: 'noxa-single-notification' });
 
     for (const sub of subs) {
       try {
@@ -425,7 +425,7 @@ function broadcastRealtimeEvent(event, data) {
         title: data.title || 'NoxariaNet Wallet',
         body: data.body || 'Pemberitahuan transaksi baru!',
         icon: '/loading screen noxa.png',
-        tag: 'noxa-global-notif'
+        tag: 'noxa-single-notification'
       });
     }
   } else {
@@ -434,7 +434,7 @@ function broadcastRealtimeEvent(event, data) {
       title: data.title || 'NoxariaNet Wallet',
       body: data.body || 'Pemberitahuan transaksi baru!',
       icon: '/loading screen noxa.png',
-      tag: 'noxa-global-notif'
+      tag: 'noxa-single-notification'
     });
   }
 }
@@ -2011,19 +2011,22 @@ app.post('/admin/ppob/products/:sku', requireAdminAuth, handleAdminPpobSkuUpdate
 
 app.post('/admin/ppob/products/bulk-markup', requireAdminAuth, async (req, res) => {
   try {
-    const { skus, markup, category, brand } = req.body;
+    const { skus, markup, applyAll } = req.body;
     const numMarkup = Math.max(0, Math.ceil(Number(markup) || 0));
-    let updatedCount = 0;
 
-    if (Array.isArray(skus) && skus.length > 0) {
-      const visMap = await db.getPpobVisibilityMap();
-      for (const sku of skus) {
-        const current = visMap[sku] || {};
-        await db.setPpobVisibility(sku, current.active !== false, current.category || category || '', current.brand || brand || '', numMarkup);
-        updatedCount++;
-      }
+    // Get all SekaliPay products to ensure all live SKUs are covered
+    let targetSkus = skus;
+    if (applyAll || !targetSkus || targetSkus === 'ALL' || (Array.isArray(targetSkus) && targetSkus.length === 0)) {
+      try {
+        const liveItems = await sekalipayService.getItems(false);
+        if (Array.isArray(liveItems) && liveItems.length > 0) {
+          targetSkus = liveItems.map(p => p.sku || p.buyer_sku_code || p.id).filter(Boolean);
+        }
+      } catch (e) {}
     }
-    res.json({ success: true, updatedCount, markup: numMarkup });
+
+    const result = await db.bulkSetPpobMarkup(targetSkus, numMarkup);
+    res.json({ success: true, updatedCount: result.updatedCount, markup: numMarkup });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
