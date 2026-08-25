@@ -4640,11 +4640,16 @@
         <!-- Recipient field -->
         <div style="background: white; border-radius: 16px; padding: 16px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
           <label style="font-size: 12px; font-weight: 700; color: #64748b; display: block; margin-bottom: 8px;">Penerima (Nomor HP / Username / User ID)</label>
-          <div style="display: flex; gap: 10px; align-items: center;">
+          <div style="display: flex; gap: 8px; align-items: center;">
             <input id="transfer-target" type="text" placeholder="Masukkan Nomor HP / Username Penerima"
               style="flex: 1; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; font-size: 14px; font-weight: 500; outline: none; color: #1e293b; background: #f8fafc; transition: border 0.2s;"
               oninput="onTransferTargetInput(this.value)"
               onfocus="this.style.border='1.5px solid #a855f7'" onblur="this.style.border='1.5px solid #e2e8f0'" />
+            <button type="button" onclick="openContactPickerFor('transfer-target', (val) => onTransferTargetInput(val))" title="Pilih dari Kontak HP"
+              style="padding: 11px 14px; background: rgba(123, 45, 142, 0.08); border: 1.5px solid rgba(123, 45, 142, 0.2); border-radius: 10px; color: #7B2D8E; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 12px; font-weight: 700; flex-shrink: 0; transition: all 0.2s;">
+              <span class="material-symbols-outlined" style="font-size: 19px;">contacts</span>
+              <span class="hidden sm:inline">Kontak</span>
+            </button>
           </div>
           <p id="transfer-recipient-name" style="font-size: 12px; color: #059669; font-weight: 600; margin: 6px 0 0 2px; display: none;"></p>
         </div>
@@ -4858,8 +4863,12 @@
 
         <!-- ACTION BUTTONS -->
         <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px;">
+          <!-- Primary: Unduh Struk (Simpan PNG ke Galeri) -->
+          <button id="download-receipt-btn" onclick="downloadReceiptImage()" style="width: 100%; padding: 14px 16px; background: linear-gradient(135deg, #7B2D8E 0%, #9B4DB8 100%); color: white; border: none; border-radius: 16px; font-weight: 800; font-size: 14px; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 6px 20px rgba(123,45,142,0.3); transition: transform 0.15s, opacity 0.2s;">
+            <span class="material-symbols-outlined" style="font-size: 20px;">download</span> Unduh Struk (Simpan PNG ke Galeri)
+          </button>
           <!-- Salin Semua Rincian Button -->
-          <button onclick="copyTransactionDetails(currentPrintTx)" style="width: 100%; padding: 12px 14px; background: linear-gradient(135deg, #7B2D8E, #9B4DB8); color: white; border: none; border-radius: 14px; font-weight: 700; font-size: 13.5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(123,45,142,0.25); transition: opacity 0.2s;">
+          <button onclick="copyTransactionDetails(currentPrintTx)" style="width: 100%; padding: 12px 14px; background: #ffffff; color: #7B2D8E; border: 1.5px solid #e9d5ff; border-radius: 14px; font-weight: 700; font-size: 13.5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 8px rgba(123,45,142,0.06); transition: opacity 0.2s;">
             <span class="material-symbols-outlined" style="font-size: 18px;">content_copy</span> Salin Semua Rincian Transaksi
           </button>
           <!-- Share ke WhatsApp Direct Button -->
@@ -4990,10 +4999,13 @@
 
         <!-- Action Buttons -->
         <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 6px;">
-          <button onclick="openTrxDetailFromPostCheckout()" style="width: 100%; height: 50px; background: linear-gradient(135deg, #7B2D8E 0%, #9B4DB8 100%); color: white; border: none; border-radius: 14px; font-weight: 700; font-size: 14px; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 6px 20px rgba(123,45,142,0.3); transition: all 0.25s ease;">
-            <span class="material-symbols-outlined" style="font-size: 20px;">receipt_long</span> Lihat / Cetak Struk Pembayaran
+          <button onclick="downloadReceiptFromPostCheckout()" style="width: 100%; height: 50px; background: linear-gradient(135deg, #7B2D8E 0%, #9B4DB8 100%); color: white; border: none; border-radius: 14px; font-weight: 800; font-size: 14px; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 6px 20px rgba(123,45,142,0.3); transition: all 0.25s ease;">
+            <span class="material-symbols-outlined" style="font-size: 20px;">download</span> Unduh Struk (Simpan PNG ke Galeri)
           </button>
-          <button onclick="closePostCheckoutStatus()" style="width: 100%; height: 48px; background: #f1f5f9; border: none; color: #475569; border-radius: 14px; font-weight: 700; font-size: 13.5px; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; transition: background 0.2s;">
+          <button onclick="openTrxDetailFromPostCheckout()" style="width: 100%; height: 46px; background: #ffffff; color: #7B2D8E; border: 1.5px solid #e9d5ff; border-radius: 14px; font-weight: 700; font-size: 13.5px; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 8px rgba(123,45,142,0.06); transition: all 0.25s ease;">
+            <span class="material-symbols-outlined" style="font-size: 18px;">receipt_long</span> Lihat / Cetak Struk Pembayaran
+          </button>
+          <button onclick="closePostCheckoutStatus()" style="width: 100%; height: 44px; background: #f1f5f9; border: none; color: #475569; border-radius: 14px; font-weight: 700; font-size: 13px; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; transition: background 0.2s;">
             Selesai & Kembali ke Beranda
           </button>
         </div>
@@ -5245,9 +5257,13 @@
           <div style="position: relative; display: flex; align-items: center; background: #f8fafc; border-radius: 12px; border: 1.5px solid #e2e8f0; transition: all 0.2s ease;">
             <span class="material-symbols-outlined" style="position: absolute; left: 12px; color: #7B2D8E; font-size: 20px;">account_box</span>
             <input type="text" id="ppob-target-input" placeholder="Masukkan nomor HP / ID Game..."
-              style="width: 100%; padding: 11px 14px 11px 40px; border: none; background: transparent; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13.5px; font-weight: 700; color: #0f172a; outline: none;"
+              style="width: 100%; padding: 11px 44px 11px 40px; border: none; background: transparent; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13.5px; font-weight: 700; color: #0f172a; outline: none;"
               onfocus="this.parentElement.style.borderColor='#7B2D8E'; this.parentElement.style.background='#ffffff'; this.parentElement.style.boxShadow='0 0 0 3.5px rgba(123, 45, 142, 0.12)';"
               onblur="this.parentElement.style.borderColor='#e2e8f0'; this.parentElement.style.background='#f8fafc'; this.parentElement.style.boxShadow='none';" />
+            <button type="button" onclick="openContactPickerFor('ppob-target-input')" title="Pilih dari Kontak HP"
+              style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: rgba(123, 45, 142, 0.08); border: none; color: #7B2D8E; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;">
+              <span class="material-symbols-outlined" style="font-size: 18px;">contacts</span>
+            </button>
           </div>
         </div>
 
@@ -5558,9 +5574,13 @@
             <span class="material-symbols-outlined" style="position: absolute; left: 12px; color: #7B2D8E; font-size: 20px;">smartphone</span>
             <input type="tel" id="dana-withdraw-phone" placeholder="Contoh: 081234567890"
               oninput="lookupEwalletAccountName(this.value)"
-              style="width: 100%; padding: 11px 14px 11px 40px; border: none; background: transparent; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13.5px; font-weight: 700; color: #0f172a; outline: none;"
+              style="width: 100%; padding: 11px 44px 11px 40px; border: none; background: transparent; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13.5px; font-weight: 700; color: #0f172a; outline: none;"
               onfocus="this.parentElement.style.borderColor='#7B2D8E'; this.parentElement.style.background='#ffffff'; this.parentElement.style.boxShadow='0 0 0 3.5px rgba(123, 45, 142, 0.12)';"
               onblur="this.parentElement.style.borderColor='#e2e8f0'; this.parentElement.style.background='#f8fafc'; this.parentElement.style.boxShadow='none';" />
+            <button type="button" onclick="openContactPickerFor('dana-withdraw-phone', (phone) => lookupEwalletAccountName(phone))" title="Pilih dari Kontak HP"
+              style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: rgba(123, 45, 142, 0.08); border: none; color: #7B2D8E; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;">
+              <span class="material-symbols-outlined" style="font-size: 18px;">contacts</span>
+            </button>
           </div>
           <!-- Atas Nama Row -->
           <div id="ewallet-accname-row" style="display:none; margin-top: 6px; background: rgba(123,45,142,0.05); border-radius: 10px; padding: 8px 12px; align-items: center; gap: 8px;">
@@ -5951,6 +5971,55 @@
 
         <div style="margin-top: 8px; padding: 6px 8px; background: rgba(123, 45, 142, 0.04); border-radius: 8px; font-size: 10px; color: #475569; line-height: 1.3; flex-shrink: 0;">
           💡 <strong>Petunjuk Simpan Manual:</strong> Jika file tidak tersimpan otomatis, sentuh &amp; tahan (tekan lama) pada gambar di atas lalu pilih <strong>"Simpan Gambar"</strong> / <strong>"Download Gambar"</strong>.
+        </div>
+      </div>
+    </div>
+
+    <!-- Universal In-App Contact Picker & Recent Contacts Modal -->
+    <div class="modal-overlay" id="contact-helper-modal" style="display: none;">
+      <div class="modal-card" style="background: var(--white); padding: 24px 20px; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.18); max-width: 420px; width: 92%; max-height: 85vh; display: flex; flex-direction: column;">
+        <!-- Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-shrink: 0;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(123, 45, 142, 0.1); color: #7B2D8E; display: flex; align-items: center; justify-content: center;">
+              <span class="material-symbols-outlined" style="font-size: 20px;">contacts</span>
+            </div>
+            <div>
+              <h3 style="color: #0f172a; font-size: 16px; font-weight: 800; margin: 0;">Pilih Kontak Tujuan</h3>
+              <p style="color: #64748b; font-size: 11px; margin: 2px 0 0;">Pilih dari riwayat transaksi atau kontak</p>
+            </div>
+          </div>
+          <button class="modal-close" onclick="closeInAppContactHelperModal()"
+            style="background: #f1f5f9; border: none; color: #475569; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+            <span class="material-symbols-outlined" style="font-size: 18px;">close</span>
+          </button>
+        </div>
+
+        <!-- Quick Manual Input with Cleaner -->
+        <div style="margin-bottom: 14px; flex-shrink: 0;">
+          <div style="display: flex; gap: 6px; align-items: center; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 4px 6px 4px 12px;">
+            <span class="material-symbols-outlined" style="color: #94a3b8; font-size: 18px;">search</span>
+            <input type="text" id="contact-helper-search-input" placeholder="Ketik / tempel nomor (+62/08)..."
+              oninput="filterInAppRecentContacts(this.value)"
+              style="flex: 1; border: none; background: transparent; font-size: 13px; font-weight: 700; color: #0f172a; outline: none; padding: 6px 0;" />
+            <button onclick="applyManualContactFromHelper()" style="background: #7B2D8E; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 800; cursor: pointer;">Gunakan</button>
+          </div>
+        </div>
+
+        <div style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; flex-shrink: 0;">
+          Nomor Kontak Terakhir
+        </div>
+
+        <!-- Recent Contacts List -->
+        <div id="contact-helper-list" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; min-height: 120px; padding-right: 2px;">
+          <!-- Items populated dynamically -->
+        </div>
+
+        <!-- Footnote / System Picker Button -->
+        <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid #f1f5f9; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0;">
+          <button onclick="triggerNativeSystemContactPicker()" style="width: 100%; padding: 10px; background: rgba(123, 45, 142, 0.06); border: 1px dashed rgba(123, 45, 142, 0.3); border-radius: 12px; color: #7B2D8E; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <span class="material-symbols-outlined" style="font-size: 18px;">person_search</span> Buka Buku Kontak Perangkat
+          </button>
         </div>
       </div>
     </div>
@@ -10360,6 +10429,10 @@
             const data = JSON.parse(e.data);
             const myUname = localStorage.getItem('noxaUsername');
             if (!data.targetUsername || data.targetUsername === myUname || data.targetUsername === 'all') {
+              if (data.title) {
+                triggerSystemNotification(data.title, data.body || 'Saldo Anda telah berhasil diperbarui.');
+              }
+              showHistoryBadge();
               syncServerState();
             }
           } catch(err) {}
@@ -10391,8 +10464,37 @@
             const data = JSON.parse(e.data);
             const myUname = localStorage.getItem('noxaUsername');
             if (!data.targetUsername || data.targetUsername === myUname || data.targetUsername === 'all') {
+              if (data.title) {
+                triggerSystemNotification(data.title, data.body || 'Status transaksi diperbarui.');
+              }
               showHistoryBadge();
               syncServerState();
+            }
+          } catch(err) {}
+        });
+
+        evtSource.addEventListener('activity', (e) => {
+          try {
+            const data = JSON.parse(e.data);
+            const myUname = localStorage.getItem('noxaUsername');
+            if (!data.targetUsername || data.targetUsername === myUname || data.targetUsername === 'all') {
+              if (data.title) {
+                triggerSystemNotification(data.title, data.body || 'Aktivitas akun berhasil.');
+              }
+              syncServerState();
+            }
+          } catch(err) {}
+        });
+
+        evtSource.addEventListener('conversation_deleted', (e) => {
+          try {
+            const data = JSON.parse(e.data);
+            const myUname = localStorage.getItem('noxaUsername');
+            if (!data.conversationId || data.conversationId === myUname || data.conversationId === 'all') {
+              const msgContainer = document.getElementById('user-chat-messages');
+              if (msgContainer) {
+                msgContainer.innerHTML = '<div style="text-align: center; color: #94a3b8; padding: 20px; font-size: 12px;">Riwayat percakapan telah dibersihkan oleh Admin CS.</div>';
+              }
             }
           } catch(err) {}
         });
@@ -12833,8 +12935,18 @@
         window.open(waUrl, '_blank');
       }
 
-      async function downloadReceiptImage() {
-        if (!currentPrintTx) return;
+      async function downloadReceiptImage(txObj = null) {
+        const tx = txObj || currentPrintTx || _currentPostCheckoutTx;
+        if (!tx) {
+          showNotification('❌ Data transaksi tidak ditemukan.', 'error');
+          return;
+        }
+
+        // If card is not yet populated with this tx, populate it
+        if (!currentPrintTx || currentPrintTx.id !== tx.id) {
+          openTrxDetail(tx);
+        }
+
         const card = document.getElementById('trx-receipt-card');
         if (!card) return;
 
@@ -12842,10 +12954,12 @@
         const originalHTML = btn ? btn.innerHTML : '';
         if (btn) {
           btn.disabled = true;
-          btn.innerHTML = '<span class="material-symbols-outlined" style="animation: spin 1s linear infinite;">sync</span> Memproses Struk...';
+          btn.innerHTML = '<span class="material-symbols-outlined" style="animation: spin 1s linear infinite;">sync</span> Menyiapkan Struk HD...';
         }
 
         try {
+          playAppNotificationSound('success');
+
           const canvas = await html2canvas(card, {
             scale: 3,
             useCORS: true,
@@ -12858,24 +12972,26 @@
           });
 
           const dataUrl = canvas.toDataURL('image/png');
-          const fileName = `Struk_NoxaPay_${currentPrintTx.id || 'TRX'}.png`;
+          const cleanTxId = (tx.id || tx.transactionId || 'TRX').replace(/[^a-zA-Z0-9_-]/g, '');
+          const fileName = `Struk_NoxaPay_${cleanTxId}.png`;
 
           // Generate Blob URL for native binary download trigger
           let blobUrl = null;
+          let pngBlob = null;
           try {
-            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
-            if (blob) blobUrl = URL.createObjectURL(blob);
+            pngBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
+            if (pngBlob) blobUrl = URL.createObjectURL(pngBlob);
           } catch(e) {}
 
-          // Try native Android bridges first
+          // 1. Try native Android / WebView bridges
           let nativeSaved = false;
           const nativeBridges = [
             window.AndroidBridge, window.Android, window.JSBridge,
-            window.NativeBridge, window.AndroidNative, window.NoxaBridge
+            window.NativeBridge, window.AndroidNative, window.NoxaBridge, window.NoxaNative
           ];
           const saveMethods = [
-            'saveImage', 'downloadImage', 'saveBase64', 'shareBase64',
-            'saveImageToGallery', 'downloadFile', 'downloadBase64', 'savePicture'
+            'saveImageToGallery', 'saveImage', 'downloadImage', 'saveBase64',
+            'shareBase64', 'downloadFile', 'downloadBase64', 'savePicture'
           ];
           for (const bridge of nativeBridges) {
             if (!bridge) continue;
@@ -12891,9 +13007,10 @@
             if (nativeSaved) break;
           }
 
-          // Open the receipt download & preview modal so the user gets direct access to image preview & download
+          // 2. Open interactive preview modal with direct download and long-press guide
           openReceiptDownloadModal(dataUrl, fileName, blobUrl);
 
+          // 3. Direct browser download trigger
           try {
             const a = document.createElement('a');
             a.download = fileName;
@@ -12904,7 +13021,22 @@
             setTimeout(() => { if (document.body.contains(a)) document.body.removeChild(a); }, 1000);
           } catch(e) {}
 
-          showNotification(nativeSaved ? '✅ Gambar struk tersimpan ke galeri!' : '✅ Struk siap diunduh & disimpan!');
+          // 4. Try Web Share API with File Blob if supported
+          if (pngBlob && navigator.canShare) {
+            try {
+              const file = new File([pngBlob], fileName, { type: 'image/png' });
+              if (navigator.canShare({ files: [file] })) {
+                // On mobile this lets user directly tap 'Save Image' or 'Simpan ke Galeri'
+                navigator.share({
+                  files: [file],
+                  title: 'Struk Pembayaran NoxaPay',
+                  text: `Struk transaksi resmi ${tx.merchant || 'NoxaPay'}`
+                }).catch(() => {});
+              }
+            } catch(shareErr) {}
+          }
+
+          showNotification(nativeSaved ? '✅ Gambar struk berhasil disimpan ke galeri!' : '✅ Struk PNG berhasil dibuat & diunduh!');
         } catch (err) {
           console.error('[Download Struk Error]', err);
           showNotification('❌ Gagal memproses struk: ' + err.message);
@@ -12913,6 +13045,226 @@
             btn.disabled = false;
             btn.innerHTML = originalHTML;
           }
+        }
+      }
+
+      function downloadReceiptFromPostCheckout() {
+        if (_currentPostCheckoutTx) {
+          downloadReceiptImage(_currentPostCheckoutTx);
+        } else if (currentPrintTx) {
+          downloadReceiptImage(currentPrintTx);
+        }
+      }
+
+      // ============================================
+      // CONTACT PICKER & PHONE NUMBER SANITIZER ENGINE
+      // ============================================
+      function cleanIndonesianPhoneNumber(rawPhone) {
+        if (!rawPhone) return '';
+        let cleaned = String(rawPhone).trim().replace(/[^\d+]/g, '');
+
+        if (cleaned.startsWith('+62')) {
+          cleaned = '0' + cleaned.substring(3);
+        } else if (cleaned.startsWith('62')) {
+          cleaned = '0' + cleaned.substring(2);
+        }
+        cleaned = cleaned.replace(/\D/g, '');
+        return cleaned;
+      }
+
+      async function openContactPickerFor(targetInputId, onSelectedCallback) {
+        const inputEl = document.getElementById(targetInputId);
+        if (!inputEl) return;
+
+        // 1. Try Native Web Contact Picker API (Chrome for Android / Supported Mobile Browsers)
+        if ('contacts' in navigator && 'ContactsManager' in window) {
+          try {
+            const props = ['name', 'tel'];
+            const contacts = await navigator.contacts.select(props, { multiple: false });
+            if (contacts && contacts.length > 0) {
+              const contact = contacts[0];
+              let chosenNumber = '';
+              if (contact.tel && contact.tel.length > 0) {
+                chosenNumber = contact.tel[0];
+              }
+              if (chosenNumber) {
+                const formatted = cleanIndonesianPhoneNumber(chosenNumber);
+                inputEl.value = formatted;
+                inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+                inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+                if (typeof onSelectedCallback === 'function') {
+                  onSelectedCallback(formatted, contact.name ? contact.name[0] : '');
+                }
+                playAppNotificationSound('success');
+                showNotification(`👤 Kontak ${contact.name && contact.name[0] ? contact.name[0] + ' (' + formatted + ')' : formatted} dipilih!`);
+                return;
+              }
+            }
+          } catch (err) {
+            console.log('[Contact Picker API]:', err.message);
+          }
+        }
+
+        // 2. Try Android WebView / NoxaNative Bridge
+        const nativeBridges = [window.AndroidBridge, window.Android, window.JSBridge, window.NoxaNative];
+        for (const bridge of nativeBridges) {
+          if (bridge && typeof bridge.pickContact === 'function') {
+            try {
+              window._onNativeContactPicked = function(number, name) {
+                const formatted = cleanIndonesianPhoneNumber(number);
+                inputEl.value = formatted;
+                inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+                inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+                if (typeof onSelectedCallback === 'function') {
+                  onSelectedCallback(formatted, name);
+                }
+                playAppNotificationSound('success');
+                showNotification(`👤 Kontak ${name ? name + ' (' + formatted + ')' : formatted} dipilih!`);
+              };
+              bridge.pickContact('_onNativeContactPicked');
+              return;
+            } catch (e) {}
+          }
+        }
+
+        // 3. Universal Fallback: Show In-App Recent / Quick Contact Helper Modal
+        openInAppContactHelperModal(targetInputId, onSelectedCallback);
+      }
+
+      function openInAppContactHelperModal(targetInputId, callback) {
+        window._activeContactTargetInputId = targetInputId;
+        window._activeContactCallback = callback;
+
+        const modal = document.getElementById('contact-helper-modal');
+        if (!modal) {
+          const manualNum = prompt('Masukkan atau tempel nomor kontak tujuan (Contoh: 08123456789):');
+          if (manualNum) {
+            const formatted = cleanIndonesianPhoneNumber(manualNum);
+            const inputEl = document.getElementById(targetInputId);
+            if (inputEl) {
+              inputEl.value = formatted;
+              inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+              inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+              if (typeof callback === 'function') callback(formatted);
+            }
+          }
+          return;
+        }
+
+        const searchInput = document.getElementById('contact-helper-search-input');
+        if (searchInput) searchInput.value = '';
+
+        renderInAppRecentContactsList('');
+
+        modal.style.display = 'flex';
+        void modal.offsetWidth;
+        modal.classList.add('active');
+      }
+
+      function renderInAppRecentContactsList(filterQuery = '') {
+        const listContainer = document.getElementById('contact-helper-list');
+        if (!listContainer) return;
+
+        const recentNumbers = [];
+        const seen = new Set();
+        const q = String(filterQuery || '').toLowerCase().trim();
+
+        if (Array.isArray(transactionHistory)) {
+          for (const tx of transactionHistory) {
+            const target = tx.target || tx.phoneNumber || tx.customerNo || tx.noTujuan || '';
+            const clean = cleanIndonesianPhoneNumber(target);
+            if (clean && clean.length >= 8 && !seen.has(clean)) {
+              seen.add(clean);
+              const name = tx.account_name || tx.customerName || tx.merchant || 'Riwayat Kontak';
+              if (!q || clean.includes(q) || name.toLowerCase().includes(q)) {
+                recentNumbers.push({
+                  number: clean,
+                  name: name,
+                  date: tx.date || ''
+                });
+                if (recentNumbers.length >= 10) break;
+              }
+            }
+          }
+        }
+
+        if (recentNumbers.length === 0) {
+          listContainer.innerHTML = `
+            <div style="padding: 24px 12px; text-align: center; color: #94a3b8; font-size: 12.5px;">
+              <span class="material-symbols-outlined" style="font-size: 32px; opacity: 0.4; margin-bottom: 4px;">contact_page</span>
+              <p style="margin: 0; font-weight: 600;">Tidak ada nomor dalam riwayat.</p>
+              <p style="margin: 4px 0 0; font-size: 11px;">Ketik nomor pada kotak pencarian di atas.</p>
+            </div>
+          `;
+          return;
+        }
+
+        listContainer.innerHTML = recentNumbers.map(item => `
+          <div onclick="selectRecentContact('${item.number}', '${escapeHtml(item.name)}')"
+            style="display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 14px; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+            <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;">
+              <div style="width: 36px; height: 36px; border-radius: 50%; background: rgba(123, 45, 142, 0.1); color: #7B2D8E; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0;">
+                ${item.name ? item.name.charAt(0).toUpperCase() : '📱'}
+              </div>
+              <div style="min-width: 0; flex: 1;">
+                <strong style="font-size: 13px; color: #0f172a; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(item.name)}</strong>
+                <span style="font-size: 12px; color: #64748b; font-family: monospace; font-weight: 600;">${item.number}</span>
+              </div>
+            </div>
+            <span class="material-symbols-outlined" style="color: #7B2D8E; font-size: 18px; flex-shrink: 0; margin-left: 6px;">arrow_forward_ios</span>
+          </div>
+        `).join('');
+      }
+
+      function filterInAppRecentContacts(query) {
+        renderInAppRecentContactsList(query);
+      }
+
+      function applyManualContactFromHelper() {
+        const searchInput = document.getElementById('contact-helper-search-input');
+        if (!searchInput) return;
+        const val = cleanIndonesianPhoneNumber(searchInput.value);
+        if (!val || val.length < 5) {
+          showNotification('❌ Masukkan nomor handphone yang valid.');
+          return;
+        }
+        selectRecentContact(val, 'Kontak Pilihan');
+      }
+
+      function selectRecentContact(number, name) {
+        const targetInputId = window._activeContactTargetInputId;
+        const callback = window._activeContactCallback;
+        if (targetInputId) {
+          const inputEl = document.getElementById(targetInputId);
+          if (inputEl) {
+            inputEl.value = number;
+            inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+            inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+            if (typeof callback === 'function') callback(number, name);
+            playAppNotificationSound('success');
+            showNotification(`👤 Nomor ${number} dipilih!`);
+          }
+        }
+        closeInAppContactHelperModal();
+      }
+
+      function closeInAppContactHelperModal() {
+        const modal = document.getElementById('contact-helper-modal');
+        if (!modal) return;
+        modal.classList.remove('active');
+        setTimeout(() => {
+          modal.style.display = 'none';
+        }, 200);
+      }
+
+      async function triggerNativeSystemContactPicker() {
+        closeInAppContactHelperModal();
+        const targetId = window._activeContactTargetInputId;
+        const cb = window._activeContactCallback;
+        if (targetId) {
+          setTimeout(() => {
+            openContactPickerFor(targetId, cb);
+          }, 150);
         }
       }
 

@@ -3284,11 +3284,75 @@ app.post('/api/chat/read', async (req, res) => {
   }
 });
 
+// Delete Entire Conversation History (CS Admin Only)
+app.delete('/api/chat/conversation/:conversationId', requireCsAuth, async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    if (!conversationId) {
+      return res.status(400).json({ success: false, error: 'conversationId wajib diisi.' });
+    }
+
+    const deleted = await db.deleteConversationMessages(conversationId);
+
+    // Broadcast deletion event to CS consoles and user live chat
+    broadcastToCs({ type: 'conversation_deleted', conversationId });
+    broadcastToUser(conversationId, { type: 'conversation_deleted', conversationId });
+
+    return res.json({
+      success: true,
+      message: `Riwayat chat untuk ${conversationId} berhasil dihapus dari database.`
+    });
+  } catch (err) {
+    console.error('[Delete Conversation Error]:', err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Delete Single Chat Message (CS Admin Only)
+app.delete('/api/chat/message/:messageId', requireCsAuth, async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const conversationId = req.query.conversationId || req.body.conversationId;
+    if (!messageId) {
+      return res.status(400).json({ success: false, error: 'messageId wajib diisi.' });
+    }
+
+    const deleted = await db.deleteSingleChatMessage(messageId);
+
+    if (conversationId) {
+      broadcastToCs({ type: 'message_deleted', messageId, conversationId });
+      broadcastToUser(conversationId, { type: 'message_deleted', messageId, conversationId });
+    }
+
+    return res.json({
+      success: true,
+      message: 'Pesan berhasil dihapus.'
+    });
+  } catch (err) {
+    console.error('[Delete Message Error]:', err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Initialize DB Files
 readJSON(USERS_FILE, []);
 readJSON(TOPUP_FILE, []);
 readJSON(CONFIG_FILE, { last_user_id: 0, last_topup_id: 0 });
 db.initDb();
+
+// Run CS Chat 5-Day Auto-Cleanup on Startup & Hourly Interval
+setTimeout(async () => {
+  try {
+    await db.autoCleanupOldChatMessages(5);
+  } catch (e) {}
+}, 5000);
+
+// Schedule hourly auto-cleanup for CS chat messages older than 5 days
+setInterval(async () => {
+  try {
+    await db.autoCleanupOldChatMessages(5);
+  } catch (e) {}
+}, 60 * 60 * 1000);
 
 // Start Combined Server (HTTP + WebSocket)
 server.listen(PORT, HOST, () => {

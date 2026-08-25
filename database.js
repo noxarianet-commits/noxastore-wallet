@@ -1497,6 +1497,61 @@ async function markConversationAsRead(conversationId, readerType = 'cs') {
   await run('UPDATE chat_messages SET readStatus = 1 WHERE conversationId = ? AND sender = ?', [cId, targetSender]);
 }
 
+async function deleteConversationMessages(conversationId) {
+  if (!conversationId) return false;
+  const cId = String(conversationId).trim();
+  if (!sqlite3) {
+    let list = readJSONFile(CHAT_FILE, []);
+    list = list.filter(m => String(m.conversationId).trim() !== cId);
+    writeJSONFile(CHAT_FILE, list);
+    return true;
+  }
+  await run('DELETE FROM chat_messages WHERE conversationId = ?', [cId]);
+  return true;
+}
+
+async function deleteSingleChatMessage(messageId) {
+  if (!messageId) return false;
+  const mId = String(messageId).trim();
+  if (!sqlite3) {
+    let list = readJSONFile(CHAT_FILE, []);
+    list = list.filter(m => String(m.id).trim() !== mId);
+    writeJSONFile(CHAT_FILE, list);
+    return true;
+  }
+  await run('DELETE FROM chat_messages WHERE id = ?', [mId]);
+  return true;
+}
+
+async function autoCleanupOldChatMessages(days = 5) {
+  try {
+    const cutoffDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+    let deletedCount = 0;
+    if (!sqlite3) {
+      let list = readJSONFile(CHAT_FILE, []);
+      const initialCount = list.length;
+      list = list.filter(m => {
+        if (!m.createdAt) return false;
+        return new Date(m.createdAt).getTime() >= (Date.now() - days * 24 * 60 * 60 * 1000);
+      });
+      deletedCount = initialCount - list.length;
+      if (deletedCount > 0) {
+        writeJSONFile(CHAT_FILE, list);
+      }
+    } else {
+      const res = await run('DELETE FROM chat_messages WHERE datetime(createdAt) <= datetime(?) OR createdAt < ?', [cutoffDate, cutoffDate]);
+      deletedCount = res && res.changes ? res.changes : 0;
+    }
+    if (deletedCount > 0) {
+      console.log(`[CS Chat Auto-Cleanup] Berhasil menghapus ${deletedCount} pesan chat CS yang lebih dari ${days} hari.`);
+    }
+    return deletedCount;
+  } catch (err) {
+    console.error('[CS Chat Auto-Cleanup Error]:', err.message);
+    return 0;
+  }
+}
+
 async function setUserSuspension(username, isSuspended, reason = '') {
   if (!username) return null;
   const target = String(username).trim();
@@ -1579,5 +1634,8 @@ module.exports = {
   getChatHistory,
   getAllConversationsSummary,
   markConversationAsRead,
+  deleteConversationMessages,
+  deleteSingleChatMessage,
+  autoCleanupOldChatMessages,
   setUserSuspension
 };
