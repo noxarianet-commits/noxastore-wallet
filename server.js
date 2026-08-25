@@ -10,7 +10,6 @@ const { exec } = require('child_process');
 const SekaliPayService = require('./sekalipayService');
 const db = require('./database');
 const orkutService = require('./orkutService');
-const waBot = require('./waBot');
 
 const app = express();
 
@@ -683,11 +682,6 @@ app.post('/api/github-webhook', (req, res) => {
       process.exit(0);
     }, 1000);
   });
-});
-
-// GET /api/wa-bot/status — Cek Status WA Bot
-app.get('/api/wa-bot/status', (req, res) => {
-  res.json(waBot.getBotStatus());
 });
 
 // POST /api/otp/send — Kirim Kode OTP ke WhatsApp User
@@ -1578,9 +1572,6 @@ app.get('/admin/ppob/products', requireAdminAuth, async (req, res) => {
     for (const item of items) {
       const itemSku = `SKL-${item.id}`;
       const vis = visMap[itemSku] || visMap[String(item.id)];
-      if (!vis) {
-        await db.setPpobVisibility(itemSku, true, item.category || category, brand || '', 0);
-      }
       const markup = vis ? Math.max(0, Math.ceil(Number(vis.markup) || 0)) : 0;
       const basePrice = Math.ceil(Number(item.price) || 0);
       products.push({
@@ -2859,9 +2850,6 @@ app.listen(PORT, HOST, () => {
   console.log(`   Internal  : http://localhost:${PORT}`);
   console.log(`   External  : http://203.175.125.151:${PORT}`);
   console.log(`================================================================`);
-
-  // Initialize WhatsApp Baileys Bot Service
-  waBot.initWaBot();
 
   const tunnelToken = process.env.CLOUDFLARE_TUNNEL_TOKEN;
   if (tunnelToken) {

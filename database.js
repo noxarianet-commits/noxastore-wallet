@@ -1174,47 +1174,81 @@ async function deleteInformation(id) {
 // PPOB VISIBILITY & MARKUP FUNCTIONS
 async function getPpobVisibilityMap() {
   if (!sqlite3) {
-    return readJSONFile(PPOB_FILE, {});
+    const rawMap = readJSONFile(PPOB_FILE, {});
+    const map = {};
+    for (const [k, v] of Object.entries(rawMap)) {
+      const rawSku = String(k || '').trim();
+      const sklSku = rawSku.startsWith('SKL-') ? rawSku : `SKL-${rawSku}`;
+      const numSku = rawSku.replace(/^SKL-/, '');
+      const entry = {
+        sku: sklSku,
+        active: v.active !== false,
+        category: v.category || '',
+        brand: v.brand || '',
+        markup: Math.max(0, Math.ceil(Number(v.markup) || 0))
+      };
+      map[rawSku] = entry;
+      map[sklSku] = entry;
+      map[numSku] = entry;
+    }
+    return map;
   }
   const rows = await all('SELECT * FROM ppob_visibility');
   const map = {};
   for (const r of rows) {
-    map[r.sku] = {
-      sku: r.sku,
+    const rawSku = String(r.sku || '').trim();
+    const sklSku = rawSku.startsWith('SKL-') ? rawSku : `SKL-${rawSku}`;
+    const numSku = rawSku.replace(/^SKL-/, '');
+    const entry = {
+      sku: sklSku,
       active: r.active !== 0,
       category: r.category || '',
       brand: r.brand || '',
-      markup: Number(r.markup) || 0
+      markup: Math.max(0, Math.ceil(Number(r.markup) || 0))
     };
+    map[rawSku] = entry;
+    map[sklSku] = entry;
+    map[numSku] = entry;
   }
   return map;
 }
 
 async function setPpobVisibility(sku, active, category = '', brand = '', markup = undefined) {
   if (!sku) return;
+  const rawSku = String(sku).trim();
+  const sklSku = rawSku.startsWith('SKL-') ? rawSku : `SKL-${rawSku}`;
+  const numSku = rawSku.replace(/^SKL-/, '');
+
   if (!sqlite3) {
     const map = readJSONFile(PPOB_FILE, {});
-    const existing = map[sku] || {};
+    const existing = map[sklSku] || map[rawSku] || map[numSku] || {};
     const newActive = active !== undefined && active !== null ? (active ? true : false) : (existing.active !== undefined ? existing.active : true);
     const newCat = category || existing.category || '';
     const newBrand = brand || existing.brand || '';
-    const newMarkup = markup !== undefined && markup !== null ? Number(markup) || 0 : (existing.markup || 0);
-    map[sku] = {
-      sku,
+    const newMarkup = markup !== undefined && markup !== null ? Math.max(0, Math.ceil(Number(markup) || 0)) : (existing.markup || 0);
+
+    const val = {
+      sku: sklSku,
       active: newActive,
       category: newCat,
       brand: newBrand,
       markup: newMarkup
     };
+
+    map[sklSku] = val;
+    map[numSku] = val;
+    map[rawSku] = val;
     writeJSONFile(PPOB_FILE, map);
-    return map[sku];
+    return val;
   }
-  const existing = await get('SELECT * FROM ppob_visibility WHERE sku = ?', [sku]);
+
+  const existing = await get('SELECT * FROM ppob_visibility WHERE sku = ? OR sku = ? OR sku = ?', [sklSku, numSku, rawSku]);
   const newActive = active !== undefined && active !== null ? (active ? 1 : 0) : (existing ? existing.active : 1);
   const newCat = category || (existing ? existing.category : '');
   const newBrand = brand || (existing ? existing.brand : '');
-  const newMarkup = markup !== undefined && markup !== null ? Number(markup) || 0 : (existing ? existing.markup : 0);
+  const newMarkup = markup !== undefined && markup !== null ? Math.max(0, Math.ceil(Number(markup) || 0)) : (existing ? Number(existing.markup) || 0 : 0);
 
+  // Save under sklSku
   await run(`
     INSERT INTO ppob_visibility (sku, active, category, brand, markup, updatedAt)
     VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
@@ -1224,10 +1258,24 @@ async function setPpobVisibility(sku, active, category = '', brand = '', markup 
       brand = excluded.brand,
       markup = excluded.markup,
       updatedAt = CURRENT_TIMESTAMP;
-  `, [sku, newActive, newCat, newBrand, newMarkup]);
+  `, [sklSku, newActive, newCat, newBrand, newMarkup]);
+
+  // Also save under numSku if different
+  if (numSku !== sklSku) {
+    await run(`
+      INSERT INTO ppob_visibility (sku, active, category, brand, markup, updatedAt)
+      VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+      ON CONFLICT(sku) DO UPDATE SET
+        active = excluded.active,
+        category = excluded.category,
+        brand = excluded.brand,
+        markup = excluded.markup,
+        updatedAt = CURRENT_TIMESTAMP;
+    `, [numSku, newActive, newCat, newBrand, newMarkup]);
+  }
 
   return {
-    sku,
+    sku: sklSku,
     active: newActive !== 0,
     category: newCat,
     brand: newBrand,
