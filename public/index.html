@@ -5219,12 +5219,12 @@
         <div style="background: #f8fafc; border-radius: 16px; padding: 16px; margin-bottom: 20px;">
           <div
             style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #e2e8f0;">
-            <span style="font-size: 13px; color: #64748b;">Produk</span>
+            <span style="font-size: 13px; color: #64748b;">Produk / Layanan</span>
             <strong id="ppob-checkout-name" style="font-size: 13px; color: #0f172a; text-align: right; max-width: 60%;">—</strong>
           </div>
           <div
             style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #e2e8f0;">
-            <span style="font-size: 13px; color: #64748b;">Nomor / ID</span>
+            <span style="font-size: 13px; color: #64748b;">Nomor Tujuan / ID</span>
             <strong id="ppob-checkout-target" style="font-size: 13px; color: #0f172a;">—</strong>
           </div>
           <div id="ppob-checkout-accname-row"
@@ -5234,12 +5234,22 @@
           </div>
           <div
             style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #e2e8f0;">
-            <span style="font-size: 13px; color: #64748b;">Saldo Kamu</span>
+            <span style="font-size: 13px; color: #64748b;">Harga Layanan</span>
+            <strong id="ppob-checkout-base-price" style="font-size: 13px; color: #475569;">Rp 0</strong>
+          </div>
+          <div
+            style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #e2e8f0;">
+            <span style="font-size: 13px; color: #64748b;">Biaya Admin</span>
+            <strong id="ppob-checkout-admin-fee" style="font-size: 13px; color: #7B2D8E;">Rp 0</strong>
+          </div>
+          <div
+            style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #e2e8f0;">
+            <span style="font-size: 13px; color: #64748b;">Saldo Kamu Saat Ini</span>
             <strong id="ppob-checkout-balance" style="font-size: 13px; color: #059669;">Rp 0</strong>
           </div>
-          <div style="display: flex; justify-content: space-between; padding: 10px 0 4px;">
-            <span style="font-size: 14px; font-weight: 700; color: #0f172a;">Total Bayar</span>
-            <strong id="ppob-checkout-price" style="font-size: 14px; font-weight: 800; color: #7B2D8E;">Rp 0</strong>
+          <div style="display: flex; justify-content: space-between; padding: 12px 0 4px;">
+            <span style="font-size: 14px; font-weight: 800; color: #0f172a;">Total Potong Saldo</span>
+            <strong id="ppob-checkout-price" style="font-size: 15px; font-weight: 800; color: #7B2D8E;">Rp 0</strong>
           </div>
         </div>
 
@@ -13313,10 +13323,21 @@
 
         _selectedPpobProduct = product;
 
+        const basePrice = product.base_price || product.price || 0;
+        const markup = product.markup || 0;
+        const totalPrice = product.price || (basePrice + markup);
+
         // Isi detail di modal
-        document.getElementById('ppob-checkout-name').innerText = product.product_name;
+        document.getElementById('ppob-checkout-name').innerText = product.product_name || product.name || 'Produk PPOB';
         document.getElementById('ppob-checkout-target').innerText = target;
-        document.getElementById('ppob-checkout-price').innerText = `Rp ${product.price.toLocaleString('id-ID')}`;
+
+        const basePriceEl = document.getElementById('ppob-checkout-base-price');
+        if (basePriceEl) basePriceEl.innerText = `Rp ${basePrice.toLocaleString('id-ID')}`;
+
+        const adminFeeEl = document.getElementById('ppob-checkout-admin-fee');
+        if (adminFeeEl) adminFeeEl.innerText = `Rp ${markup.toLocaleString('id-ID')}`;
+
+        document.getElementById('ppob-checkout-price').innerText = `Rp ${totalPrice.toLocaleString('id-ID')}`;
 
         // Atas Nama / Account Lookup
         const accRow = document.getElementById('ppob-checkout-accname-row');
