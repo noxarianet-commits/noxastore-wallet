@@ -717,39 +717,305 @@
       transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
-    /* Admin Navigation Tabs */
-    .admin-nav-tabs {
+    /* ========================================== */
+    /* ADMIN SIDEBAR & RESPONSIVE LAYOUT          */
+    /* ========================================== */
+    .admin-layout-root {
       display: flex;
-      gap: 12px;
-      margin-bottom: 24px;
+      min-height: 100vh;
+      width: 100%;
+      background: var(--bg-color);
     }
 
-    .admin-nav-tab {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      color: var(--text-muted);
-      padding: 12px 24px;
+    /* DESKTOP SIDEBAR */
+    .admin-sidebar {
+      width: 270px;
+      flex-shrink: 0;
+      background: linear-gradient(180deg, #190a2c 0%, #0d0517 100%);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+      z-index: 100;
+      box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+    }
+
+    .sidebar-brand {
+      padding: 24px 20px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .sidebar-brand .logo-icon {
+      background: linear-gradient(135deg, #7B2D8E 0%, #a855f7 100%);
+      color: white;
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(123, 45, 142, 0.4);
+      flex-shrink: 0;
+    }
+
+    .sidebar-brand h1 {
       font-family: var(--font-outfit);
+      font-size: 16px;
+      font-weight: 800;
+      color: white;
+      margin: 0;
+      line-height: 1.2;
+    }
+
+    .sidebar-brand p {
+      font-size: 9.5px;
+      color: rgba(255, 255, 255, 0.6);
       font-weight: 700;
-      font-size: 14px;
-      cursor: pointer;
-      border-radius: 14px;
+      letter-spacing: 0.5px;
+      margin: 2px 0 0;
+    }
+
+    .sidebar-status-card {
+      margin: 14px 16px 8px;
+      padding: 8px 12px;
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.25);
+      border-radius: 10px;
       display: flex;
       align-items: center;
       gap: 8px;
-      transition: all 0.25s ease;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #86efac;
     }
 
-    .admin-nav-tab.active {
-      background: var(--primary);
-      color: white;
-      border-color: var(--primary);
-      box-shadow: 0 4px 15px rgba(123, 45, 142, 0.2);
+    .sidebar-menu {
+      flex: 1;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      overflow-y: auto;
+    }
+
+    .sidebar-heading {
+      font-size: 10px;
+      font-weight: 800;
+      color: rgba(255, 255, 255, 0.4);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      padding: 8px 10px 4px;
+    }
+
+    .admin-nav-tab {
+      background: transparent;
+      border: 1px solid transparent;
+      color: #cbd5e1;
+      padding: 11px 14px;
+      font-family: var(--font-outfit);
+      font-weight: 700;
+      font-size: 13.5px;
+      cursor: pointer;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      text-align: left;
+      transition: all 0.2s ease;
+      text-decoration: none;
     }
 
     .admin-nav-tab:hover:not(.active) {
-      background: #f1f5f9;
-      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.08);
+      color: white;
+      transform: translateX(3px);
+    }
+
+    .admin-nav-tab.active {
+      background: linear-gradient(135deg, #7B2D8E 0%, #9B4DB8 100%);
+      color: white;
+      border-color: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 4px 14px rgba(123, 45, 142, 0.35);
+    }
+
+    .admin-nav-tab .material-symbols-outlined {
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .sidebar-actions {
+      padding: 14px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-sidebar-action {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #e2e8f0;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 12.5px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+      width: 100%;
+    }
+
+    .btn-sidebar-action:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+    }
+
+    .btn-sidebar-action.danger {
+      background: rgba(220, 38, 38, 0.15);
+      border-color: rgba(220, 38, 38, 0.3);
+      color: #fca5a5;
+    }
+
+    .btn-sidebar-action.danger:hover {
+      background: rgba(220, 38, 38, 0.85);
+      color: white;
+    }
+
+    /* RIGHT MAIN CONTENT */
+    .admin-main-wrapper {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .admin-main-inner {
+      padding: 24px 32px;
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      flex: 1;
+    }
+
+    /* MOBILE NAVIGATION CONTROLS */
+    .admin-mobile-nav {
+      display: none;
+    }
+
+    .mobile-header {
+      display: none;
+    }
+
+    /* MEDIA QUERIES FOR MOBILE */
+    @media (max-width: 960px) {
+      .admin-layout-root {
+        flex-direction: column;
+      }
+
+      .admin-sidebar {
+        display: none !important;
+      }
+
+      .mobile-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(135deg, var(--primary) 0%, #9B4DB8 100%);
+        padding: 14px 16px;
+        color: white;
+        box-shadow: 0 4px 16px rgba(123, 45, 142, 0.2);
+      }
+
+      .mobile-header .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .mobile-header .brand h1 {
+        font-size: 16px;
+        font-weight: 800;
+        margin: 0;
+      }
+
+      .mobile-header .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .admin-main-inner {
+        padding: 14px;
+      }
+
+      /* MOBILE DROPDOWN SELECTOR */
+      .admin-mobile-nav {
+        display: block;
+        margin-bottom: 16px;
+      }
+
+      .mobile-dropdown-container {
+        background: white;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 12px 14px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+      }
+
+      .mobile-dropdown-label {
+        font-size: 11px;
+        font-weight: 800;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 8px;
+      }
+
+      .mobile-select-box {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+
+      .admin-dropdown-select {
+        width: 100%;
+        padding: 12px 38px 12px 14px;
+        background: #faf5ff;
+        border: 1.5px solid #7B2D8E;
+        border-radius: 12px;
+        font-family: inherit;
+        font-size: 13.5px;
+        font-weight: 800;
+        color: #581c87;
+        appearance: none;
+        -webkit-appearance: none;
+        outline: none;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(123, 45, 142, 0.1);
+      }
+
+      .dropdown-arrow {
+        position: absolute;
+        right: 12px;
+        pointer-events: none;
+        color: #7B2D8E;
+        font-size: 22px;
+      }
     }
 
     .admin-view {
@@ -999,70 +1265,118 @@
 
   <!-- No separate admin login — authentication handled via index.html login page -->
 
-  <!-- Main Container -->
-  <div class="container">
+  <!-- Main Admin Layout Wrapper -->
+  <div class="admin-layout-root">
 
-    <!-- Top Header App Bar -->
-    <header>
-      <div class="brand">
+    <!-- DESKTOP / TABLET SIDEBAR -->
+    <aside class="admin-sidebar" id="admin-sidebar">
+      <div class="sidebar-brand">
         <div class="logo-icon">
-          <span class="material-symbols-outlined" style="font-size: 26px;">shield</span>
+          <span class="material-symbols-outlined" style="font-size: 24px;">shield</span>
         </div>
         <div>
           <h1>noxastore wallet</h1>
-          <p style="font-size: 10px; color: rgba(255,255,255,0.7); font-weight: 600; letter-spacing: 0.5px;">SYSTEM
-            CONTROL
-            CONSOLE</p>
+          <p>SYSTEM CONTROL CONSOLE</p>
         </div>
       </div>
-      <div class="header-actions">
-        <span
-          style="font-size: 13px; font-weight: 700; color: white; background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; gap: 6px;">
-          <span style="width: 8px; height: 8px; border-radius: 50%; background: #34d399; display: inline-block;"></span>
-          Console Online
-        </span>
-        <button class="btn-logout" onclick="window.location.href='/index.html'"
-          style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); color: white;">
-          <span class="material-symbols-outlined">phone_android</span>
-          Buka Client
+
+      <div class="sidebar-status-card">
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: #22c55e; display: inline-block;"></span>
+        <span>Console Online</span>
+      </div>
+
+      <div class="sidebar-menu">
+        <div class="sidebar-heading">MENU UTAMA</div>
+        <button class="admin-nav-tab active" id="tab-users-btn" onclick="switchAdminView('users')">
+          <span class="material-symbols-outlined">group</span> Kelola Anggota
         </button>
-        <button class="btn-logout" onclick="handleAdminLogout()">
-          <span class="material-symbols-outlined">logout</span>
-          Keluar Console
+        <button class="admin-nav-tab" id="tab-withdrawals-btn" onclick="switchAdminView('withdrawals')">
+          <span class="material-symbols-outlined">payments</span> Penarikan Dana
         </button>
-        <button onclick="openPurgeModal()" style="background: rgba(220,38,38,0.15); border: 1px solid rgba(220,38,38,0.4); color: #fca5a5; padding: 10px 18px; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.25s; font-family: inherit; font-size: 14px;" onmouseover="this.style.background='rgba(220,38,38,0.9)'; this.style.color='white'; this.style.boxShadow='0 4px 16px rgba(220,38,38,0.4)'" onmouseout="this.style.background='rgba(220,38,38,0.15)'; this.style.color='#fca5a5'; this.style.boxShadow='none'">
-          <span class="material-symbols-outlined">delete_sweep</span>
-          Kosongkan DB
+        <button class="admin-nav-tab" id="tab-banners-btn" onclick="switchAdminView('banners')">
+          <span class="material-symbols-outlined">image</span> Banner Promo
+        </button>
+        <button class="admin-nav-tab" id="tab-info-btn" onclick="switchAdminView('info')">
+          <span class="material-symbols-outlined">campaign</span> Kelola Informasi
+        </button>
+        <button class="admin-nav-tab" id="tab-settings-btn" onclick="switchAdminView('settings')">
+          <span class="material-symbols-outlined">settings_suggest</span> Pemberitahuan & Update
+        </button>
+        <button class="admin-nav-tab" id="tab-ppob-btn" onclick="switchAdminView('ppob')">
+          <span class="material-symbols-outlined">settings_input_component</span> Layanan PPOB
+        </button>
+
+        <div class="sidebar-heading" style="margin-top: 14px;">LAYANAN LIVE CHAT</div>
+        <a href="/chat-admin.html" target="_blank" class="admin-nav-tab" style="background: rgba(168,85,247,0.12); border: 1px solid rgba(168,85,247,0.25);">
+          <span class="material-symbols-outlined" style="color: #c084fc;">support_agent</span>
+          <span style="flex: 1; color: #e9d5ff;">Buka CS Live Chat</span>
+          <span style="font-size: 9px; background: #22c55e; color: white; padding: 2px 6px; border-radius: 20px; font-weight: 900;">LIVE</span>
+        </a>
+      </div>
+
+      <div class="sidebar-actions">
+        <button class="btn-sidebar-action" onclick="window.location.href='/index.html'">
+          <span class="material-symbols-outlined">phone_android</span> Buka Client
+        </button>
+        <button class="btn-sidebar-action" onclick="handleAdminLogout()">
+          <span class="material-symbols-outlined">logout</span> Keluar Console
+        </button>
+        <button class="btn-sidebar-action danger" onclick="openPurgeModal()">
+          <span class="material-symbols-outlined">delete_sweep</span> Kosongkan DB
         </button>
       </div>
-    </header>
+    </aside>
 
-    <!-- Admin Navigation Tabs -->
-    <div class="admin-nav-tabs">
-      <button class="admin-nav-tab active" id="tab-users-btn" onclick="switchAdminView('users')">
-        <span class="material-symbols-outlined">group</span> Kelola Anggota
-      </button>
-      <button class="admin-nav-tab" id="tab-withdrawals-btn" onclick="switchAdminView('withdrawals')">
-        <span class="material-symbols-outlined">payments</span> Penarikan Dana
-      </button>
-      <button class="admin-nav-tab" id="tab-banners-btn" onclick="switchAdminView('banners')">
-        <span class="material-symbols-outlined">image</span> Banner Promo
-      </button>
-      <button class="admin-nav-tab" id="tab-info-btn" onclick="switchAdminView('info')">
-        <span class="material-symbols-outlined">campaign</span> Kelola Informasi
-      </button>
-      <button class="admin-nav-tab" id="tab-settings-btn" onclick="switchAdminView('settings')">
-        <span class="material-symbols-outlined">settings_suggest</span> Pemberitahuan & Update
-      </button>
-      <button class="admin-nav-tab" id="tab-ppob-btn" onclick="switchAdminView('ppob')">
-        <span class="material-symbols-outlined">settings_input_component</span> Layanan PPOB
-      </button>
-      <a href="/chat-admin.html" target="_blank" class="admin-nav-tab" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 8px; background: linear-gradient(135deg, rgba(123,45,142,0.08), rgba(99,102,241,0.08)); border-color: rgba(123,45,142,0.25);">
-        <span class="material-symbols-outlined" style="color: #7B2D8E;">support_agent</span>
-        <span style="font-weight: 800; color: #7B2D8E;">Buka CS Live Chat</span>
-        <span style="font-size: 9px; background: #22c55e; color: white; padding: 1px 6px; border-radius: 20px; font-weight: 900;">LIVE</span>
-      </a>
-    </div>
+    <!-- RIGHT MAIN CONTENT WRAPPER -->
+    <main class="admin-main-wrapper">
+
+      <!-- Mobile Header (Mobile only) -->
+      <header class="mobile-header">
+        <div class="brand">
+          <div class="logo-icon" style="background: rgba(255,255,255,0.2); width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+            <span class="material-symbols-outlined" style="font-size: 20px;">shield</span>
+          </div>
+          <div>
+            <h1>noxastore wallet</h1>
+            <p style="font-size: 9.5px; color: rgba(255,255,255,0.7); font-weight: 700; margin: 0;">CONTROL CONSOLE</p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button class="btn-logout" onclick="window.location.href='/index.html'" title="Buka Client" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 6px 10px; border-radius: 8px;">
+            <span class="material-symbols-outlined" style="font-size: 18px;">phone_android</span>
+          </button>
+          <button class="btn-logout" onclick="handleAdminLogout()" title="Keluar" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 6px 10px; border-radius: 8px;">
+            <span class="material-symbols-outlined" style="font-size: 18px;">logout</span>
+          </button>
+          <button onclick="openPurgeModal()" title="Kosongkan DB" style="background: rgba(220,38,38,0.25); border: 1px solid rgba(220,38,38,0.4); color: #fca5a5; padding: 6px 10px; border-radius: 8px; cursor: pointer; display: flex; align-items: center;">
+            <span class="material-symbols-outlined" style="font-size: 18px;">delete_sweep</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="admin-main-inner">
+
+        <!-- Mobile Dropdown Navigation (Mobile only) -->
+        <div class="admin-mobile-nav">
+          <div class="mobile-dropdown-container">
+            <div class="mobile-dropdown-label">
+              <span class="material-symbols-outlined" style="font-size: 18px; color: #7B2D8E;">grid_view</span>
+              <span>Pilih Menu Dashboard:</span>
+            </div>
+            <div class="mobile-select-box">
+              <select id="admin-mobile-select" class="admin-dropdown-select" onchange="switchAdminView(this.value)">
+                <option value="users">👥 Kelola Anggota (Users)</option>
+                <option value="withdrawals">💵 Penarikan Dana (Withdrawals)</option>
+                <option value="banners">🖼️ Banner Promo</option>
+                <option value="info">📢 Kelola Informasi</option>
+                <option value="settings">⚙️ Pemberitahuan & Update</option>
+                <option value="ppob">📱 Layanan PPOB SekaliPay</option>
+                <option value="livechat">💬 Buka CS Live Chat (Console)</option>
+              </select>
+              <span class="material-symbols-outlined dropdown-arrow">expand_more</span>
+            </div>
+          </div>
+        </div>
 
     <!-- VIEW 1: USER MANAGEMENT -->
     <div id="view-users" class="admin-view active">
@@ -1657,7 +1971,9 @@
           </div>
         </form>
       </div>
-    </div>
+        </div>
+      </div>
+    </main>
   </div>
 
   <!-- JavaScript Admin Console -->
@@ -1743,7 +2059,18 @@
     let informationsData = [];
 
     function switchAdminView(view) {
+      if (view === 'livechat') {
+        window.open('/chat-admin.html', '_blank');
+        const mobileSelect = document.getElementById('admin-mobile-select');
+        if (mobileSelect) mobileSelect.value = currentAdminView;
+        return;
+      }
+
       currentAdminView = view;
+
+      // Sync mobile dropdown
+      const mobileSelect = document.getElementById('admin-mobile-select');
+      if (mobileSelect) mobileSelect.value = view;
 
       // Update nav tab active classes
       document.querySelectorAll('.admin-nav-tab').forEach(tab => tab.classList.remove('active'));

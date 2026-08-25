@@ -105,6 +105,23 @@
     </div>
   </div>
 
+  <!-- Floating CS In-App Notification Toast -->
+  <div id="cs-toast-banner" class="fixed top-4 right-4 z-50 transform transition-all duration-300 translate-y-[-150%] opacity-0 pointer-events-none max-w-sm w-full">
+    <div id="cs-toast-inner" onclick="onCsToastClick()" class="bg-slate-900 text-white p-3.5 rounded-2xl shadow-2xl border border-purple-500/30 flex items-center gap-3 cursor-pointer hover:bg-slate-800 transition">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white font-bold flex items-center justify-center shrink-0 shadow-md">
+        <span class="material-symbols-outlined text-xl">chat</span>
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center justify-between">
+          <h4 class="text-xs font-extrabold text-purple-300 truncate" id="cs-toast-title">Pesan Baru</h4>
+          <span class="text-[10px] text-slate-400">Baru saja</span>
+        </div>
+        <p class="text-xs text-slate-200 truncate mt-0.5" id="cs-toast-body">Isi pesan...</p>
+      </div>
+      <span class="material-symbols-outlined text-slate-400 text-base">chevron_right</span>
+    </div>
+  </div>
+
   <!-- ========================================== -->
   <!-- 2. MAIN CS CONSOLE WORKSPACE               -->
   <!-- ========================================== -->
@@ -202,12 +219,15 @@
               <div>
                 <div class="flex items-center gap-2">
                   <h3 class="text-sm font-bold text-slate-900 leading-tight" id="active-user-fullname">Nama User</h3>
-                  <span id="active-user-role-badge" class="text-[10px] font-extrabold px-1.5 py-0.2 rounded bg-purple-100 text-purple-700 border border-purple-200">MEMBER</span>
+                  <span id="active-user-role-badge" class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-purple-200">MEMBER</span>
                 </div>
-                <div class="flex items-center gap-2 text-xs text-slate-500">
-                  <span id="active-user-username">081234567890</span>
-                  <span>•</span>
-                  <span class="font-bold text-emerald-600" id="active-user-balance">Saldo: Rp 0</span>
+                <div class="flex items-center gap-2 text-xs text-slate-500 mt-1">
+                  <span class="inline-flex items-center gap-1 font-semibold text-slate-600">
+                    <span class="material-symbols-outlined text-[13px] text-emerald-600">call</span>
+                    <span id="active-user-wa">081234567890</span>
+                  </span>
+                  <span class="text-slate-300">•</span>
+                  <span class="font-extrabold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200" id="active-user-balance">Saldo: Rp 0</span>
                 </div>
               </div>
             </div>
@@ -269,6 +289,11 @@
 
     // Initialize View on Load
     window.addEventListener('DOMContentLoaded', () => {
+      // Request browser notification permission if available
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission().catch(() => {});
+      }
+
       if (csToken) {
         document.getElementById('cs-login-view').classList.add('hidden');
         initCsWebSocket();
@@ -278,88 +303,75 @@
       }
     });
 
-    // Handle CS Login
-    async function handleCsLogin(e) {
-      e.preventDefault();
-      const username = document.getElementById('cs-login-username').value.trim();
-      const password = document.getElementById('cs-login-password').value.trim();
-      const errEl = document.getElementById('cs-login-error');
-      const btn = document.getElementById('cs-login-btn');
+    // Anti-Spam Sound & Notification Manager
+    let lastCsChimeTime = 0;
+    const CS_CHIME_THROTTLE_MS = 2200; // Anti-spam: max 1 chime per 2.2 seconds
+    let csToastTimeout = null;
+    let csToastTargetConversationId = null;
 
-      errEl.classList.add('hidden');
-      btn.disabled = true;
-      btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-lg">autorenew</span> Masuk...';
+    function playSoftChime() {
+      const now = Date.now();
+      if (now - lastCsChimeTime < CS_CHIME_THROTTLE_MS) return;
+      lastCsChimeTime = now;
 
+      // 1. Web Audio API Pleasant High-Res Chime
       try {
-        const res = await fetch('/api/chat/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
-        });
-        const data = await res.json();
-
-        if (data.success && data.token) {
-          csToken = data.token;
-          localStorage.setItem('noxaCsToken', csToken);
-          document.getElementById('cs-login-view').classList.add('hidden');
-          initCsWebSocket();
-          loadConversations();
-        } else {
-          errEl.innerText = data.error || 'Username atau Password salah.';
-          errEl.classList.remove('hidden');
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+          const ctx = new AudioCtx();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(880, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.12);
+          gain.gain.setValueAtTime(0.18, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.35);
         }
-      } catch (err) {
-        errEl.innerText = 'Gagal terhubung ke server: ' + err.message;
-        errEl.classList.remove('hidden');
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<span>Masuk ke CS Console</span><span class="material-symbols-outlined text-lg">arrow_forward</span>';
+      } catch (e) {}
+
+      // 2. Audio element fallback
+      try {
+        const audio = document.getElementById('chat-chime');
+        if (audio) {
+          audio.currentTime = 0;
+          audio.play().catch(() => {});
+        }
+      } catch (e) {}
+    }
+
+    function showCsNotificationToast(cId, senderName, messageText) {
+      csToastTargetConversationId = cId;
+      const banner = document.getElementById('cs-toast-banner');
+      const titleEl = document.getElementById('cs-toast-title');
+      const bodyEl = document.getElementById('cs-toast-body');
+
+      if (!banner) return;
+      titleEl.innerText = `💬 ${senderName || cId}`;
+      bodyEl.innerText = messageText;
+
+      banner.classList.remove('translate-y-[-150%]', 'opacity-0', 'pointer-events-none');
+      banner.classList.add('translate-y-0', 'opacity-100', 'pointer-events-auto');
+
+      clearTimeout(csToastTimeout);
+      csToastTimeout = setTimeout(() => {
+        banner.classList.add('translate-y-[-150%]', 'opacity-0', 'pointer-events-none');
+        banner.classList.remove('translate-y-0', 'opacity-100', 'pointer-events-auto');
+      }, 4500);
+    }
+
+    function onCsToastClick() {
+      if (csToastTargetConversationId) {
+        selectConversation(csToastTargetConversationId);
       }
-    }
-
-    // Handle CS Logout
-    function handleCsLogout() {
-      if (!confirm('Apakah Anda yakin ingin keluar dari CS Console?')) return;
-      localStorage.removeItem('noxaCsToken');
-      csToken = '';
-      if (ws) ws.close();
-      document.getElementById('cs-login-view').classList.remove('hidden');
-    }
-
-    // WebSocket Initialization
-    function initCsWebSocket() {
-      const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${location.host}`;
-      ws = new WebSocket(wsUrl);
-
-      ws.onopen = () => {
-        console.log('[WS] Connected to CS Gateway');
-        document.getElementById('ws-status-badge').className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
-        document.getElementById('ws-status-badge').innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Live WebSocket';
-
-        // Authenticate socket as CS
-        ws.send(JSON.stringify({ type: 'auth', role: 'cs', token: csToken, isCs: true }));
-      };
-
-      ws.onmessage = (event) => {
-        try {
-          const payload = JSON.parse(event.data);
-          handleIncomingWsEvent(payload);
-        } catch (e) {
-          console.warn('[WS Parse Error]:', e);
-        }
-      };
-
-      ws.onclose = () => {
-        console.log('[WS] Disconnected. Retrying in 3s...');
-        document.getElementById('ws-status-badge').className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/30';
-        document.getElementById('ws-status-badge').innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Menghubungkan ulang...';
-        setTimeout(() => { if (csToken) initCsWebSocket(); }, 3000);
-      };
-
-      ws.onerror = (e) => {
-        console.warn('[WS Error]:', e);
-      };
+      const banner = document.getElementById('cs-toast-banner');
+      if (banner) {
+        banner.classList.add('translate-y-[-150%]', 'opacity-0', 'pointer-events-none');
+        banner.classList.remove('translate-y-0', 'opacity-100', 'pointer-events-auto');
+      }
     }
 
     // Handle Incoming WebSocket Events
@@ -368,9 +380,22 @@
         const msg = payload.message;
         const cId = payload.conversationId;
 
-        // Play Sound
+        // Anti-Spam Notification & Chime for Incoming User Messages
         if (msg.sender === 'user') {
-          playChime();
+          playSoftChime();
+
+          if (currentConversationId !== cId || document.hidden) {
+            showCsNotificationToast(cId, msg.senderName || cId, msg.message);
+
+            if (document.hidden && 'Notification' in window && Notification.permission === 'granted') {
+              try {
+                new Notification(`💬 Pesan Baru dari ${msg.senderName || cId}`, {
+                  body: msg.message,
+                  icon: '/favicon.ico'
+                });
+              } catch (e) {}
+            }
+          }
         }
 
         // If current open chat matches this conversation, append message to canvas!
@@ -395,17 +420,6 @@
           }
         }
       }
-    }
-
-    // Play chime sound
-    function playChime() {
-      try {
-        const audio = document.getElementById('chat-chime');
-        if (audio) {
-          audio.currentTime = 0;
-          audio.play().catch(() => {});
-        }
-      } catch (e) {}
     }
 
     // Load Conversations List
@@ -494,19 +508,42 @@
       currentConversationId = conversationId;
       renderConversationList();
 
-      const conv = allConversations.find(c => c.conversationId === conversationId);
-      if (!conv) return;
+      const conv = allConversations.find(c => c.conversationId === conversationId) || { conversationId };
 
       // Show Chat View
       document.getElementById('cs-empty-state').classList.add('hidden');
       document.getElementById('cs-active-chat').classList.remove('hidden');
 
-      // Populate Header
-      document.getElementById('active-user-fullname').innerText = conv.fullname || conv.username;
-      document.getElementById('active-user-username').innerText = conv.username;
+      // Populate Header Initial Values
+      document.getElementById('active-user-fullname').innerText = conv.fullname || conv.username || conversationId;
+      document.getElementById('active-user-wa').innerText = conv.waContact || conv.username || conversationId;
       document.getElementById('active-user-balance').innerText = `Saldo: Rp ${(conv.mainBalance || 0).toLocaleString('id-ID')}`;
       document.getElementById('active-user-role-badge').innerText = conv.role || 'MEMBER';
       document.getElementById('active-user-avatar').innerText = (conv.fullname || conv.username || 'U').charAt(0).toUpperCase();
+
+      // Asynchronously fetch FRESH live user profile (Saldo, Full Name, WA)
+      fetch(`/api/chat/user-profile/${encodeURIComponent(conversationId)}`, {
+        headers: { 'Authorization': 'Bearer ' + csToken }
+      })
+      .then(res => res.json())
+      .then(pData => {
+        if (pData.success && pData.user) {
+          const u = pData.user;
+          document.getElementById('active-user-fullname').innerText = u.fullname || u.username;
+          document.getElementById('active-user-wa').innerText = u.waContact || u.username;
+          document.getElementById('active-user-balance').innerText = `Saldo: Rp ${(u.mainBalance || 0).toLocaleString('id-ID')}`;
+          document.getElementById('active-user-role-badge').innerText = u.role || 'MEMBER';
+          document.getElementById('active-user-avatar').innerText = (u.fullname || u.username || 'U').charAt(0).toUpperCase();
+
+          if (conv) {
+            conv.fullname = u.fullname;
+            conv.waContact = u.waContact;
+            conv.mainBalance = u.mainBalance;
+            conv.role = u.role;
+          }
+        }
+      })
+      .catch(() => {});
 
       // Clear Canvas & Load History
       const canvas = document.getElementById('cs-message-canvas');
@@ -526,7 +563,7 @@
 
       // Mark as read
       markAsRead(conversationId);
-      conv.unreadCount = 0;
+      if (conv) conv.unreadCount = 0;
       renderConversationList();
 
       // Mobile UX
@@ -642,15 +679,34 @@
           conv.unreadCount = (conv.unreadCount || 0) + 1;
         }
       } else {
-        allConversations.unshift({
+        const newConv = {
           conversationId: cId,
           username: cId,
           fullname: msg.senderName || cId,
+          waContact: cId,
+          mainBalance: 0,
+          role: 'MEMBER',
           lastMessage: msg.message,
           lastMessageSender: msg.sender,
           lastMessageTime: msg.createdAt,
           unreadCount: msg.sender === 'user' ? 1 : 0
-        });
+        };
+        allConversations.unshift(newConv);
+
+        // Fetch fresh profile in background
+        fetch(`/api/chat/user-profile/${encodeURIComponent(cId)}`, {
+          headers: { 'Authorization': 'Bearer ' + csToken }
+        })
+        .then(res => res.json())
+        .then(pData => {
+          if (pData.success && pData.user) {
+            newConv.fullname = pData.user.fullname || cId;
+            newConv.waContact = pData.user.waContact || cId;
+            newConv.mainBalance = pData.user.mainBalance || 0;
+            newConv.role = pData.user.role || 'MEMBER';
+            renderConversationList();
+          }
+        }).catch(() => {});
       }
       renderConversationList();
     }

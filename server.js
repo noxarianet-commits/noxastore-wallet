@@ -2849,6 +2849,24 @@ const wss = new WebSocket.Server({ server });
 const userChatSockets = new Map();
 // Set: CS Admin Sockets
 const csChatSockets = new Set();
+// Anti-spam rate limiting map
+const chatRateLimits = new Map();
+
+function checkChatRateLimit(senderKey) {
+  const now = Date.now();
+  const limit = chatRateLimits.get(senderKey) || { count: 0, resetTime: now + 3000 };
+  if (now > limit.resetTime) {
+    limit.count = 1;
+    limit.resetTime = now + 3000;
+    chatRateLimits.set(senderKey, limit);
+    return true;
+  }
+  if (limit.count >= 6) {
+    return false; // Max 6 messages per 3 seconds to prevent spam
+  }
+  limit.count += 1;
+  return true;
+}
 
 function registerUserSocket(username, ws) {
   const u = String(username || '').trim();
@@ -2917,6 +2935,7 @@ wss.on('connection', (ws, req) => {
         const cId = String(data.conversationId || authenticatedUser || data.username || '').trim();
         const text = String(data.message || '').trim();
         if (!cId || !text) return;
+        if (!checkChatRateLimit(cId)) return; // Anti-spam protection
 
         const savedMsg = await db.saveChatMessage({
           conversationId: cId,
@@ -2948,6 +2967,7 @@ wss.on('connection', (ws, req) => {
         const cId = String(data.conversationId || '').trim();
         const text = String(data.message || '').trim();
         if (!cId || !text) return;
+        if (!checkChatRateLimit('cs_' + cId)) return;
 
         const savedMsg = await db.saveChatMessage({
           conversationId: cId,
@@ -3074,6 +3094,40 @@ app.get('/api/chat/conversations', requireCsAuth, async (req, res) => {
   try {
     const conversations = await db.getAllConversationsSummary();
     res.json({ success: true, conversations });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Get Live User Profile for CS Admin Console Header
+app.get('/api/chat/user-profile/:username', requireCsAuth, async (req, res) => {
+  try {
+    const { username } = req.params;
+    const user = await db.getUser(username);
+    if (!user) {
+      return res.json({
+        success: true,
+        user: {
+          username: username,
+          fullname: username,
+          waContact: username,
+          mainBalance: 0,
+          role: 'MEMBER'
+        }
+      });
+    }
+    return res.json({
+      success: true,
+      user: {
+        username: user.username,
+        fullname: user.fullname || user.name || (user.brand ? user.brand : user.username),
+        waContact: user.waContact || user.username,
+        mainBalance: user.mainBalance !== undefined ? user.mainBalance : (user.saldo || 0),
+        role: user.role || 'MEMBER',
+        brand: user.brand || '',
+        email: user.email || ''
+      }
+    });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

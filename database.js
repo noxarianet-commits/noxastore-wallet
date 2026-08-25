@@ -1371,7 +1371,6 @@ async function getChatHistory(conversationId) {
 }
 
 async function getAllConversationsSummary() {
-  const usersMap = await getAllUsersMap();
   let messages = [];
 
   if (!sqlite3) {
@@ -1384,13 +1383,14 @@ async function getAllConversationsSummary() {
   for (const m of messages) {
     const cId = String(m.conversationId).trim();
     if (!convMap[cId]) {
-      const user = usersMap[cId] || {};
+      const user = (await getUser(cId)) || {};
       convMap[cId] = {
         conversationId: cId,
-        username: cId,
-        fullname: user.fullname || cId,
+        username: user.username || cId,
+        fullname: user.fullname || user.name || (user.brand ? user.brand : cId),
+        waContact: user.waContact || user.username || cId,
         brand: user.brand || '',
-        mainBalance: user.mainBalance !== undefined ? user.mainBalance : (user.saldo || 0),
+        mainBalance: user.mainBalance !== undefined ? user.mainBalance : (user.saldo !== undefined ? user.saldo : 0),
         role: user.role || 'MEMBER',
         status: user.status || 'active',
         isSuspended: user.isSuspended === true,
