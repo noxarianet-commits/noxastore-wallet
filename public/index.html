@@ -4511,7 +4511,7 @@
     <!-- ========================================== -->
     <div id="screen-mutasi" class="full-screen-panel" style="background: #f8fafc; display: none;">
       <div style="background: linear-gradient(135deg, #2563eb, #3b82f6); padding: 18px 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; position: sticky; top: 0; z-index: 20;">
-        <button onclick="closeMutasiScreen()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+        <button onclick="history.back()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
           <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
         </button>
         <div>
@@ -4562,7 +4562,7 @@
     <div id="screen-qr-scanner" class="full-screen-panel" style="background: radial-gradient(circle at 50% 30%, #1e0f36 0%, #0a0614 100%); display: none;">
       <!-- Sticky Top Header -->
       <div style="background: linear-gradient(135deg, #2a1147, #4c1d95); padding: 18px 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; position: sticky; top: 0; z-index: 20; border-bottom: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
-        <button onclick="closeQRScannerScreen()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s;" onmousedown="this.style.background='rgba(255,255,255,0.3)'" onmouseup="this.style.background='rgba(255,255,255,0.15)'">
+        <button onclick="history.back()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s;" onmousedown="this.style.background='rgba(255,255,255,0.3)'" onmouseup="this.style.background='rgba(255,255,255,0.15)'">
           <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
         </button>
         <div>
@@ -4622,7 +4622,7 @@
     <!-- ========================================== -->
     <div id="screen-transfer" class="full-screen-panel" style="background: #f8fafc; display: none;">
       <div style="background: linear-gradient(135deg, #7B2D8E, #a855f7); padding: 18px 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; position: sticky; top: 0; z-index: 20;">
-        <button onclick="closeTransferScreen()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+        <button onclick="history.back()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
           <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
         </button>
         <div>
@@ -4716,7 +4716,7 @@
       <!-- Sticky Top Header -->
       <div style="background: linear-gradient(135deg, #1e1b4b, #4c1d95); padding: 18px 16px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; position: sticky; top: 0; z-index: 20;">
         <div style="display: flex; align-items: center; gap: 12px;">
-          <button onclick="closeTrxDetail()"
+          <button onclick="history.back()"
             style="background: rgba(255,255,255,0.15); border: none; color: white; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;">
             <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
           </button>
@@ -4889,7 +4889,7 @@
       <!-- Sticky Top Header -->
       <div style="background: linear-gradient(135deg, #7B2D8E 0%, #9B4DB8 100%); padding: 18px 16px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; position: sticky; top: 0; z-index: 20; box-shadow: 0 4px 20px rgba(123,45,142,0.25);">
         <div style="display: flex; align-items: center; gap: 12px;">
-          <button onclick="closePostCheckoutStatus()"
+          <button onclick="history.back()"
             style="background: rgba(255,255,255,0.2); border: none; color: white; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: background 0.2s;">
             <span class="material-symbols-outlined" style="font-size: 20px;">close</span>
           </button>
@@ -5005,7 +5005,7 @@
           <button onclick="openTrxDetailFromPostCheckout()" style="width: 100%; height: 46px; background: #ffffff; color: #7B2D8E; border: 1.5px solid #e9d5ff; border-radius: 14px; font-weight: 700; font-size: 13.5px; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 8px rgba(123,45,142,0.06); transition: all 0.25s ease;">
             <span class="material-symbols-outlined" style="font-size: 18px;">receipt_long</span> Lihat / Cetak Struk Pembayaran
           </button>
-          <button onclick="closePostCheckoutStatus()" style="width: 100%; height: 44px; background: #f1f5f9; border: none; color: #475569; border-radius: 14px; font-weight: 700; font-size: 13px; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; transition: background 0.2s;">
+          <button onclick="history.back()" style="width: 100%; height: 44px; background: #f1f5f9; border: none; color: #475569; border-radius: 14px; font-weight: 700; font-size: 13px; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; transition: background 0.2s;">
             Selesai & Kembali ke Beranda
           </button>
         </div>
@@ -5032,7 +5032,7 @@
       <div class="merchant-header"
         style="background: var(--primary-gradient); display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
         <div style="display: flex; gap: 16px; align-items: flex-start;">
-          <button class="back-btn" onclick="closeMerchantScreen()">
+          <button class="back-btn" onclick="history.back()">
             <span class="material-symbols-outlined">arrow_back</span>
           </button>
           <h2>Merchant</h2>
@@ -5244,7 +5244,7 @@
       style="display:none; position: fixed; inset: 0; background: #f8fafc; z-index: 1000; flex-direction: column;">
       <div
         style="background: var(--primary-gradient); padding: 16px; color: white; display: flex; align-items: center; gap: 16px;">
-        <button onclick="closePPOBScreen()"
+        <button onclick="history.back()"
           style="background: none; border: none; color: white; cursor: pointer; display: flex;"><span
             class="material-symbols-outlined">arrow_back</span></button>
         <h2 id="ppob-screen-title" style="font-size: 16px; font-weight: 700; flex: 1;">Layanan Digital</h2>
@@ -5313,7 +5313,7 @@
             <h2 style="font-size: 18px; font-weight: 800; color: #0f172a; margin: 0;">Konfirmasi Pembelian</h2>
             <p style="font-size: 12px; color: #64748b; margin: 4px 0 0;">Periksa detail sebelum melanjutkan</p>
           </div>
-          <button onclick="closePPOBCheckout()"
+          <button onclick="history.back()"
             style="background: #f1f5f9; border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;">
             <span class="material-symbols-outlined" style="font-size: 20px; color: #64748b;">close</span>
           </button>
@@ -5369,7 +5369,7 @@
     <!-- e-Wallet List Screen (Squircle Grid Layout - Styled per user design) -->
     <div id="screen-ewallet-list" class="full-screen-panel" style="display:none; position: fixed; inset: 0; background: #f8fafc; z-index: 1000; flex-direction: column;">
       <div style="background: linear-gradient(135deg, #7B2D8E 0%, #9B4DB8 100%); padding: 16px; color: white; display: flex; align-items: center; gap: 14px; box-shadow: 0 4px 16px rgba(123,45,142,0.15);">
-        <button onclick="closeEwalletListScreen()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+        <button onclick="history.back()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
           <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
         </button>
         <div>
@@ -5459,7 +5459,7 @@
     <!-- Game Selection Screen (4-Column Squircle Grid Layout with Game Icons) -->
     <div id="screen-game-list" class="full-screen-panel" style="display:none; position: fixed; inset: 0; background: #f8fafc; z-index: 1000; flex-direction: column;">
       <div style="background: linear-gradient(135deg, #7B2D8E 0%, #9B4DB8 100%); padding: 16px; color: white; display: flex; align-items: center; gap: 14px; box-shadow: 0 4px 16px rgba(123,45,142,0.15);">
-        <button onclick="closeGameListScreen()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+        <button onclick="history.back()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
           <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
         </button>
         <div>
@@ -5561,7 +5561,7 @@
       style="display:none; position: fixed; inset: 0; background: #f8fafc; z-index: 1001; flex-direction: column;">
       <div
         style="background: var(--primary-gradient); padding: 16px; color: white; display: flex; align-items: center; gap: 16px;">
-        <button onclick="closeEwalletDanaScreen()"
+        <button onclick="history.back()"
           style="background: none; border: none; color: white; cursor: pointer; display: flex;"><span
             class="material-symbols-outlined">arrow_back</span></button>
         <h2 id="ewallet-withdraw-title" style="font-size: 16px; font-weight: 700; flex: 1;">Top Up DANA</h2>
@@ -6076,7 +6076,7 @@
 
       <!-- Header Top Bar (Ungu Putih) -->
       <div style="background: linear-gradient(135deg, #7B2D8E 0%, #9B4DB8 100%); padding: max(44px, calc(env(safe-area-inset-top) + 14px)) 16px 18px; color: white; display: flex; align-items: center; gap: 14px; box-shadow: 0 4px 16px rgba(123,45,142,0.15);">
-        <button onclick="closeTopUpScreen()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+        <button onclick="history.back()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
           <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
         </button>
         <div>
@@ -6234,7 +6234,7 @@
       <!-- Sticky Header -->
       <div
         style="background: linear-gradient(135deg, #7B2D8E, #8b5cf6); padding: 18px 16px; display: flex; align-items: center; gap: 14px; box-shadow: 0 4px 20px rgba(123, 45, 142,0.15); position: sticky; top: 0; z-index: 10;">
-        <button onclick="closeEditProfileScreen()"
+        <button onclick="history.back()"
           style="background: rgba(255,255,255,0.15); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: background 0.2s;"
           onmouseover="this.style.background='rgba(255,255,255,0.25)'"
           onmouseout="this.style.background='rgba(255,255,255,0.15)'">
@@ -6340,7 +6340,7 @@
       <!-- Sticky Header -->
       <div
         style="background: linear-gradient(135deg, #1e1b4b, #4c1d95); padding: 20px 16px 16px; display: flex; align-items: center; gap: 14px; flex-shrink: 0; position: sticky; top: 0; z-index: 10;">
-        <button onclick="closeChangePasswordScreen()"
+        <button onclick="history.back()"
           style="background: rgba(255,255,255,0.15); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: background 0.2s;"
           onmouseover="this.style.background='rgba(255,255,255,0.25)'"
           onmouseout="this.style.background='rgba(255,255,255,0.15)'">
@@ -6452,7 +6452,7 @@
       <!-- Top App Bar (WhatsApp Style Header) -->
       <div style="background: linear-gradient(135deg, #7B2D8E 0%, #4c1d95 100%); color: white; padding: max(16px, env(safe-area-inset-top)) 16px 14px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 16px rgba(123,45,142,0.25); flex-shrink: 0; z-index: 20;">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <button onclick="closeLiveChatScreen()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='none'">
+          <button onclick="history.back()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='none'">
             <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
           </button>
           
@@ -8805,6 +8805,7 @@
 
         const screen = document.getElementById('screen-merchant');
         if (!screen) return showNotification('ℹ️ Fitur Merchant tidak tersedia.');
+        pushNavigationState('merchant');
         screen.style.display = 'flex';
         void screen.offsetWidth;
         screen.classList.add('active');
@@ -9436,7 +9437,10 @@
         const screen = document.getElementById('screen-qr-scanner');
         if (!screen) return;
         screen.classList.remove('active');
-        screen.style.display = 'none';
+        setTimeout(() => {
+          if (screen.classList.contains('active')) return;
+          screen.style.display = 'none';
+        }, 300);
       }
 
       function _startQRScanner() {
@@ -9589,20 +9593,42 @@
         }
       });
 
-      function _onQRScanned(decodedText) {
-        _stopQRScanner();
+      async function _onQRScanned(decodedText) {
+        // Synchronously stop camera video tracks to release camera hardware immediately
+        try {
+          const videoElements = document.querySelectorAll('#qr-reader video');
+          videoElements.forEach(videoEl => {
+            if (videoEl && videoEl.srcObject) {
+              const tracks = videoEl.srcObject.getTracks ? videoEl.srcObject.getTracks() : [];
+              tracks.forEach(track => { try { track.stop(); } catch(e) {} });
+              videoEl.srcObject = null;
+            }
+          });
+        } catch(e) {}
+
+        // Wait for full scanner stop
+        await _stopQRScanner();
+
         // Expected format: noxa-transfer:<username>
         if (decodedText && decodedText.startsWith('noxa-transfer:')) {
           const targetUser = decodedText.replace('noxa-transfer:', '').trim();
           closeQRScannerScreen();
           openTransferScreen();
-          setTimeout(() => {
+          
+          // Wait for the slide-in transition of screen-transfer to fully finish (400ms)
+          setTimeout(async () => {
             const tgt = document.getElementById('transfer-target');
             if (tgt) { tgt.value = targetUser; }
-            checkTransferTargetUser(targetUser);
-            const amtInput = document.getElementById('transfer-amount');
-            if (amtInput) amtInput.focus();
-          }, 350);
+            
+            // Wait for user verification to complete and render in the DOM
+            await checkTransferTargetUser(targetUser);
+            
+            // Once the layout has settled, focus the input to smoothly show the keyboard
+            setTimeout(() => {
+              const amtInput = document.getElementById('transfer-amount');
+              if (amtInput) amtInput.focus();
+            }, 100);
+          }, 400);
         } else {
           showNotification('⚠️ QR ini bukan kode transfer pengguna yang valid.');
           // Restart scanner after 2 seconds
@@ -12525,7 +12551,12 @@
         // Generate watermark grid
         generateReceiptWatermark();
 
-        document.getElementById('screen-trx-detail').classList.add('active');
+        const screen = document.getElementById('screen-trx-detail');
+        if (screen) {
+          screen.style.display = 'flex';
+          void screen.offsetWidth;
+          screen.classList.add('active');
+        }
       }
 
       // Generate watermark grid programmatically to fit container dimensions (DANA-style repeating pattern)
@@ -12829,7 +12860,13 @@
         stopReceiptClock();
         if (_receiptPollTimer) { clearInterval(_receiptPollTimer); _receiptPollTimer = null; }
         const screen = document.getElementById('screen-trx-detail');
-        if (screen) screen.classList.remove('active');
+        if (screen) {
+          screen.classList.remove('active');
+          setTimeout(() => {
+            if (screen.classList.contains('active')) return;
+            screen.style.display = 'none';
+          }, 300);
+        }
       }
 
       let _lastGeneratedReceiptDataUrl = null;
@@ -12899,7 +12936,13 @@
       function closeReceiptDownloadModal(e) {
         if (e && e.target && e.target.id !== 'receipt-download-modal') return;
         const modal = document.getElementById('receipt-download-modal');
-        if (modal) modal.classList.remove('active');
+        if (modal) {
+          modal.classList.remove('active');
+          setTimeout(() => {
+            if (modal.classList.contains('active')) return;
+            modal.style.display = 'none';
+          }, 300);
+        }
       }
 
       async function shareReceiptFromPreviewModal() {
@@ -15389,6 +15432,80 @@
           return;
         }
 
+        const zoomOverlay = document.getElementById('zoom-overlay');
+        if (zoomOverlay && zoomOverlay.style.display !== 'none') {
+          closeZoomModal();
+          return;
+        }
+
+        // 2. Close active full-screen panels in reverse hierarchical stack order (deepest child first)
+        const ewalletDanaScreen = document.getElementById('screen-ewallet-dana');
+        if (ewalletDanaScreen && ewalletDanaScreen.style.display !== 'none') {
+          closeEwalletDanaScreen();
+          return;
+        }
+
+        const trxDetailScreen = document.getElementById('screen-trx-detail');
+        if (trxDetailScreen && trxDetailScreen.style.display !== 'none') {
+          closeTrxDetail();
+          return;
+        }
+
+        const postCheckoutScreen = document.getElementById('screen-post-checkout-status');
+        if (postCheckoutScreen && postCheckoutScreen.style.display !== 'none') {
+          closePostCheckoutStatus();
+          return;
+        }
+
+        const ppobScreen = document.getElementById('screen-ppob');
+        if (ppobScreen && ppobScreen.style.display !== 'none') {
+          closePPOBScreen();
+          return;
+        }
+
+        // First-level full-screen screens (opened from Home)
+        const gameListScreen = document.getElementById('screen-game-list');
+        if (gameListScreen && gameListScreen.style.display !== 'none') {
+          closeGameListScreen();
+          return;
+        }
+
+        const ewalletListScreen = document.getElementById('screen-ewallet-list');
+        if (ewalletListScreen && ewalletListScreen.style.display !== 'none') {
+          closeEwalletListScreen();
+          return;
+        }
+
+        const merchantScreen = document.getElementById('screen-merchant');
+        if (merchantScreen && merchantScreen.style.display !== 'none') {
+          closeMerchantScreen();
+          return;
+        }
+
+        const qrScannerScreen = document.getElementById('screen-qr-scanner');
+        if (qrScannerScreen && qrScannerScreen.style.display !== 'none') {
+          closeQRScannerScreen();
+          return;
+        }
+
+        const transferScreen = document.getElementById('screen-transfer');
+        if (transferScreen && transferScreen.style.display !== 'none') {
+          closeTransferScreen();
+          return;
+        }
+
+        const topupScreen = document.getElementById('screen-topup');
+        if (topupScreen && topupScreen.style.display !== 'none') {
+          closeTopUpScreen();
+          return;
+        }
+
+        const mutasiScreen = document.getElementById('screen-mutasi');
+        if (mutasiScreen && mutasiScreen.style.display !== 'none') {
+          closeMutasiScreen();
+          return;
+        }
+
         const editProfileScreen = document.getElementById('screen-edit-profile');
         if (editProfileScreen && editProfileScreen.style.display !== 'none') {
           closeEditProfileScreen();
@@ -15407,79 +15524,13 @@
           return;
         }
 
-        const infoDetailModal = document.getElementById('info-detail-modal');
-        if (infoDetailModal && infoDetailModal.style.display !== 'none') {
-          closeInfoDetailModal();
-          return;
-        }
-
-        const mutasiScreen = document.getElementById('screen-mutasi');
-        if (mutasiScreen && mutasiScreen.style.display !== 'none') {
-          closeMutasiScreen();
-          return;
-        }
-
-        const postCheckoutScreen = document.getElementById('screen-post-checkout-status');
-        if (postCheckoutScreen && postCheckoutScreen.style.display !== 'none') {
-          closePostCheckoutStatus();
-          return;
-        }
-
-        const trxDetailScreen = document.getElementById('screen-trx-detail');
-        if (trxDetailScreen && trxDetailScreen.style.display !== 'none') {
-          closeTrxDetail();
-          return;
-        }
-
-        const qrScannerScreen = document.getElementById('screen-qr-scanner');
-        if (qrScannerScreen && qrScannerScreen.style.display !== 'none') {
-          closeQRScannerScreen();
-          return;
-        }
-
-        const transferScreen = document.getElementById('screen-transfer');
-        if (transferScreen && transferScreen.style.display !== 'none') {
-          closeTransferScreen();
-          return;
-        }
-
-        const topupScreen = document.getElementById('screen-topup');
-        if (topupScreen && topupScreen.style.display !== 'none') {
-          closeTopUpModal();
-          return;
-        }
-
-        const ewalletDanaScreen = document.getElementById('screen-ewallet-dana');
-        if (ewalletDanaScreen && ewalletDanaScreen.style.display !== 'none') {
-          closeEwalletDanaScreen();
-          return;
-        }
-
-        const ewalletListScreen = document.getElementById('screen-ewallet-list');
-        if (ewalletListScreen && ewalletListScreen.style.display !== 'none') {
-          closeEwalletListScreen();
-          return;
-        }
-
-        const ppobScreen = document.getElementById('screen-ppob');
-        if (ppobScreen && ppobScreen.style.display !== 'none') {
-          closePPOBScreen();
-          return;
-        }
-
-        const gameListScreen = document.getElementById('screen-game-list');
-        if (gameListScreen && gameListScreen.style.display !== 'none') {
-          closeGameListScreen();
-          return;
-        }
-
-        // 2. If no modal/panel is open, switch back to Home tab if currently on sub-tabs
+        // 3. If no modal/panel is open, switch back to Home tab if currently on sub-tabs
         if (typeof currentTab !== 'undefined' && currentTab !== 'home') {
           switchTab('home');
           return;
         }
 
-        // 3. Root Guard: If on Home tab, re-push a guard state so back press NEVER exits app unexpectedly
+        // 4. Root Guard: If on Home tab, re-push a guard state so back press NEVER exits app unexpectedly
         try {
           history.pushState({ root: true, screen: 'home' }, '');
         } catch(e) {}
