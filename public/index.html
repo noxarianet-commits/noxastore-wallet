@@ -5019,7 +5019,7 @@
     <input type="file" id="file-input" accept="image/*" style="display: none;" onchange="handleFileSelect(event)" />
 
     <!-- Zoom Overlay -->
-    <div id="zoom-overlay" class="zoom-overlay" onclick="closeZoomModal()">
+    <div id="zoom-overlay" class="zoom-overlay" onclick="closeZoomModal()" style="display: none;">
       <button class="close-zoom-btn" onclick="closeZoomModal()">
         <span class="material-symbols-outlined">close</span>
       </button>
@@ -6025,7 +6025,7 @@
     </div>
 
     <!-- Withdraw Modal Overlay -->
-    <div class="modal-overlay" id="withdraw-modal">
+    <div class="modal-overlay" id="withdraw-modal" style="display: none;">
       <div class="modal-card"
         style="background: var(--white); padding: 28px 24px; text-align: center; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.15);">
 
@@ -15421,7 +15421,7 @@
         }
 
         const withdrawModal = document.getElementById('withdraw-modal');
-        if (withdrawModal && withdrawModal.style.display !== 'none') {
+        if (withdrawModal && withdrawModal.style.display !== 'none' && withdrawModal.classList.contains('active')) {
           closeWithdrawModal();
           return;
         }
@@ -15433,7 +15433,7 @@
         }
 
         const zoomOverlay = document.getElementById('zoom-overlay');
-        if (zoomOverlay && zoomOverlay.style.display !== 'none') {
+        if (zoomOverlay && zoomOverlay.style.display !== 'none' && zoomOverlay.classList.contains('active')) {
           closeZoomModal();
           return;
         }
