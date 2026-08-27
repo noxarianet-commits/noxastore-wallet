@@ -13172,32 +13172,38 @@
         return cleaned;
       }
 
-      async function openContactPickerFor(targetInputId, onSelectedCallback) {
+      async function openContactPickerFor(targetInputId, onSelectedCallback, skipFallback = false) {
         const inputEl = document.getElementById(targetInputId);
         if (!inputEl) return;
 
         // 1. Try Native Web Contact Picker API (Chrome for Android / Supported Mobile Browsers)
         if ('contacts' in navigator && 'ContactsManager' in window) {
           try {
-            const props = ['name', 'tel'];
-            const contacts = await navigator.contacts.select(props, { multiple: false });
-            if (contacts && contacts.length > 0) {
-              const contact = contacts[0];
-              let chosenNumber = '';
-              if (contact.tel && contact.tel.length > 0) {
-                chosenNumber = contact.tel[0];
-              }
-              if (chosenNumber) {
-                const formatted = cleanIndonesianPhoneNumber(chosenNumber);
-                inputEl.value = formatted;
-                inputEl.dispatchEvent(new Event('input', { bubbles: true }));
-                inputEl.dispatchEvent(new Event('change', { bubbles: true }));
-                if (typeof onSelectedCallback === 'function') {
-                  onSelectedCallback(formatted, contact.name ? contact.name[0] : '');
+            const supported = await navigator.contacts.getProperties();
+            const props = [];
+            if (supported.includes('name')) props.push('name');
+            if (supported.includes('tel')) props.push('tel');
+
+            if (props.length > 0) {
+              const contacts = await navigator.contacts.select(props, { multiple: false });
+              if (contacts && contacts.length > 0) {
+                const contact = contacts[0];
+                let chosenNumber = '';
+                if (contact.tel && contact.tel.length > 0) {
+                  chosenNumber = contact.tel[0];
                 }
-                playAppNotificationSound('success');
-                showNotification(`👤 Kontak ${contact.name && contact.name[0] ? contact.name[0] + ' (' + formatted + ')' : formatted} dipilih!`);
-                return;
+                if (chosenNumber) {
+                  const formatted = cleanIndonesianPhoneNumber(chosenNumber);
+                  inputEl.value = formatted;
+                  inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+                  inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+                  if (typeof onSelectedCallback === 'function') {
+                    onSelectedCallback(formatted, contact.name ? contact.name[0] : '');
+                  }
+                  playAppNotificationSound('success');
+                  showNotification(`👤 Kontak ${contact.name && contact.name[0] ? contact.name[0] + ' (' + formatted + ')' : formatted} dipilih!`);
+                  return;
+                }
               }
             }
           } catch (err) {
@@ -13207,28 +13213,48 @@
 
         // 2. Try Android WebView / NoxaNative Bridge
         const nativeBridges = [window.AndroidBridge, window.Android, window.JSBridge, window.NoxaNative];
+        const contactMethods = ['pickContact', 'selectContact', 'getContact', 'openContactPicker'];
+        
         for (const bridge of nativeBridges) {
-          if (bridge && typeof bridge.pickContact === 'function') {
-            try {
-              window._onNativeContactPicked = function(number, name) {
-                const formatted = cleanIndonesianPhoneNumber(number);
-                inputEl.value = formatted;
-                inputEl.dispatchEvent(new Event('input', { bubbles: true }));
-                inputEl.dispatchEvent(new Event('change', { bubbles: true }));
-                if (typeof onSelectedCallback === 'function') {
-                  onSelectedCallback(formatted, name);
+          if (bridge) {
+            for (const method of contactMethods) {
+              if (typeof bridge[method] === 'function') {
+                try {
+                  const callback = function(number, name) {
+                    const formatted = cleanIndonesianPhoneNumber(number);
+                    inputEl.value = formatted;
+                    inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+                    inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+                    if (typeof onSelectedCallback === 'function') {
+                      onSelectedCallback(formatted, name);
+                    }
+                    playAppNotificationSound('success');
+                    showNotification(`👤 Kontak ${name ? name + ' (' + formatted + ')' : formatted} dipilih!`);
+                  };
+                  window._onNativeContactPicked = callback;
+                  window.onContactPicked = callback;
+                  window.contactPicked = callback;
+
+                  try {
+                    bridge[method]('_onNativeContactPicked');
+                  } catch (e) {
+                    bridge[method]();
+                  }
+                  return;
+                } catch (e) {
+                  console.log(`[Native Bridge ${method}]:`, e.message);
                 }
-                playAppNotificationSound('success');
-                showNotification(`👤 Kontak ${name ? name + ' (' + formatted + ')' : formatted} dipilih!`);
-              };
-              bridge.pickContact('_onNativeContactPicked');
-              return;
-            } catch (e) {}
+              }
+            }
           }
         }
 
         // 3. Universal Fallback: Show In-App Recent / Quick Contact Helper Modal
-        openInAppContactHelperModal(targetInputId, onSelectedCallback);
+        if (!skipFallback) {
+          openInAppContactHelperModal(targetInputId, onSelectedCallback);
+        } else {
+          showNotification('⚠️ Kontak sistem tidak dapat dibuka di perangkat ini. Silakan cari/ketik secara manual.');
+        }
       }
 
       function openInAppContactHelperModal(targetInputId, callback) {
@@ -13363,7 +13389,7 @@
         const cb = window._activeContactCallback;
         if (targetId) {
           setTimeout(() => {
-            openContactPickerFor(targetId, cb);
+            openContactPickerFor(targetId, cb, true);
           }, 150);
         }
       }
