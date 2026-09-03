@@ -1562,6 +1562,60 @@
           </form>
         </div>
 
+        <!-- Admin Account & Credentials Card (SQLite Database) -->
+        <div
+          style="background: var(--card-bg); border: 1.5px solid rgba(123, 45, 142, 0.2); padding: 24px; border-radius: 24px; box-shadow: 0 10px 30px rgba(123, 45, 142, 0.06); display: flex; flex-direction: column;">
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+            <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(123, 45, 142, 0.1); color: var(--primary); display: flex; align-items: center; justify-content: center;">
+              <span class="material-symbols-outlined" style="font-size: 26px;">admin_panel_settings</span>
+            </div>
+            <div>
+              <h2 style="font-family: var(--font-outfit); font-size: 18px; font-weight: 700; color: var(--text-main);">
+                Kredensial Login Admin (SQLite)</h2>
+              <p style="color: var(--text-muted); font-size: 12px; margin-top: 2px;">Ganti username dan kata sandi administrator yang tersimpan di database SQLite.</p>
+            </div>
+          </div>
+
+          <div style="background: rgba(123, 45, 142, 0.05); border: 1px solid rgba(123, 45, 142, 0.15); border-radius: 12px; padding: 10px 14px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
+            <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Username Aktif Saat Ini:</span>
+            <span id="admin-current-display" style="font-family: monospace; font-size: 13px; font-weight: 800; color: var(--primary); background: white; padding: 3px 10px; border-radius: 8px; border: 1px solid rgba(123,45,142,0.2);">andika123</span>
+          </div>
+
+          <form id="admin-credentials-form" onsubmit="handleAdminCredentialsSubmit(event)"
+            style="display: flex; flex-direction: column; gap: 14px; flex: 1;">
+            
+            <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 0;">
+              <div class="form-group">
+                <label style="font-size: 11px; font-weight: 700;">Username Lama</label>
+                <input type="text" id="admin-old-username" required placeholder="Username lama" style="font-size: 13px; padding: 10px 12px;" />
+              </div>
+              <div class="form-group">
+                <label style="font-size: 11px; font-weight: 700;">Password Lama</label>
+                <input type="password" id="admin-old-password" required placeholder="Password lama" style="font-size: 13px; padding: 10px 12px;" />
+              </div>
+            </div>
+
+            <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 0;">
+              <div class="form-group">
+                <label style="font-size: 11px; font-weight: 700;">Username Baru</label>
+                <input type="text" id="admin-new-username" required placeholder="Username baru" style="font-size: 13px; padding: 10px 12px;" />
+              </div>
+              <div class="form-group">
+                <label style="font-size: 11px; font-weight: 700;">Password Baru (min. 4 char)</label>
+                <input type="password" id="admin-new-password" required minlength="4" placeholder="Password baru" style="font-size: 13px; padding: 10px 12px;" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label style="font-size: 11px; font-weight: 700;">Konfirmasi Password Baru</label>
+              <input type="password" id="admin-confirm-password" required minlength="4" placeholder="Ulangi password baru" style="font-size: 13px; padding: 10px 12px;" />
+            </div>
+
+            <button type="submit" class="btn-primary" style="margin-top: auto; justify-content: center; background: linear-gradient(135deg, var(--primary), #9B4DB8);">
+              <span class="material-symbols-outlined">lock_reset</span> Simpan Kredensial Baru
+            </button>
+          </form>
+        </div>
 
       </div>
     </div>
@@ -1986,7 +2040,7 @@
     // Check existing auth on load — redirect to index.html if no valid admin token
     window.addEventListener('DOMContentLoaded', () => {
       const savedToken = localStorage.getItem('noxAdminToken');
-      if (savedToken === 'andika123') {
+      if (savedToken) {
         adminToken = savedToken;
         loadAdminDashboard();
       } else {
@@ -2159,6 +2213,7 @@
       } else if (view === 'settings') {
         loadAnnouncementSettings();
         loadAppUpdateSettings();
+        loadAdminCredentialsSettings();
       } else if (view === 'users') {
         loadAdminDashboard();
       } else if (view === 'withdrawals') {
@@ -2590,7 +2645,70 @@
       }
     }
 
+    // ==========================================
+    // ADMIN CREDENTIALS CRUD MANAGEMENT LOGIC (SQLITE)
+    // ==========================================
+    async function loadAdminCredentialsSettings() {
+      try {
+        const res = await adminFetch('/admin/credentials');
+        if (res && res.success && res.admin) {
+          const u = res.admin.username || 'andika123';
+          const disp = document.getElementById('admin-current-display');
+          if (disp) disp.innerText = u;
+          const oldU = document.getElementById('admin-old-username');
+          if (oldU && !oldU.value) oldU.value = u;
+        }
+      } catch (err) {
+        console.error('Failed to load admin credentials:', err);
+      }
+    }
 
+    async function handleAdminCredentialsSubmit(e) {
+      e.preventDefault();
+      const oldUsername = document.getElementById('admin-old-username').value.trim();
+      const oldPassword = document.getElementById('admin-old-password').value.trim();
+      const newUsername = document.getElementById('admin-new-username').value.trim();
+      const newPassword = document.getElementById('admin-new-password').value.trim();
+      const confirmPassword = document.getElementById('admin-confirm-password').value.trim();
+
+      if (newPassword !== confirmPassword) {
+        showNotification('❌ Konfirmasi password baru tidak cocok!', 'error');
+        return;
+      }
+
+      if (newPassword.length < 4) {
+        showNotification('❌ Password baru minimal harus 4 karakter!', 'error');
+        return;
+      }
+
+      if (!confirm(`Apakah Anda yakin ingin mengubah kredensial admin dari "${oldUsername}" menjadi "${newUsername}"?`)) {
+        return;
+      }
+
+      showNotification('⏳ Memperbarui kredensial di database SQLite...', 'info');
+
+      const res = await adminFetch('/admin/change-credentials', {
+        method: 'POST',
+        body: { oldUsername, oldPassword, newUsername, newPassword }
+      });
+
+      if (res && res.success) {
+        showNotification('✅ ' + (res.message || 'Kredensial admin berhasil diubah!'), 'verified');
+        if (res.token) {
+          adminToken = res.token;
+          localStorage.setItem('noxAdminToken', res.token);
+        }
+        const disp = document.getElementById('admin-current-display');
+        if (disp) disp.innerText = res.username || newUsername;
+        document.getElementById('admin-old-username').value = res.username || newUsername;
+        document.getElementById('admin-old-password').value = '';
+        document.getElementById('admin-new-username').value = '';
+        document.getElementById('admin-new-password').value = '';
+        document.getElementById('admin-confirm-password').value = '';
+      } else {
+        showNotification('❌ Gagal: ' + (res?.error || 'Gagal mengubah kredensial admin.'), 'error');
+      }
+    }
 
     // Render Stats
     function updateStats() {

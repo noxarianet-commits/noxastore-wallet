@@ -308,8 +308,139 @@ async function initDb() {
     });
   }
 
+  await run(`
+    CREATE TABLE IF NOT EXISTS admin_users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE NOT NULL,
+      password TEXT NOT NULL,
+      fullname TEXT DEFAULT 'Administrator',
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  // Ensure default admin exists in SQLite
+  const existingAdmin = await get('SELECT * FROM admin_users LIMIT 1');
+  if (!existingAdmin) {
+    const defaultAdminUser = process.env.ADMIN_USERNAME || 'andika123';
+    const defaultAdminPass = process.env.ADMIN_PASSWORD || 'andika123';
+    await run('INSERT INTO admin_users (username, password, fullname) VALUES (?, ?, ?)', [defaultAdminUser, defaultAdminPass, 'Administrator Utama']);
+    console.log(`[SQLite DB] Default admin initialized: ${defaultAdminUser}`);
+  }
+
   console.log('[SQLite DB] Database initialized successfully using data.sqlite.');
   return db;
+}
+
+// ==========================================
+// ADMIN CREDENTIALS CRUD FUNCTIONS (SQLITE)
+// ==========================================
+const ADMINS_FILE = path.join(__dirname, 'admins.json');
+
+async function getAdmin(username) {
+  if (!username) return null;
+  const u = String(username).trim();
+  if (!sqlite3) {
+    const admins = readJSONFile(ADMINS_FILE, [{ username: 'andika123', password: 'andika123', fullname: 'Administrator Utama' }]);
+    return admins.find(a => a.username.toLowerCase() === u.toLowerCase()) || null;
+  }
+  return await get('SELECT id, username, fullname, createdAt, updatedAt FROM admin_users WHERE LOWER(username) = LOWER(?)', [u]);
+}
+
+async function getDefaultAdmin() {
+  if (!sqlite3) {
+    const admins = readJSONFile(ADMINS_FILE, [{ username: 'andika123', password: 'andika123', fullname: 'Administrator Utama' }]);
+    return admins[0] || { username: 'andika123', fullname: 'Administrator Utama' };
+  }
+  const row = await get('SELECT id, username, fullname, createdAt, updatedAt FROM admin_users ORDER BY id ASC LIMIT 1');
+  return row || { username: 'andika123', fullname: 'Administrator Utama' };
+}
+
+async function verifyAdminCredentials(username, password) {
+  const u = String(username || '').trim();
+  const p = String(password || '').trim();
+  if (!u || !p) return null;
+
+  if (!sqlite3) {
+    const admins = readJSONFile(ADMINS_FILE, [{ username: 'andika123', password: 'andika123', fullname: 'Administrator Utama' }]);
+    const admin = admins.find(a => a.username.toLowerCase() === u.toLowerCase());
+    if (admin && (admin.password === p || admin.password === p + '.' || p === admin.password + '.')) {
+      return admin;
+    }
+    return null;
+  }
+
+  const admin = await get('SELECT * FROM admin_users WHERE LOWER(username) = LOWER(?)', [u]);
+  if (!admin) return null;
+  if (admin.password === p || admin.password === p + '.' || p === admin.password + '.') {
+    return admin;
+  }
+  return null;
+}
+
+async function updateAdminCredentials(oldUsername, oldPassword, newUsername, newPassword, newFullname) {
+  const oldU = String(oldUsername || '').trim();
+  const oldP = String(oldPassword || '').trim();
+  const newU = String(newUsername || '').trim();
+  const newP = String(newPassword || '').trim();
+
+  if (!oldU || !oldP || !newU || !newP) {
+    return { success: false, error: 'Semua kolom username dan password wajib diisi.' };
+  }
+
+  if (newP.length < 4) {
+    return { success: false, error: 'Password baru minimal harus 4 karakter.' };
+  }
+
+  // 1. Verify old credentials first
+  const currentAdmin = await verifyAdminCredentials(oldU, oldP);
+  if (!currentAdmin) {
+    return { success: false, error: 'Username lama atau Password lama tidak sesuai!' };
+  }
+
+  if (!sqlite3) {
+    const admins = readJSONFile(ADMINS_FILE, [{ username: 'andika123', password: 'andika123', fullname: 'Administrator Utama' }]);
+    const idx = admins.findIndex(a => a.username.toLowerCase() === oldU.toLowerCase());
+    if (idx !== -1) {
+      admins[idx].username = newU;
+      admins[idx].password = newP;
+      if (newFullname) admins[idx].fullname = newFullname;
+      admins[idx].updatedAt = new Date().toISOString();
+      writeJSONFile(ADMINS_FILE, admins);
+    }
+    return { success: true, username: newU, message: 'Kredensial admin berhasil diperbarui!' };
+  }
+
+  // Check if newUsername is already taken by another admin entry
+  if (newU.toLowerCase() !== oldU.toLowerCase()) {
+    const existing = await get('SELECT id FROM admin_users WHERE LOWER(username) = LOWER(?) AND id != ?', [newU, currentAdmin.id]);
+    if (existing) {
+      return { success: false, error: `Username "${newU}" sudah digunakan.` };
+    }
+  }
+
+  await run(
+    'UPDATE admin_users SET username = ?, password = ?, fullname = COALESCE(?, fullname), updatedAt = CURRENT_TIMESTAMP WHERE id = ?',
+    [newU, newP, newFullname || null, currentAdmin.id]
+  );
+
+  // Sync to JSON backup as well
+  try {
+    const admins = readJSONFile(ADMINS_FILE, []);
+    const idx = admins.findIndex(a => a.username.toLowerCase() === oldU.toLowerCase());
+    if (idx !== -1) {
+      admins[idx].username = newU;
+      admins[idx].password = newP;
+      if (newFullname) admins[idx].fullname = newFullname;
+      admins[idx].updatedAt = new Date().toISOString();
+      writeJSONFile(ADMINS_FILE, admins);
+    } else {
+      admins.push({ username: newU, password: newP, fullname: newFullname || 'Administrator Utama', updatedAt: new Date().toISOString() });
+      writeJSONFile(ADMINS_FILE, admins);
+    }
+  } catch (e) {}
+
+  return { success: true, username: newU, message: 'Kredensial login admin berhasil diperbarui di database SQLite!' };
 }
 
 // CONFIG FUNCTIONS
@@ -627,6 +758,92 @@ async function updateUser(username, updateFields) {
     params.push(username);
     await run(`UPDATE users SET ${updates.join(', ')} WHERE username = ?`, params);
   }
+}
+
+// ==========================================
+// ATOMIC BALANCE OPERATIONS (ANTI-RACE CONDITION / CONCURRENCY LOCK)
+// ==========================================
+async function atomicDeductBalance(username, amount, balanceType = 'mainBalance') {
+  if (!username || !amount || amount <= 0) return { success: false, error: 'Parameter nominal tidak valid.' };
+  const numAmt = Math.ceil(Number(amount));
+  const col = balanceType === 'qrisBalance' ? 'qrisBalance' : 'mainBalance';
+
+  if (!sqlite3) {
+    const users = readJSONUsers();
+    const idx = users.findIndex(u => u.username === username || u.name === username);
+    if (idx === -1) return { success: false, error: 'Pengguna tidak ditemukan.' };
+    const curBal = Number(users[idx][col] !== undefined ? users[idx][col] : (users[idx].saldo || 0));
+    if (curBal < numAmt) {
+      return { success: false, error: 'Saldo tidak mencukupi.', currentBalance: curBal };
+    }
+    users[idx][col] = curBal - numAmt;
+    if (col === 'mainBalance') users[idx].saldo = curBal - numAmt;
+    writeJSONUsers(users);
+    return { success: true, newBalance: curBal - numAmt };
+  }
+
+  // SQLite Atomic Conditional Update (Guarantee at database engine level)
+  const res = await run(
+    `UPDATE users SET ${col} = ${col} - ?, updatedAt = CURRENT_TIMESTAMP WHERE username = ? AND ${col} >= ?`,
+    [numAmt, username, numAmt]
+  );
+
+  if (!res || res.changes === 0) {
+    const user = await get(`SELECT ${col} FROM users WHERE username = ?`, [username]);
+    if (!user) return { success: false, error: 'Pengguna tidak ditemukan.' };
+    return { success: false, error: 'Saldo tidak mencukupi.', currentBalance: user[col] || 0 };
+  }
+
+  // Sync to JSON backup
+  try {
+    const users = readJSONUsers();
+    const idx = users.findIndex(u => u.username === username);
+    if (idx !== -1) {
+      const cur = Number(users[idx][col] || 0);
+      users[idx][col] = Math.max(0, cur - numAmt);
+      if (col === 'mainBalance') users[idx].saldo = users[idx][col];
+      writeJSONUsers(users);
+    }
+  } catch (e) {}
+
+  const updatedUser = await get(`SELECT ${col} FROM users WHERE username = ?`, [username]);
+  return { success: true, newBalance: updatedUser ? updatedUser[col] : 0 };
+}
+
+async function atomicAddBalance(username, amount, balanceType = 'mainBalance') {
+  if (!username || !amount || amount <= 0) return { success: false, error: 'Parameter nominal tidak valid.' };
+  const numAmt = Math.ceil(Number(amount));
+  const col = balanceType === 'qrisBalance' ? 'qrisBalance' : 'mainBalance';
+
+  if (!sqlite3) {
+    const users = readJSONUsers();
+    const idx = users.findIndex(u => u.username === username || u.name === username);
+    if (idx === -1) return { success: false, error: 'Pengguna tidak ditemukan.' };
+    const curBal = Number(users[idx][col] !== undefined ? users[idx][col] : (users[idx].saldo || 0));
+    users[idx][col] = curBal + numAmt;
+    if (col === 'mainBalance') users[idx].saldo = curBal + numAmt;
+    writeJSONUsers(users);
+    return { success: true, newBalance: curBal + numAmt };
+  }
+
+  await run(
+    `UPDATE users SET ${col} = ${col} + ?, updatedAt = CURRENT_TIMESTAMP WHERE username = ?`,
+    [numAmt, username]
+  );
+
+  // Sync to JSON backup
+  try {
+    const users = readJSONUsers();
+    const idx = users.findIndex(u => u.username === username);
+    if (idx !== -1) {
+      users[idx][col] = (Number(users[idx][col]) || 0) + numAmt;
+      if (col === 'mainBalance') users[idx].saldo = users[idx][col];
+      writeJSONUsers(users);
+    }
+  } catch (e) {}
+
+  const updatedUser = await get(`SELECT ${col} FROM users WHERE username = ?`, [username]);
+  return { success: true, newBalance: updatedUser ? updatedUser[col] : 0 };
 }
 
 async function updateUsernameKey(oldUsername, newUsername) {
@@ -1637,5 +1854,11 @@ module.exports = {
   deleteConversationMessages,
   deleteSingleChatMessage,
   autoCleanupOldChatMessages,
-  setUserSuspension
+  setUserSuspension,
+  atomicDeductBalance,
+  atomicAddBalance,
+  getAdmin,
+  getDefaultAdmin,
+  verifyAdminCredentials,
+  updateAdminCredentials
 };

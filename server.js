@@ -616,7 +616,55 @@ async function callSekalipayTopup(refId, amount, paymentCode) {
 }
 
 // ==========================================
-// AUTH MIDDLEWARE FOR NOXARIA WALLET (JWT)
+// IN-MEMORY SLIDING WINDOW RATE LIMITER
+// ==========================================
+const rateLimitStore = new Map();
+
+function createRateLimiter({ windowMs = 60000, max = 30, message = 'Terlalu banyak permintaan. Silakan tunggu beberapa saat.' }) {
+  return (req, res, next) => {
+    const ip = req.headers['cf-connecting-ip'] || (req.headers['x-forwarded-for'] ? req.headers['x-forwarded-for'].split(',')[0].trim() : '') || req.socket.remoteAddress || 'unknown';
+    const key = `${req.baseUrl || ''}${req.path}_${ip}`;
+    const now = Date.now();
+    let record = rateLimitStore.get(key);
+
+    if (!record) {
+      record = { hits: [now] };
+      rateLimitStore.set(key, record);
+    } else {
+      record.hits = record.hits.filter(time => now - time < windowMs);
+      if (record.hits.length >= max) {
+        const retryAfter = Math.ceil((windowMs - (now - record.hits[0])) / 1000);
+        res.setHeader('Retry-After', retryAfter);
+        return res.status(429).json({
+          success: false,
+          status: false,
+          error: message,
+          msg: message,
+          retryAfter
+        });
+      }
+      record.hits.push(now);
+    }
+    next();
+  };
+}
+
+// Memory cleanup for rateLimitStore every 10 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, v] of rateLimitStore.entries()) {
+    v.hits = v.hits.filter(t => now - t < 3600000);
+    if (v.hits.length === 0) rateLimitStore.delete(k);
+  }
+}, 10 * 60 * 1000);
+
+const otpSendLimiter = createRateLimiter({ windowMs: 10 * 60 * 1000, max: 5, message: 'Terlalu sering meminta kode OTP. Silakan coba lagi setelah 10 menit.' });
+const authLimiter = createRateLimiter({ windowMs: 15 * 60 * 1000, max: 15, message: 'Terlalu banyak percobaan login. Silakan tunggu 15 menit.' });
+const pinLimiter = createRateLimiter({ windowMs: 10 * 60 * 1000, max: 8, message: 'Terlalu banyak percobaan PIN salah. Silakan coba lagi nanti.' });
+const adminLoginLimiter = createRateLimiter({ windowMs: 15 * 60 * 1000, max: 5, message: 'Batas percobaan login Administrator tercapai. Akses ditangguhkan 15 menit.' });
+
+// ==========================================
+// AUTH MIDDLEWARE FOR NOXARIA WALLET (JWT ONLY)
 // ==========================================
 const requireAuth = async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -630,8 +678,7 @@ const requireAuth = async (req, res, next) => {
     const decoded = jwt.verify(token, JWT_SECRET);
     username = decoded.username;
   } catch (err) {
-    // Fallback for direct username string token during compatibility
-    username = token;
+    return res.status(401).json({ status: false, msg: 'Sesi tidak valid atau telah kedaluwarsa. Silakan masuk kembali.' });
   }
 
   if (!username) {
@@ -661,30 +708,124 @@ const requireAuth = async (req, res, next) => {
 const requireAdminAuth = async (req, res, next) => {
   const adminSecret = req.headers['x-admin-secret'] || req.query.admin_secret;
   const envAdminSecret = process.env.ADMIN_SECRET || 'noxaadmin123';
-  if (adminSecret && (adminSecret === 'noxaadmin123' || adminSecret === envAdminSecret)) {
+  if (adminSecret && adminSecret === envAdminSecret) {
     return next();
   }
 
   const authHeader = req.headers.authorization;
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.split(' ')[1].trim();
-    if (token === 'andika123') return next();
     try {
       const decoded = jwt.verify(token, JWT_SECRET);
       if (decoded && decoded.role === 'ADMIN') {
+        req.admin = decoded;
         return next();
       }
     } catch (e) {}
   }
-  return res.status(403).json({ status: false, error: 'Akses Admin Ditolak.' });
+  return res.status(403).json({ status: false, error: 'Akses Administrator Ditolak.' });
 };
 
+// POST /admin/login — Dedicated secure Administrator authentication (SQLite Database Backed)
+app.post('/admin/login', adminLoginLimiter, async (req, res) => {
+  const inputUser = String(req.body.username || '').trim();
+  const inputPass = String(req.body.password || '').trim();
+
+  // Verify against SQLite admin_users table (seeded default: andika123 / andika123)
+  const admin = await db.verifyAdminCredentials(inputUser, inputPass);
+  if (admin) {
+    const token = jwt.sign(
+      { username: admin.username, role: 'ADMIN', fullname: admin.fullname || 'System Administrator' },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+    return res.json({
+      success: true,
+      token,
+      admin: { username: admin.username, fullname: admin.fullname },
+      message: 'Autentikasi Administrator Berhasil.'
+    });
+  }
+
+  return res.status(401).json({
+    success: false,
+    error: 'Kredensial Administrator (Username atau Password) salah.'
+  });
+});
+
+// GET /admin/credentials — Ambil profile admin yang sedang aktif (SQLite)
+app.get('/admin/credentials', requireAdminAuth, async (req, res) => {
+  try {
+    const admin = await db.getDefaultAdmin();
+    res.json({
+      success: true,
+      admin: {
+        username: admin.username,
+        fullname: admin.fullname,
+        updatedAt: admin.updatedAt
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /admin/change-credentials — CRUD Ganti Username & Password Admin di SQLite
+app.post('/admin/change-credentials', requireAdminAuth, async (req, res) => {
+  try {
+    const { oldUsername, oldPassword, newUsername, newPassword, fullname } = req.body;
+    const result = await db.updateAdminCredentials(oldUsername, oldPassword, newUsername, newPassword, fullname);
+
+    if (!result.success) {
+      return res.status(400).json({ success: false, error: result.error });
+    }
+
+    // Generate fresh token with new username
+    const newToken = jwt.sign(
+      { username: result.username, role: 'ADMIN', fullname: fullname || 'System Administrator' },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    return res.json({
+      success: true,
+      message: result.message,
+      token: newToken,
+      username: result.username
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // ==========================================
-// GITHUB AUTO-DEPLOY WEBHOOK (AUTOMATIC RESTART ON PUSH)
+// GITHUB AUTO-DEPLOY WEBHOOK (CRYPTOGRAPHICALLY VERIFIED)
 // ==========================================
 app.post('/api/github-webhook', (req, res) => {
-  res.json({ success: true, message: 'Webhook received! Updating server...' });
-  console.log('[Auto Deploy] GitHub Webhook received! Executing git pull...');
+  const secret = process.env.GITHUB_WEBHOOK_SECRET;
+  if (!secret) {
+    return res.status(403).json({ success: false, error: 'Webhook deployment is disabled on this server.' });
+  }
+
+  const signature = req.headers['x-hub-signature-256'];
+  if (!signature) {
+    return res.status(401).json({ success: false, error: 'Missing webhook signature header.' });
+  }
+
+  try {
+    const hmac = crypto.createHmac('sha256', secret);
+    const digest = 'sha256=' + hmac.update(JSON.stringify(req.body)).digest('hex');
+    const sigBuffer = Buffer.from(signature);
+    const digestBuffer = Buffer.from(digest);
+    if (sigBuffer.length !== digestBuffer.length || !crypto.timingSafeEqual(sigBuffer, digestBuffer)) {
+      return res.status(401).json({ success: false, error: 'Invalid webhook signature.' });
+    }
+  } catch (err) {
+    return res.status(401).json({ success: false, error: 'Webhook signature verification failed.' });
+  }
+
+  res.json({ success: true, message: 'Webhook verified! Updating server...' });
+  console.log('[Auto Deploy] GitHub Webhook verified! Executing git pull...');
   exec('git fetch origin && git reset --hard origin/main', (err, stdout, stderr) => {
     if (err) {
       console.error('[Auto Deploy Error]', err.message);
@@ -699,7 +840,7 @@ app.post('/api/github-webhook', (req, res) => {
 });
 
 // POST /api/otp/send — Kirim Kode OTP ke WhatsApp User
-app.post('/api/otp/send', async (req, res) => {
+app.post('/api/otp/send', otpSendLimiter, async (req, res) => {
   try {
     const inputUsername = String(req.body.phone || req.body.username || '').trim();
     const inputPassword = String(req.body.password || '123456').trim();
@@ -749,7 +890,7 @@ app.post('/api/otp/send', async (req, res) => {
 });
 
 // POST /api/otp/verify — Verifikasi OTP Direct Auto-Pass
-app.post('/api/otp/verify', async (req, res) => {
+app.post('/api/otp/verify', authLimiter, async (req, res) => {
   try {
     const inputUsername = String(req.body.phone || req.body.username || '').trim();
     const inputPassword = String(req.body.password || '123456').trim();
@@ -855,7 +996,7 @@ app.post('/register', async (req, res) => {
   }
 });
 
-app.post('/login', async (req, res) => {
+app.post('/login', authLimiter, async (req, res) => {
   const inputUsername = String(req.body.username || '').trim();
   const inputPassword = String(req.body.password || '').trim();
 
@@ -987,6 +1128,12 @@ app.get('/deposit-status/:trxId', requireAuth, async (req, res) => {
 
   if (!topup) {
     return res.status(404).json({ success: false, error: 'Data top-up tidak ditemukan.' });
+  }
+
+  // IDOR protection: Verify transaction ownership
+  const topupUser = String(topup.username || topup.userId || topup.user_id || '').trim();
+  if (req.user.role !== 'ADMIN' && topupUser && topupUser.toLowerCase() !== String(req.user.username).toLowerCase()) {
+    return res.status(403).json({ success: false, error: 'Akses ditolak. Transaksi ini bukan milik akun Anda.' });
   }
 
   const user = await db.getUser(req.user.username);
@@ -1203,22 +1350,30 @@ app.post('/api/register', (req, res) => {
   });
 });
 
-// 2. GET /api/saldo/:userId - Cek Saldo User
-app.get('/api/saldo/:userId', (req, res) => {
+// 2. GET /api/saldo/:userId - Cek Saldo User (Protected)
+app.get('/api/saldo/:userId', requireAuth, (req, res) => {
   const { userId } = req.params;
-  const user = findUserById(userId);
+  const targetUser = String(userId || '').trim().toLowerCase();
+  const callerUser = String(req.user.username || '').trim().toLowerCase();
+
+  // IDOR Protection: User can only read their own balance, unless admin
+  if (req.user.role !== 'ADMIN' && targetUser !== callerUser && String(req.user.userId || '').toLowerCase() !== targetUser) {
+    return res.status(403).json({ success: false, error: 'Akses ditolak.' });
+  }
+
+  const user = findUserById(userId) || req.user;
   if (!user) {
     return res.status(404).json({ success: false, error: 'User tidak ditemukan.' });
   }
   return res.json({
-    id: user.id,
-    name: user.name,
-    saldo: user.saldo
+    id: user.id || user.userId || user.username,
+    name: user.name || user.fullname,
+    saldo: user.saldo !== undefined ? user.saldo : (user.mainBalance || 0)
   });
 });
 
 // 3. POST /api/topup - Request Top-Up Saldo OrderKuota QRIS Dinamis
-app.post('/api/topup', async (req, res) => {
+app.post('/api/topup', requireAuth, async (req, res) => {
   const { user_id, amount } = req.body;
   if (!user_id || !amount) {
     return res.status(400).json({ success: false, error: 'user_id dan amount wajib diisi.' });
@@ -1286,11 +1441,18 @@ app.get('/api/topup/status/:refId', (req, res) => {
   });
 });
 
-// 5. GET /api/topup/history/:userId - Riwayat Top-Up User
-app.get('/api/topup/history/:userId', (req, res) => {
+// 5. GET /api/topup/history/:userId - Riwayat Top-Up User (Protected)
+app.get('/api/topup/history/:userId', requireAuth, (req, res) => {
   const { userId } = req.params;
+  const targetUser = String(userId || '').trim().toLowerCase();
+  const callerUser = String(req.user.username || '').trim().toLowerCase();
+
+  if (req.user.role !== 'ADMIN' && targetUser !== callerUser && String(req.user.userId || '').toLowerCase() !== targetUser) {
+    return res.status(403).json({ success: false, error: 'Akses ditolak.' });
+  }
+
   const topups = readJSON(TOPUP_FILE, []);
-  const userHistory = topups.filter(t => Number(t.user_id) === Number(userId));
+  const userHistory = topups.filter(t => Number(t.user_id) === Number(userId) || String(t.userId || t.username) === String(userId));
   return res.json(userHistory);
 });
 
@@ -1315,6 +1477,7 @@ app.post('/webhook/sekalipay', async (req, res) => {
       }
     } catch (e) {
       console.error('[Webhook Signature Error]:', e.message);
+      return res.status(401).json({ success: false, error: 'Signature verification failure.' });
     }
   }
 
@@ -2650,7 +2813,7 @@ app.get('/api/merchant-config', async (req, res) => {
 });
 
 // Transfer Saldo
-app.post('/transfer-saldo', requireAuth, async (req, res) => {
+app.post('/transfer-saldo', requireAuth, pinLimiter, async (req, res) => {
   const { target, amount, pin, note } = req.body;
   const senderUname = req.user.username;
   const numAmt = Math.ceil(Number(amount) || 0);
@@ -2667,11 +2830,6 @@ app.post('/transfer-saldo', requireAuth, async (req, res) => {
     return res.status(400).json({ success: false, error: 'PIN transaksi tidak valid.' });
   }
 
-  const senderBal = sender.mainBalance !== undefined ? sender.mainBalance : (sender.saldo || 0);
-  if (senderBal < numAmt) {
-    return res.status(400).json({ success: false, error: `Saldo tidak mencukupi. Saldo Anda Rp ${senderBal.toLocaleString('id-ID')}` });
-  }
-
   const recipient = (await db.getUserByWaContact(target)) || (await db.getUser(target)) || (await db.getUserByUserId(target));
   if (!recipient) {
     return res.status(404).json({ success: false, error: `Pengguna tujuan "${target}" tidak ditemukan.` });
@@ -2682,12 +2840,14 @@ app.post('/transfer-saldo', requireAuth, async (req, res) => {
     return res.status(400).json({ success: false, error: 'Tidak dapat mentransfer saldo ke akun sendiri.' });
   }
 
-  const newSenderBal = senderBal - numAmt;
-  const recipBal = recipient.mainBalance !== undefined ? recipient.mainBalance : (recipient.saldo || 0);
-  const newRecipBal = recipBal + numAmt;
+  // Atomic deduction: prevents double-spending / race conditions at the database engine level
+  const deductResult = await db.atomicDeductBalance(senderUname, numAmt, 'mainBalance');
+  if (!deductResult.success) {
+    return res.status(400).json({ success: false, error: deductResult.error || 'Saldo tidak mencukupi atau transaksi sedang berjalan.' });
+  }
 
-  await db.updateUser(senderUname, { mainBalance: newSenderBal, saldo: newSenderBal });
-  await db.updateUser(recipientUname, { mainBalance: newRecipBal, saldo: newRecipBal });
+  // Atomically credit recipient
+  await db.atomicAddBalance(recipientUname, numAmt, 'mainBalance');
 
   const txId = `TF-${Date.now()}`;
   const senderDesc = transferNote || `Transfer saldo ke ${recipient.fullname || recipientUname}`;
@@ -3010,11 +3170,26 @@ wss.on('connection', (ws, req) => {
 
       // 1. Client Authentication
       if (data.type === 'auth') {
-        if (data.role === 'cs' || data.token === 'andika123' || data.isCs === true) {
-          isCsAgent = true;
-          csChatSockets.add(ws);
-          ws.send(JSON.stringify({ type: 'auth_success', role: 'cs' }));
-        } else if (data.username) {
+        if (data.token) {
+          try {
+            const decoded = jwt.verify(data.token, JWT_SECRET);
+            if (decoded.role === 'CS_AGENT' || decoded.role === 'ADMIN') {
+              isCsAgent = true;
+              csChatSockets.add(ws);
+              ws.send(JSON.stringify({ type: 'auth_success', role: 'cs' }));
+              return;
+            } else if (decoded.username) {
+              authenticatedUser = String(decoded.username).trim();
+              registerUserSocket(authenticatedUser, ws);
+              ws.send(JSON.stringify({ type: 'auth_success', role: 'user', username: authenticatedUser }));
+              return;
+            }
+          } catch (err) {
+            ws.send(JSON.stringify({ type: 'auth_error', message: 'Token otentikasi tidak valid.' }));
+            return;
+          }
+        }
+        if (data.username) {
           authenticatedUser = String(data.username).trim();
           registerUserSocket(authenticatedUser, ws);
           ws.send(JSON.stringify({ type: 'auth_success', role: 'user', username: authenticatedUser }));
@@ -3167,7 +3342,6 @@ const requireCsAuth = (req, res, next) => {
   if (!authHeader) return res.status(401).json({ success: false, error: 'Unauthorized' });
 
   const token = authHeader.replace(/^Bearer\s+/i, '').trim();
-  if (token === 'andika123') return next();
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);

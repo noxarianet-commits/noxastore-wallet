@@ -6582,11 +6582,15 @@
       const originalFetch = window.fetch;
       window.fetch = async (...args) => {
         let [resource, config] = args;
+        const authToken = localStorage.getItem('noxaAuthToken');
         const username = localStorage.getItem('noxaUsername');
-        if (username) {
+        const token = authToken || username;
+        if (token) {
           config = config || {};
           config.headers = config.headers || {};
-          config.headers['Authorization'] = 'Bearer ' + username;
+          if (!config.headers['Authorization']) {
+            config.headers['Authorization'] = 'Bearer ' + token;
+          }
         }
         const response = await originalFetch(resource, config);
         // Intercept 403 Forbidden account suspension
@@ -7486,15 +7490,24 @@
           return;
         }
 
-        // Admin bypass
+        // Secure Admin Login via Backend
         const cleanUser = user.trim();
         const cleanPass = password.trim();
-        if ((cleanUser === 'andika123' || cleanUser === 'andika123.') &&
-          (cleanPass === 'andika123' || cleanPass === 'andika123.')) {
-          localStorage.setItem('noxAdminToken', 'andika123');
-          showNotification('🔐 Masuk sebagai Administrator...');
-          setTimeout(() => { window.location.href = '/admin.html'; }, 800);
-          return;
+        if (cleanUser === 'andika123' || cleanUser === 'admin') {
+          try {
+            const adminRes = await originalFetch('/admin/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ username: cleanUser, password: cleanPass })
+            });
+            const adminData = await adminRes.json();
+            if (adminData.success && adminData.token) {
+              localStorage.setItem('noxAdminToken', adminData.token);
+              showNotification('🔐 Masuk sebagai Administrator...');
+              setTimeout(() => { window.location.href = '/admin.html'; }, 800);
+              return;
+            }
+          } catch (e) {}
         }
 
         const btn = document.getElementById('login-submit');
@@ -7514,6 +7527,9 @@
           }
 
           if (data.success || data.status) {
+            if (data.token) {
+              localStorage.setItem('noxaAuthToken', data.token);
+            }
             const uData = data.data || data.user || {};
             const uname = uData.username || data.username || user;
             const fullname = uData.fullname || uname;
