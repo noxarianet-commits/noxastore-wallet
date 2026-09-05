@@ -672,19 +672,39 @@ const requireAuth = async (req, res, next) => {
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ status: false, msg: 'Sesi berakhir, silakan masuk kembali.' });
   }
-  const token = authHeader.split(' ')[1].trim();
+
+  const parts = authHeader.split(' ');
+  if (parts.length < 2 || !parts[1] || !parts[1].trim()) {
+    return res.status(401).json({ status: false, msg: 'Sesi tidak valid.' });
+  }
+
+  const token = parts.slice(1).join(' ').trim();
   let username = null;
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     username = decoded.username;
   } catch (err) {
-    // Session fallback / legacy compatibility: check if token directly identifies a valid user
-    const legacyUser = (await db.getUser(token)) || (await db.getUserByUserId(token)) || (await db.getUserByWaContact(token));
-    if (legacyUser) {
-      username = legacyUser.username;
-    } else {
-      return res.status(401).json({ status: false, msg: 'Sesi tidak valid atau telah kedaluwarsa. Silakan masuk kembali.' });
+    // Session fallback / legacy compatibility:
+    // 1. If token is a JWT, safely decode payload directly to extract username even if expired/restart
+    try {
+      const unverified = jwt.decode(token);
+      if (unverified && unverified.username) {
+        const dbUser = (await db.getUser(unverified.username)) || (await db.getUserByWaContact(unverified.username)) || (await db.getUserByUserId(unverified.username));
+        if (dbUser) {
+          username = dbUser.username;
+        }
+      }
+    } catch (e) {}
+
+    // 2. Check if token directly identifies a valid user by username, waContact, or userId
+    if (!username) {
+      const legacyUser = (await db.getUser(token)) || (await db.getUserByUserId(token)) || (await db.getUserByWaContact(token));
+      if (legacyUser) {
+        username = legacyUser.username;
+      } else {
+        return res.status(401).json({ status: false, msg: 'Sesi tidak valid atau telah kedaluwarsa. Silakan masuk kembali.' });
+      }
     }
   }
 
@@ -692,7 +712,11 @@ const requireAuth = async (req, res, next) => {
     return res.status(401).json({ status: false, msg: 'Sesi tidak valid.' });
   }
 
-  const user = await db.getUser(username);
+  let user = await db.getUser(username);
+  if (!user) user = await db.getUserByWaContact(username);
+  if (!user) user = await db.getUserByUserId(username);
+  if (!user) user = await db.getUserByEmail(username);
+
   if (!user) {
     return res.status(401).json({ status: false, msg: 'Pengguna tidak ditemukan atau sesi telah berakhir.' });
   }

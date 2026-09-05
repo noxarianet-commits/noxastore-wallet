@@ -6581,7 +6581,13 @@
       // Fetch Wrapper for Auth & Suspension Interceptor
       // Helper function to obtain active valid auth token
       function getAuthToken() {
-        return localStorage.getItem('noxaAuthToken') || localStorage.getItem('noxaUsername') || '';
+        const token = localStorage.getItem('noxaAuthToken');
+        if (token && token !== 'null' && token !== 'undefined' && token.trim()) return token.trim();
+        const user = localStorage.getItem('noxaUsername');
+        if (user && user !== 'null' && user !== 'undefined' && user.trim()) return user.trim();
+        const userId = localStorage.getItem('noxaUserId');
+        if (userId && userId !== 'null' && userId !== 'undefined' && userId.trim()) return userId.trim();
+        return '';
       }
 
       function getAuthHeader() {
@@ -6593,22 +6599,20 @@
       const originalFetch = window.fetch;
       window.fetch = async (...args) => {
         let [resource, config] = args;
-        const authToken = localStorage.getItem('noxaAuthToken');
-        const username = localStorage.getItem('noxaUsername');
-        const token = authToken || username;
+        const token = getAuthToken();
 
         if (token) {
           config = config || {};
           if (typeof Headers !== 'undefined' && config.headers instanceof Headers) {
             const curAuth = config.headers.get('Authorization') || config.headers.get('authorization');
-            if (!curAuth || (authToken && curAuth.startsWith('Bearer ') && !curAuth.includes(authToken))) {
+            if (!curAuth || curAuth.includes('undefined') || curAuth.includes('null') || (token && !curAuth.includes(token))) {
               config.headers.set('Authorization', 'Bearer ' + token);
             }
           } else if (Array.isArray(config.headers)) {
             let found = false;
             for (let i = 0; i < config.headers.length; i++) {
               if (String(config.headers[i][0]).toLowerCase() === 'authorization') {
-                if (authToken) config.headers[i][1] = 'Bearer ' + token;
+                config.headers[i][1] = 'Bearer ' + token;
                 found = true;
                 break;
               }
@@ -6617,7 +6621,7 @@
           } else {
             config.headers = config.headers || {};
             const curAuth = config.headers['Authorization'] || config.headers['authorization'];
-            if (!curAuth || (authToken && curAuth.startsWith('Bearer ') && curAuth !== 'Bearer ' + authToken)) {
+            if (!curAuth || curAuth.includes('undefined') || curAuth.includes('null') || (token && curAuth !== 'Bearer ' + token)) {
               config.headers['Authorization'] = 'Bearer ' + token;
             }
           }
@@ -7147,12 +7151,15 @@
           fetch('/balance', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } })
             .then(res => {
               if (res.status === 401) {
-                // Server di-restart / user tidak ditemukan → hapus localStorage
-                clearAllLocalStorage();
-                document.getElementById('setup-modal').style.display = 'flex';
-                initAuthInputEffects();
-                switchAuthTab('login');
-                showNotification('🔄 Sesi berakhir. Silakan login kembali.');
+                console.warn('[checkRegistration] Balance 401, preserving local session.');
+                const u = localStorage.getItem('noxaUsername');
+                if (!u) {
+                  clearAllLocalStorage();
+                  document.getElementById('setup-modal').style.display = 'flex';
+                  initAuthInputEffects();
+                  switchAuthTab('login');
+                  showNotification('🔄 Sesi berakhir. Silakan login kembali.');
+                }
               } else {
                 // User valid → ambil balance + history dari server
                 return res.json().then(data => {
@@ -10259,11 +10266,14 @@
           const balanceRes = await fetch('/balance', { headers: authHeader });
 
           if (balanceRes.status === 401) {
-            // Sesi tidak valid atau user tidak ditemukan di backend (misal database direset)
-            clearAllLocalStorage();
-            document.getElementById('setup-modal').style.display = 'flex';
-            switchAuthTab('login');
-            showNotification('🔄 Sesi berakhir. Server telah di-restart. Silakan login kembali.');
+            console.warn('[syncServerState] Balance 401, preserving active session.');
+            const u = localStorage.getItem('noxaUsername');
+            if (!u) {
+              clearAllLocalStorage();
+              document.getElementById('setup-modal').style.display = 'flex';
+              switchAuthTab('login');
+              showNotification('🔄 Sesi berakhir. Silakan login kembali.');
+            }
             return;
           }
 
