@@ -7100,10 +7100,17 @@
       }
 
       function checkRegistration() {
-        const savedBrand = localStorage.getItem('noxaBrandName');
-        const savedUser = localStorage.getItem('noxaUsername');
-        const savedFullname = localStorage.getItem('noxaFullname') || savedUser;
-        const savedUserId = localStorage.getItem('noxaUserId') || savedUser;
+        const savedUser = localStorage.getItem('noxaUsername') || localStorage.getItem('noxaUserId');
+        const savedAuthToken = localStorage.getItem('noxaAuthToken');
+        let savedBrand = localStorage.getItem('noxaBrandName');
+        const savedFullname = localStorage.getItem('noxaFullname') || savedUser || '';
+        const savedUserId = localStorage.getItem('noxaUserId') || savedUser || '';
+
+        // Auto-heal missing brand if user is already saved
+        if (savedUser && !savedBrand) {
+          savedBrand = savedFullname || savedUser || 'Noxa';
+          localStorage.setItem('noxaBrandName', savedBrand);
+        }
 
         // Tombol "Kembali ke Admin" HANYA muncul jika admin datang dari panel admin (impersonate)
         const isImpersonating = localStorage.getItem('noxaAdminImpersonate') === 'true';
@@ -7117,22 +7124,26 @@
         loadAnnouncement();
         checkForAppUpdates();
 
-        // ==========================================
         // RESTORE HISTORY DARI LOCALSTORAGE CACHE
-        // (Tampilkan dulu data cache, lalu update dari server)
-        // ==========================================
         loadHistoryCache();
 
-        // ==========================================
-        // VERIFIKASI SERVER: pastikan user masih ada di backend
-        // Kalau server di-restart, data hilang → kembali ke halaman daftar
-        // ==========================================
-        if (savedBrand && savedUser) {
-          // Tutup modal auth secara eksplisit jika user sudah login
+        // USER TERAUTENTIKASI: Jika memiliki username atau auth token
+        if (savedUser || savedAuthToken) {
+          // Tutup modal auth secara eksplisit dan seketika
           const activeAuthModal = document.getElementById('setup-modal');
           if (activeAuthModal) activeAuthModal.style.display = 'none';
 
-          // Cek dulu ke server — jangan langsung tampilkan dashboard
+          // Set sapaan dan profil awal langsung dari data lokal
+          userBrandName = savedBrand;
+          const greetingEl = document.getElementById('greeting-name');
+          if (greetingEl && savedFullname) greetingEl.innerText = `Halo, ${savedFullname}!`;
+          const profileFullnameEl = document.getElementById('profile-fullname');
+          if (profileFullnameEl && savedFullname) profileFullnameEl.innerText = savedFullname;
+          const profileUsernameEl = document.getElementById('profile-username');
+          if (profileUsernameEl && savedUserId) profileUsernameEl.innerText = savedUserId;
+          switchTab('home');
+
+          // Cek dulu ke server untuk sinkronisasi saldo & riwayat terbaru
           fetch('/balance', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } })
             .then(res => {
               if (res.status === 401) {
@@ -7141,7 +7152,7 @@
                 document.getElementById('setup-modal').style.display = 'flex';
                 initAuthInputEffects();
                 switchAuthTab('login');
-                showNotification('🔄 Server telah di-restart. Silakan login kembali.');
+                showNotification('🔄 Sesi berakhir. Silakan login kembali.');
               } else {
                 // User valid → ambil balance + history dari server
                 return res.json().then(data => {
@@ -7165,29 +7176,11 @@
                     }
                     renderHistoryList();
                     renderRecentTransactionsHome();
-
-                    userBrandName = savedBrand;
-                    const greetingEl = document.getElementById('greeting-name');
-                    if (greetingEl) greetingEl.innerText = `Halo, ${savedFullname}!`;
-                    const profileFullnameEl = document.getElementById('profile-fullname');
-                    if (profileFullnameEl) profileFullnameEl.innerText = savedFullname;
-                    const profileUsernameEl = document.getElementById('profile-username');
-                    if (profileUsernameEl) profileUsernameEl.innerText = savedUserId;
                     generateDynamicQR();
-                    switchTab('home');
                     updateProfileAnalytics();
                     checkAndPromptPin();
                   }).catch(() => {
-                    // History gagal fetch — tetap lanjut dengan cache
-                    userBrandName = savedBrand;
-                    const greetingEl = document.getElementById('greeting-name');
-                    if (greetingEl) greetingEl.innerText = `Halo, ${savedFullname}!`;
-                    const profileFullnameEl = document.getElementById('profile-fullname');
-                    if (profileFullnameEl) profileFullnameEl.innerText = savedFullname;
-                    const profileUsernameEl = document.getElementById('profile-username');
-                    if (profileUsernameEl) profileUsernameEl.innerText = savedUserId;
                     generateDynamicQR();
-                    switchTab('home');
                     checkAndPromptPin();
                     initUserChatWebSocket();
                   });
@@ -7199,23 +7192,15 @@
               const m = document.getElementById('setup-modal');
               if (m) m.style.display = 'none';
 
-              userBrandName = savedBrand;
-              const greetingEl = document.getElementById('greeting-name');
-              if (greetingEl) greetingEl.innerText = `Halo, ${savedFullname}!`;
-              const profileFullnameEl = document.getElementById('profile-fullname');
-              if (profileFullnameEl) profileFullnameEl.innerText = savedFullname;
-              const profileUsernameEl = document.getElementById('profile-username');
-              if (profileUsernameEl) profileUsernameEl.innerText = savedUserId;
               generateDynamicQR();
               updateMembershipDisplay(localStorage.getItem('noxaUserRole') || 'MEMBER');
-              switchTab('home');
               checkAndPromptPin();
             });
         } else {
+          // Pengguna belum login: buka modal auth
           const modal = document.getElementById('setup-modal');
-          modal.style.display = 'flex';
+          if (modal) modal.style.display = 'flex';
           initAuthInputEffects();
-          switchTab('home');
         }
       }
 
@@ -7314,19 +7299,38 @@
           }
 
           if (data.success || data.status) {
-            if (data.token) {
-              localStorage.setItem('token', data.token);
+            const uData = data.data || data.user || {};
+            const uname = uData.username || user;
+            const fullnameVal = uData.fullname || fullname || uname;
+            const brandVal = uData.brand || fullnameVal.toUpperCase();
+            const tokenVal = data.token || '';
+
+            if (tokenVal) {
+              localStorage.setItem('noxaAuthToken', tokenVal);
             }
-            if (data.user || data.data) {
-              currentUser = data.user || data.data;
-            }
+            localStorage.setItem('noxaUsername', uname);
+            localStorage.setItem('noxaFullname', fullnameVal);
+            localStorage.setItem('noxaBrandName', brandVal);
+            localStorage.setItem('noxaUserId', uData.userId || uname);
+            localStorage.setItem('noxaWaContact', uData.waContact || user);
+            localStorage.setItem('noxaUserRole', uData.role || 'MEMBER');
+
+            userBrandName = brandVal;
+            const greetingEl = document.getElementById('greeting-name');
+            if (greetingEl) greetingEl.innerText = `Halo, ${fullnameVal}!`;
+            const profileFullnameEl = document.getElementById('profile-fullname');
+            if (profileFullnameEl) profileFullnameEl.innerText = fullnameVal;
+            const profileUsernameEl = document.getElementById('profile-username');
+            if (profileUsernameEl) profileUsernameEl.innerText = uData.userId || uname;
+
+            const modal = document.getElementById('setup-modal');
+            if (modal) modal.style.display = 'none';
+
             showNotification('🎉 Registrasi Berhasil! Selamat datang di NoxariaNet Wallet.');
-            
-            // Close auth modal and update UI
-            closeAuthModal();
-            updateAuthUI();
-            if (typeof fetchInitialData === 'function') fetchInitialData();
-            if (typeof loadUserProfile === 'function') loadUserProfile();
+            switchTab('home');
+            generateDynamicQR();
+            syncServerState();
+            checkAndPromptPin();
           } else {
             showNotification('❌ ' + (data.error || data.msg || 'Gagal mendaftar.'));
           }
@@ -8569,6 +8573,10 @@
         const username = localStorage.getItem('noxaUsername');
         if (!username || localStorage.getItem('noxAdminToken')) return;
 
+        // User is logged in, ensure auth modal is hidden
+        const authModal = document.getElementById('setup-modal');
+        if (authModal) authModal.style.display = 'none';
+
         try {
           const res = await fetch('/pin-status', {
             headers: { 'Authorization': 'Bearer ' + getAuthToken() }
@@ -8658,6 +8666,10 @@
         _pinModalReturnToCheckout = !fromProfile;
         _currentVerifiedOldPin = '';
         _pendingNewPin = '';
+
+        // Close auth modal
+        const authModal = document.getElementById('setup-modal');
+        if (authModal) authModal.style.display = 'none';
 
         const savedPin = localStorage.getItem('noxaUserPin');
         if (savedPin || fromProfile) {
@@ -10259,6 +10271,12 @@
           currentBalance = balanceData.mainBalance;
           qrisBalance = balanceData.qrisBalance;
           updateBalanceDisplay();
+
+          // Ensure setup modal is closed since session is confirmed valid
+          const modal = document.getElementById('setup-modal');
+          if (modal && modal.style.display !== 'none') {
+            modal.style.display = 'none';
+          }
 
           const merchantSaldoEl = document.getElementById('merchant-saldo-text');
           if (merchantSaldoEl) {
