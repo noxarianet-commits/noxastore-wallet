@@ -4,18 +4,22 @@ echo =====================================================
 echo    NoxarianetApp - Auto Git Push to GitHub
 echo =====================================================
 echo.
-echo [1/3] Menyiapkan perubahan (git add)...
+echo [1/4] Membersihkan ppob_visibility.json dari Git tracking...
+git rm --cached ppob_visibility.json 2>nul
+del /f /q ppob_visibility.json 2>nul
+echo.
+echo [2/4] Menyiapkan perubahan (git add)...
 git add .
 echo.
-echo [2/3] Menyimpan commit (git commit)...
-git commit -m "update app - %date% %time%"
+echo [3/4] Menyimpan commit (git commit)...
+git commit -m "fix: remove ppob_visibility.json from git to prevent merge conflict"
 echo.
-echo [3/3] Mengunggah ke GitHub (git push origin main)...
+echo [4/4] Mengunggah ke GitHub (git push origin main)...
 git push origin main
 echo.
 echo =====================================================
 echo    SELESAI! Kode telah berhasil diunggah ke GitHub.
-echo    Server FinCloud akan otomatis memuat kode terbaru.
+echo    Silakan klik Start / Restart pada panel FinCloud.
 echo =====================================================
 echo.
 pause
