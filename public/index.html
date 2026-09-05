@@ -7128,8 +7128,12 @@
         // Kalau server di-restart, data hilang → kembali ke halaman daftar
         // ==========================================
         if (savedBrand && savedUser) {
+          // Tutup modal auth secara eksplisit jika user sudah login
+          const activeAuthModal = document.getElementById('setup-modal');
+          if (activeAuthModal) activeAuthModal.style.display = 'none';
+
           // Cek dulu ke server — jangan langsung tampilkan dashboard
-          fetch('/balance')
+          fetch('/balance', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } })
             .then(res => {
               if (res.status === 401) {
                 // Server di-restart / user tidak ditemukan → hapus localStorage
@@ -7141,6 +7145,9 @@
               } else {
                 // User valid → ambil balance + history dari server
                 return res.json().then(data => {
+                  const m = document.getElementById('setup-modal');
+                  if (m) m.style.display = 'none';
+
                   currentBalance = data.mainBalance;
                   qrisBalance = data.qrisBalance;
                   updateBalanceDisplay();
@@ -7189,6 +7196,9 @@
             })
             .catch(() => {
               // Gagal koneksi — tetap tampilkan dashboard dari cache lokal
+              const m = document.getElementById('setup-modal');
+              if (m) m.style.display = 'none';
+
               userBrandName = savedBrand;
               const greetingEl = document.getElementById('greeting-name');
               if (greetingEl) greetingEl.innerText = `Halo, ${savedFullname}!`;
@@ -7583,6 +7593,8 @@
             if (profileFullnameEl) profileFullnameEl.innerText = fullname;
             const profileUsernameEl = document.getElementById('profile-username');
             if (profileUsernameEl) profileUsernameEl.innerText = userId;
+            const loginPassEl = document.getElementById('login-password');
+            if (loginPassEl) loginPassEl.value = '';
             document.getElementById('setup-modal').style.display = 'none';
             switchTab('home');
             generateDynamicQR();
@@ -9806,14 +9818,16 @@
         if (qrRefEl) qrRefEl.textContent = data.transaction_id || data.ref_id || currentTrxId || '-';
         if (qrExpiredEl) qrExpiredEl.textContent = formatTopUpDateTime(data.expired_at);
 
-        const imgSrc = data.qris_image || (data.qr_url ? '/qr-proxy?url=' + encodeURIComponent(data.qr_url) : '');
+        const imgSrc = data.qr_base64 || (data.qr_url && data.qr_url.startsWith('data:') ? data.qr_url : (data.qris_image || data.qr_url || ''));
         if (imgSrc && qrImg) {
           qrImg.onload = () => {
             if (qrLoading) qrLoading.style.display = 'none';
             qrImg.style.display = 'block';
           };
           qrImg.onerror = () => {
-            if (data.qr_url && qrImg.src !== data.qr_url) {
+            if (data.qr_base64 && qrImg.src !== data.qr_base64) {
+              qrImg.src = data.qr_base64;
+            } else if (data.qr_url && qrImg.src !== data.qr_url) {
               qrImg.src = data.qr_url;
             } else {
               if (qrLoading) qrLoading.style.display = 'none';
@@ -15455,6 +15469,14 @@
         try {
           history.pushState({ screen: screenName, timestamp: Date.now() }, '');
         } catch(e) {}
+      }
+
+      function closeSetupModal() {
+        const username = localStorage.getItem('noxaUsername');
+        if (username) {
+          const modal = document.getElementById('setup-modal');
+          if (modal) modal.style.display = 'none';
+        }
       }
 
       window.addEventListener('popstate', function(event) {

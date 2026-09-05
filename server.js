@@ -12,6 +12,7 @@ const { exec } = require('child_process');
 const SekaliPayService = require('./sekalipayService');
 const db = require('./database');
 const orkutService = require('./orkutService');
+const miraipediaService = require('./miraipediaService');
 
 const app = express();
 const server = http.createServer(app);
@@ -1069,7 +1070,61 @@ app.get('/balance', requireAuth, async (req, res) => {
   res.json({ status: true, balance: Math.ceil(mainBal), qris_balance: Math.ceil(qrisBal), mainBalance: Math.ceil(mainBal), qrisBalance: Math.ceil(qrisBal) });
 });
 
-// POST /deposit-qris (Connect UI Top-Up to OrderKuota QRIS Dinamis)
+// Helper to generate dynamic QRIS via Miraipedia API (with fallback to orkutService)
+async function generateDynamicTopupQris({ amount, userId, username }) {
+  const numericAmount = Math.ceil(parseInt(amount, 10));
+  if (isNaN(numericAmount) || numericAmount < 1000) {
+    throw new Error('Nominal top-up minimal Rp 1.000.');
+  }
+
+  // Generate kode unik (100 - 999) to uniquely identify deposit
+  const uniqueCode = Math.floor(Math.random() * 899) + 100;
+  const totalAmount = numericAmount + uniqueCode;
+
+  const timestamp = Date.now();
+  const refId = `TOPUP_${username || userId}_${timestamp}`;
+  const invoiceId = `INV-QRIS-${timestamp}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
+  const expiredAt = new Date(timestamp + (30 * 60 * 1000)).toISOString(); // 30 menit expired
+
+  let qrisResult = null;
+  try {
+    qrisResult = await miraipediaService.convertStaticToDynamic(totalAmount);
+  } catch (miraErr) {
+    console.error('[Miraipedia Convert Note]:', miraErr.message);
+    try {
+      const fallbackRecord = await orkutService.createTopupOrder({ amount: numericAmount, userId, username });
+      return fallbackRecord;
+    } catch (fbErr) {
+      throw new Error(`Gagal membuat QRIS Dinamis: ${miraErr.message}`);
+    }
+  }
+
+  return {
+    success: true,
+    ref_id: refId,
+    invoice: invoiceId,
+    user_id: userId || username,
+    username: username || userId,
+    nominal_awal: numericAmount,
+    kode_unik: uniqueCode,
+    total_amount: totalAmount,
+    amount: totalAmount,
+    fees: 0,
+    payment_code: 'QRIS_DYNAMIC',
+    status: 'pending',
+    qr_link: qrisResult.qr_base64,
+    qr_url: qrisResult.qr_base64,
+    qr_base64: qrisResult.qr_base64,
+    qris_payload: qrisResult.qris_string,
+    qris_string: qrisResult.qris_string,
+    payment_link: '',
+    expired_at: expiredAt,
+    created_at: new Date(timestamp).toISOString(),
+    updated_at: new Date(timestamp).toISOString()
+  };
+}
+
+// POST /deposit-qris (Connect UI Top-Up to Dynamic QRIS with Locked Amount)
 app.post('/deposit-qris', requireAuth, async (req, res) => {
   const { amount } = req.body;
   const numericAmount = Math.ceil(parseInt(amount, 10));
@@ -1081,7 +1136,7 @@ app.post('/deposit-qris', requireAuth, async (req, res) => {
   const username = req.user.username;
 
   try {
-    const topupRecord = await orkutService.createTopupOrder({
+    const topupRecord = await generateDynamicTopupQris({
       amount: numericAmount,
       userId: username,
       username: username
@@ -1103,7 +1158,7 @@ app.post('/deposit-qris', requireAuth, async (req, res) => {
     broadcastRealtimeEvent('transaction', {
       targetUsername: username,
       title: '💳 Top Up QRIS Dibuat',
-      body: `Silakan bayar QRIS sebesar Rp ${topupRecord.total_amount.toLocaleString('id-ID')} sebelum expired.`,
+      body: `Silakan bayar QRIS sebesar Rp ${topupRecord.total_amount.toLocaleString('id-ID')} sebelum kedaluwarsa.`,
       type: 'topup_created',
       amount: topupRecord.total_amount
     });
@@ -1111,6 +1166,7 @@ app.post('/deposit-qris', requireAuth, async (req, res) => {
     return res.json({
       success: true,
       transaction_id: topupRecord.ref_id,
+      ref_id: topupRecord.ref_id,
       invoice: topupRecord.invoice,
       nominalAwal: topupRecord.nominal_awal,
       kodeUnik: topupRecord.kode_unik,
@@ -1118,11 +1174,14 @@ app.post('/deposit-qris', requireAuth, async (req, res) => {
       amount: topupRecord.total_amount,
       qr_url: topupRecord.qr_link,
       qr_link: topupRecord.qr_link,
+      qr_base64: topupRecord.qr_base64,
+      qris_string: topupRecord.qris_string,
       payment_url: topupRecord.qr_link,
       expired_at: topupRecord.expired_at,
       instruksi: `Scan QRIS di atas. Nominal Rp ${topupRecord.total_amount.toLocaleString('id-ID')} akan OTOMATIS TERISI & TERKUNCI di aplikasi m-Banking/e-Wallet Anda!`
     });
   } catch (error) {
+    console.error('[Deposit QRIS Error]:', error.message);
     return res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -1395,7 +1454,7 @@ app.post('/api/topup', requireAuth, async (req, res) => {
   const targetUsername = user ? (user.username || user.id || user_id) : user_id;
 
   try {
-    const topupRecord = await orkutService.createTopupOrder({
+    const topupRecord = await generateDynamicTopupQris({
       amount: numericAmount,
       userId: user_id,
       username: targetUsername
@@ -1416,13 +1475,16 @@ app.post('/api/topup', requireAuth, async (req, res) => {
     return res.status(200).json({
       success: true,
       ref_id: topupRecord.ref_id,
+      transaction_id: topupRecord.ref_id,
       invoice: topupRecord.invoice,
       nominal_awal: topupRecord.nominal_awal,
-      kode_unik: topupRecord.kode_unik,
+      kodeUnik: topupRecord.kode_unik,
       total_amount: topupRecord.total_amount,
       amount: topupRecord.total_amount,
       qr_link: topupRecord.qr_link,
       qr_url: topupRecord.qr_link,
+      qr_base64: topupRecord.qr_base64,
+      qris_string: topupRecord.qris_string,
       expired_at: topupRecord.expired_at,
       instruksi: `Scan QRIS di atas. Nominal Rp ${topupRecord.total_amount.toLocaleString('id-ID')} akan OTOMATIS TERISI & TERKUNCI!`
     });
@@ -2008,6 +2070,67 @@ app.get('/admin/withdrawals', requireAdminAuth, async (req, res) => {
   try {
     const withdrawals = await db.getWithdrawals();
     res.json({ success: true, withdrawals });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET /admin/payments — List all payment/top-up requests
+app.get('/admin/payments', requireAdminAuth, async (req, res) => {
+  try {
+    const payments = await db.getAllPayments();
+    res.json({ success: true, payments: payments || [] });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /admin/payments/:id/approve — Manually approve & credit deposit
+app.post('/admin/payments/:id/approve', requireAdminAuth, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const payment = (await db.getPayment(id)) || findTopupByRefId(id);
+    if (!payment) {
+      return res.status(404).json({ success: false, error: 'Data pembayaran tidak ditemukan.' });
+    }
+
+    const username = payment.username || payment.userId || payment.user_id;
+    const amount = Math.ceil(Number(payment.nominal_awal || payment.amount || 0));
+
+    const curStatus = String(payment.status || '').toUpperCase();
+    if (curStatus === 'PAID' || curStatus === 'SUCCESS' || curStatus === 'COMPLETED') {
+      return res.json({ success: true, message: 'Transaksi ini sudah berstatus PAID sebelumnya.' });
+    }
+
+    await db.updatePaymentStatus(id, 'PAID');
+    updateTopupStatus(id, 'paid');
+
+    await db.atomicAddBalance(username, amount, 'mainBalance');
+    const updatedUser = await db.getUser(username);
+    const newBal = updatedUser ? (updatedUser.mainBalance !== undefined ? updatedUser.mainBalance : (updatedUser.saldo || 0)) : 0;
+
+    await db.addHistory(username, {
+      id: id,
+      merchant: 'Top Up Saldo QRIS',
+      amount: amount,
+      status: 'BERHASIL',
+      type: 'DEPOSIT',
+      category: 'Deposit'
+    });
+
+    broadcastRealtimeEvent('balance_update', {
+      targetUsername: username,
+      amount: amount,
+      mainBalance: newBal,
+      title: '⚡ Saldo QRIS Diterima!',
+      body: `Pembayaran QRIS Rp ${amount.toLocaleString('id-ID')} telah disetujui Administrator.`
+    });
+
+    res.json({
+      success: true,
+      message: `Deposit Rp ${amount.toLocaleString('id-ID')} untuk ${username} berhasil disetujui.`,
+      mainBalance: newBal
+    });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
