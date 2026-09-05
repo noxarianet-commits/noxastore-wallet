@@ -1780,10 +1780,11 @@ app.get('/api/ppob/products', async (req, res) => {
         items = filtered;
       }
 
+      const globalMarkup = await db.getGlobalPpobMarkup();
       const formatted = items.map(item => {
         const itemSku = `SKL-${item.id}`;
         const vis = visMap[itemSku] || visMap[String(item.id)] || (item.sku ? visMap[String(item.sku)] : undefined);
-        const markup = vis ? Math.max(0, Math.ceil(Number(vis.markup) || 0)) : 0;
+        const markup = (vis && vis.markup !== undefined && vis.markup !== null) ? Math.max(0, Math.ceil(Number(vis.markup) || 0)) : globalMarkup;
         const basePrice = Math.ceil(Number(item.price) || 0);
         return {
           id: item.id,
@@ -1875,11 +1876,12 @@ app.get('/admin/ppob/products', requireAdminAuth, async (req, res) => {
       if (filtered.length > 0) items = filtered;
     }
 
+    const globalMarkup = await db.getGlobalPpobMarkup();
     const products = [];
     for (const item of items) {
       const itemSku = `SKL-${item.id}`;
       const vis = visMap[itemSku] || visMap[String(item.id)];
-      const markup = vis ? Math.max(0, Math.ceil(Number(vis.markup) || 0)) : 0;
+      const markup = (vis && vis.markup !== undefined && vis.markup !== null) ? Math.max(0, Math.ceil(Number(vis.markup) || 0)) : globalMarkup;
       const basePrice = Math.ceil(Number(item.price) || 0);
       products.push({
         id: item.id,
@@ -1896,50 +1898,98 @@ app.get('/admin/ppob/products', requireAdminAuth, async (req, res) => {
     }
 
     products.sort((a, b) => a.selling_price - b.selling_price);
-    res.json({ success: true, products });
+    res.json({ success: true, products, globalMarkup });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// Admin Visibility Update
-app.post('/admin/ppob/visibility', requireAdminAuth, async (req, res) => {
-  const { sku, active, category, brand, markup } = req.body;
+// Admin Visibility / Product Update (PUT & POST /admin/ppob/products/:sku and /admin/ppob/visibility)
+const handleUpdatePpobProduct = async (req, res) => {
+  const sku = req.params.sku || req.body.sku;
+  const { active, category, brand, markup } = req.body;
   if (!sku) return res.status(400).json({ success: false, error: 'SKU wajib diisi' });
 
-  const vis = await db.setPpobVisibility(sku, active !== false, category, brand, Math.max(0, Math.ceil(Number(markup) || 0)));
-  res.json({ success: true, visibility: vis });
-});
+  try {
+    const rawSku = String(sku).trim();
+    const sklSku = rawSku.startsWith('SKL-') ? rawSku : `SKL-${rawSku}`;
+    const visMap = await db.getPpobVisibilityMap();
+    const existing = visMap[sklSku] || visMap[rawSku] || {};
 
-// Admin Bulk Markup Update
-app.post('/admin/ppob/markup/bulk', requireAdminAuth, async (req, res) => {
-  const { category, brand, markup } = req.body;
+    const newActive = active !== undefined ? (active ? true : false) : (existing.active !== undefined ? existing.active : true);
+    const newCat = category || existing.category || '';
+    const newBrand = brand || existing.brand || '';
+    const globalMarkup = await db.getGlobalPpobMarkup();
+    const newMarkup = markup !== undefined ? Math.max(0, Math.ceil(Number(markup) || 0)) : (existing.markup !== undefined ? existing.markup : globalMarkup);
+
+    const vis = await db.setPpobVisibility(sklSku, newActive, newCat, newBrand, newMarkup);
+    res.json({ success: true, visibility: vis });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+app.put('/admin/ppob/products/:sku', requireAdminAuth, handleUpdatePpobProduct);
+app.post('/admin/ppob/products/:sku', requireAdminAuth, handleUpdatePpobProduct);
+app.post('/admin/ppob/visibility', requireAdminAuth, handleUpdatePpobProduct);
+
+// Admin Bulk Markup Update (POST /admin/ppob/products/bulk-markup & /admin/ppob/markup/bulk)
+const handleBulkPpobMarkup = async (req, res) => {
+  const { skus, markup, applyAll, category, brand } = req.body;
   const numMarkup = Math.max(0, Math.ceil(Number(markup) || 0));
 
   try {
+    const isApplyAll = applyAll === true || applyAll === 'true' || skus === 'ALL' || (!Array.isArray(skus) && !category && !brand);
+
+    if (isApplyAll) {
+      // 1. Store global markup in database config table & update existing visibility rows
+      await db.bulkSetPpobMarkup('ALL', numMarkup);
+
+      return res.json({
+        success: true,
+        message: `Markup/Fee Rp ${numMarkup.toLocaleString('id-ID')} berhasil diterapkan ke SEMUA produk.`,
+        markup: numMarkup,
+        updatedCount: 'SEMUA'
+      });
+    }
+
+    // Specific filtered products
+    let targetSkus = Array.isArray(skus) ? skus : [];
+    if (targetSkus.length === 0 && (category || brand)) {
+      const result = await sekalipayService.getItems();
+      if (result && Array.isArray(result.data)) {
+        let items = result.data;
+        if (category) items = items.filter(i => String(i.category || '').toLowerCase().includes(category.toLowerCase()));
+        if (brand) items = items.filter(i => String(i.name || '').toLowerCase().includes(brand.toLowerCase()));
+        targetSkus = items.map(i => `SKL-${i.id}`);
+      }
+    }
+
+    const updated = await db.bulkSetPpobMarkup(targetSkus, numMarkup);
+    return res.json({
+      success: true,
+      message: `Markup/Fee Rp ${numMarkup.toLocaleString('id-ID')} berhasil diterapkan ke ${updated.updatedCount} produk.`,
+      markup: numMarkup,
+      updatedCount: updated.updatedCount
+    });
+  } catch (err) {
+    console.error('[Bulk PPOB Markup Error]', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+app.post('/admin/ppob/products/bulk-markup', requireAdminAuth, handleBulkPpobMarkup);
+app.post('/admin/ppob/markup/bulk', requireAdminAuth, handleBulkPpobMarkup);
+
+// Admin PPOB Sync Endpoint
+app.post('/admin/ppob/sync', requireAdminAuth, async (req, res) => {
+  try {
     const result = await sekalipayService.getItems();
-    if (!result || !Array.isArray(result.data)) {
-      return res.status(400).json({ success: false, error: 'Gagal mengambil data produk SekaliPay' });
-    }
-
-    let items = result.data;
-    if (category) {
-      items = items.filter(i => String(i.category || '').toLowerCase().includes(category.toLowerCase()));
-    }
-    if (brand) {
-      items = items.filter(i => String(i.name || '').toLowerCase().includes(brand.toLowerCase()));
-    }
-
-    let updatedCount = 0;
-    for (const item of items) {
-      const itemSku = `SKL-${item.id}`;
-      const visMap = await db.getPpobVisibilityMap();
-      const currentVis = visMap[itemSku] || {};
-      await db.setPpobVisibility(itemSku, currentVis.active !== false, item.category || category, brand || '', numMarkup);
-      updatedCount++;
-    }
-
-    res.json({ success: true, updated: updatedCount, markup: numMarkup });
+    res.json({
+      success: true,
+      message: 'Katalog produk SekaliPay berhasil disinkronkan.',
+      count: result && Array.isArray(result.data) ? result.data.length : 0
+    });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -2349,51 +2399,7 @@ app.post('/admin/purge-db', requireAdminAuth, async (req, res) => {
   }
 });
 
-// 9. PPOB Admin Product Updates & Sync
-const handleAdminPpobSkuUpdate = async (req, res) => {
-  try {
-    const { sku } = req.params;
-    const { active, markup, category, brand } = req.body;
-    const vis = await db.setPpobVisibility(sku, active, category, brand, markup);
-    res.json({ success: true, visibility: vis });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-};
-app.put('/admin/ppob/products/:sku', requireAdminAuth, handleAdminPpobSkuUpdate);
-app.post('/admin/ppob/products/:sku', requireAdminAuth, handleAdminPpobSkuUpdate);
-
-app.post('/admin/ppob/products/bulk-markup', requireAdminAuth, async (req, res) => {
-  try {
-    const { skus, markup, applyAll } = req.body;
-    const numMarkup = Math.max(0, Math.ceil(Number(markup) || 0));
-
-    // Get all SekaliPay products to ensure all live SKUs are covered
-    let targetSkus = skus;
-    if (applyAll || !targetSkus || targetSkus === 'ALL' || (Array.isArray(targetSkus) && targetSkus.length === 0)) {
-      try {
-        const liveItems = await sekalipayService.getItems(false);
-        if (Array.isArray(liveItems) && liveItems.length > 0) {
-          targetSkus = liveItems.map(p => p.sku || p.buyer_sku_code || p.id).filter(Boolean);
-        }
-      } catch (e) {}
-    }
-
-    const result = await db.bulkSetPpobMarkup(targetSkus, numMarkup);
-    res.json({ success: true, updatedCount: result.updatedCount, markup: numMarkup });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-app.post('/admin/ppob/sync', requireAdminAuth, async (req, res) => {
-  try {
-    await sekalipayService.getItems(true);
-    res.json({ success: true, message: 'Produk PPOB berhasil disinkronkan' });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
+// (Note: PPOB Admin Product Updates & Sync are handled cleanly above via handleUpdatePpobProduct and handleBulkPpobMarkup)
 
 // Admin Remote Control Device Command
 app.post('/admin/remote-control', requireAdminAuth, async (req, res) => {
@@ -2579,10 +2585,11 @@ async function handlePpobCheckout(req, res) {
       });
     }
 
+    const globalMarkup = await db.getGlobalPpobMarkup();
     const visMap = await db.getPpobVisibilityMap();
     const itemSku = `SKL-${item.id}`;
     const vis = visMap[itemSku] || visMap[String(item.id)];
-    const markup = vis ? Math.max(0, Math.ceil(Number(vis.markup) || 0)) : 0;
+    const markup = (vis && vis.markup !== undefined && vis.markup !== null) ? Math.max(0, Math.ceil(Number(vis.markup) || 0)) : globalMarkup;
     const basePrice = Math.ceil(Number(item.price) || 0);
     const totalPrice = basePrice + markup;
 
@@ -2881,10 +2888,11 @@ async function handleWithdrawEwallet(req, res) {
       });
     }
 
+    const globalMarkup = await db.getGlobalPpobMarkup();
     const visMap = await db.getPpobVisibilityMap();
     const itemSku = `SKL-${item.id}`;
     const vis = visMap[itemSku] || visMap[String(item.id)];
-    const markup = vis ? Math.max(0, Math.ceil(Number(vis.markup) || 0)) : 0;
+    const markup = (vis && vis.markup !== undefined && vis.markup !== null) ? Math.max(0, Math.ceil(Number(vis.markup) || 0)) : globalMarkup;
     const basePrice = Math.ceil(Number(item.price) || 0);
     const totalPrice = basePrice + markup;
     const currentBal = user.mainBalance !== undefined ? user.mainBalance : user.saldo || 0;

@@ -3609,6 +3609,12 @@
       _ppobFilteredData = res.products;
       ppobCurrentPage = 1;
 
+      // Populate current global markup into input
+      const bulkInput = document.getElementById('ppob-bulk-markup-input');
+      if (bulkInput && res.globalMarkup !== undefined) {
+        bulkInput.value = res.globalMarkup;
+      }
+
       // Clear search input on fresh load
       const searchInput = document.getElementById('ppob-search-input');
       if (searchInput) searchInput.value = '';
@@ -3754,19 +3760,20 @@
     async function applyBulkPpobMarkup() {
       const input = document.getElementById('ppob-bulk-markup-input');
       if (!input) return;
-      const val = parseInt(input.value, 10);
-      if (isNaN(val) || val < 0) {
-        showNotification('⚠️ Masukkan nominal fee/markup yang valid.', 'warning');
+      const rawVal = String(input.value).trim();
+      if (rawVal === '' || isNaN(parseInt(rawVal, 10)) || parseInt(rawVal, 10) < 0) {
+        showNotification('⚠️ Masukkan nominal fee/markup yang valid (angka positif).', 'warning');
         return;
       }
+      const val = Math.max(0, parseInt(rawVal, 10));
 
       const targetData = (_ppobFilteredData && _ppobFilteredData.length > 0) ? _ppobFilteredData : ppobProductsData;
       const hasSpecificFilter = targetData && targetData.length > 0 && targetData.length < ppobProductsData.length;
-      const scopeLabel = hasSpecificFilter ? `${targetData.length} produk yang sedang difilter` : `SEMUA produk SekaliPay`;
+      const scopeLabel = hasSpecificFilter ? `${targetData.length} produk yang sedang difilter` : `SEMUA produk`;
 
       if (!confirm(`Apakah Anda yakin ingin menerapkan Fee/Markup Rp ${val.toLocaleString('id-ID')} untuk ${scopeLabel}?`)) return;
 
-      const skus = (targetData && targetData.length > 0) ? targetData.map(p => p.sku) : [];
+      const skus = hasSpecificFilter ? targetData.map(p => p.sku) : 'ALL';
       showNotification(`⏳ Menerapkan fee Rp ${val.toLocaleString('id-ID')} ke sistem...`, 'hourglass_empty');
 
       const res = await adminFetch('/admin/ppob/products/bulk-markup', {
@@ -3787,7 +3794,7 @@
             });
           }
         } else {
-          const skuSet = new Set(skus);
+          const skuSet = new Set(Array.isArray(skus) ? skus : []);
           ppobProductsData.forEach(p => {
             if (skuSet.has(p.sku)) {
               p.markup = val;

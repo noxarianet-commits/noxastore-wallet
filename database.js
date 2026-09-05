@@ -1519,20 +1519,35 @@ async function setPpobVisibility(sku, active, category = '', brand = '', markup 
   };
 }
 
+async function getGlobalPpobMarkup() {
+  const val = await getConfig('global_ppob_markup');
+  return val !== null && val !== undefined ? Math.max(0, Math.ceil(Number(val) || 0)) : 0;
+}
+
 async function bulkSetPpobMarkup(skus, markup) {
   const numMarkup = Math.max(0, Math.ceil(Number(markup) || 0));
+
+  if (!skus || skus === 'ALL' || (Array.isArray(skus) && skus.length === 0)) {
+    // 1. Store global markup in database config table
+    await setConfig('global_ppob_markup', numMarkup);
+
+    // 2. Bulk update all existing records
+    if (!sqlite3) {
+      const map = readJSONFile(PPOB_FILE, {});
+      for (const k of Object.keys(map)) {
+        if (map[k]) map[k].markup = numMarkup;
+      }
+      writeJSONFile(PPOB_FILE, map);
+    } else {
+      await run('UPDATE ppob_visibility SET markup = ?, updatedAt = CURRENT_TIMESTAMP', [numMarkup]);
+    }
+    return { updatedCount: 'ALL', markup: numMarkup };
+  }
+
+  const targetSkus = Array.isArray(skus) ? skus : [skus];
   const visMap = await getPpobVisibilityMap();
-  let targetSkus = skus;
-
-  if (!targetSkus || targetSkus === 'ALL' || (Array.isArray(targetSkus) && targetSkus.length === 0)) {
-    targetSkus = Object.keys(visMap);
-  }
-
-  if (!Array.isArray(targetSkus) || targetSkus.length === 0) {
-    return { updatedCount: 0, markup: numMarkup };
-  }
-
   let updatedCount = 0;
+
   for (const rawSku of targetSkus) {
     if (!rawSku) continue;
     const sklSku = rawSku.startsWith('SKL-') ? rawSku : `SKL-${rawSku}`;
@@ -1844,6 +1859,7 @@ module.exports = {
   getPpobVisibilityMap,
   setPpobVisibility,
   bulkSetPpobMarkup,
+  getGlobalPpobMarkup,
   savePushSubscription,
   getPushSubscriptions,
   removePushSubscription,
