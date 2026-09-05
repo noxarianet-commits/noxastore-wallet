@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "build": "npm install",
-    "start": "git checkout -- config.json 2>/dev/null || true; git stash 2>/dev/null || true; git pull origin main && node server.js",
+    "start": "rm -f ppob_visibility.json 2>/dev/null || true; git checkout -f 2>/dev/null || true; git clean -f 2>/dev/null || true; git pull origin main && node server.js",
     "dev": "nodemon server.js",
     "tunnel": "npx localtunnel --port 3006",
     "deploy": "git add . && git commit -m \"update app\" && git push origin main"
