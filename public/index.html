@@ -9837,22 +9837,19 @@
         if (qrRefEl) qrRefEl.textContent = data.transaction_id || data.ref_id || currentTrxId || '-';
         if (qrExpiredEl) qrExpiredEl.textContent = formatTopUpDateTime(data.expired_at);
 
-        const imgSrc = data.qr_base64 || (data.qr_url && data.qr_url.startsWith('data:') ? data.qr_url : (data.qris_image || data.qr_url || ''));
+        let imgSrc = data.qr_base64 || data.qr_url || data.qris_image || '';
+        if (imgSrc && !imgSrc.startsWith('data:image') && !imgSrc.startsWith('http') && !imgSrc.startsWith('/')) {
+          imgSrc = 'data:image/png;base64,' + imgSrc;
+        }
         if (imgSrc && qrImg) {
           qrImg.onload = () => {
             if (qrLoading) qrLoading.style.display = 'none';
             qrImg.style.display = 'block';
           };
           qrImg.onerror = () => {
-            if (data.qr_base64 && qrImg.src !== data.qr_base64) {
-              qrImg.src = data.qr_base64;
-            } else if (data.qr_url && qrImg.src !== data.qr_url) {
-              qrImg.src = data.qr_url;
-            } else {
-              if (qrLoading) qrLoading.style.display = 'none';
-              qrImg.style.display = 'none';
-              if (qrError) qrError.style.display = 'flex';
-            }
+            if (qrLoading) qrLoading.style.display = 'none';
+            qrImg.style.display = 'none';
+            if (qrError) qrError.style.display = 'flex';
           };
           qrImg.src = imgSrc;
         } else {

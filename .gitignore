@@ -12,6 +12,7 @@ pg orkut/node_modules/
 data.sqlite
 users.json
 topup_requests.json
+runtime_counters.json
 backup_json/
 
 # Cache & large binaries

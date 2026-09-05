@@ -446,6 +446,7 @@ function broadcastRealtimeEvent(event, data) {
 const USERS_FILE = path.join(__dirname, 'users.json');
 const TOPUP_FILE = path.join(__dirname, 'topup_requests.json');
 const CONFIG_FILE = path.join(__dirname, 'config.json');
+const RUNTIME_COUNTERS_FILE = path.join(__dirname, 'runtime_counters.json');
 
 function readJSON(filePath, defaultValue = []) {
   try {
@@ -470,15 +471,26 @@ function writeJSON(filePath, data) {
 }
 
 function getNextId(type) {
-  const config = readJSON(CONFIG_FILE, { last_user_id: 0, last_topup_id: 0 });
+  let counters = null;
+  if (fs.existsSync(RUNTIME_COUNTERS_FILE)) {
+    counters = readJSON(RUNTIME_COUNTERS_FILE, null);
+  }
+  if (!counters) {
+    const initialConfig = readJSON(CONFIG_FILE, { last_user_id: 0, last_topup_id: 0 });
+    counters = {
+      last_user_id: initialConfig.last_user_id || 0,
+      last_topup_id: initialConfig.last_topup_id || 0
+    };
+  }
+
   if (type === 'user') {
-    config.last_user_id = (config.last_user_id || 0) + 1;
-    writeJSON(CONFIG_FILE, config);
-    return config.last_user_id;
+    counters.last_user_id = (counters.last_user_id || 0) + 1;
+    writeJSON(RUNTIME_COUNTERS_FILE, counters);
+    return counters.last_user_id;
   } else if (type === 'topup') {
-    config.last_topup_id = (config.last_topup_id || 0) + 1;
-    writeJSON(CONFIG_FILE, config);
-    return config.last_topup_id;
+    counters.last_topup_id = (counters.last_topup_id || 0) + 1;
+    writeJSON(RUNTIME_COUNTERS_FILE, counters);
+    return counters.last_topup_id;
   }
   return Date.now();
 }
@@ -1114,12 +1126,12 @@ async function generateDynamicTopupQris({ amount, userId, username }) {
   try {
     qrisResult = await miraipediaService.convertStaticToDynamic(totalAmount);
   } catch (miraErr) {
-    console.error('[Miraipedia Convert Note]:', miraErr.message);
+    console.warn('[Miraipedia Convert Note]:', miraErr.message, '-> Using local dynamic QRIS fallback');
     try {
-      const fallbackRecord = await orkutService.createTopupOrder({ amount: numericAmount, userId, username });
-      return fallbackRecord;
+      qrisResult = await miraipediaService.generateLocalDynamicQris(totalAmount);
     } catch (fbErr) {
-      throw new Error(`Gagal membuat QRIS Dinamis: ${miraErr.message}`);
+      console.error('[QRIS Local Fallback Error]:', fbErr.message);
+      throw new Error(`Gagal membuat QRIS Dinamis: ${fbErr.message}`);
     }
   }
 
