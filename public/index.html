@@ -274,16 +274,18 @@
       flex-direction: column;
       align-items: center;
       justify-content: flex-start !important;
-      padding: max(28px, env(safe-area-inset-top)) 24px max(36px, env(safe-area-inset-bottom)) 24px !important;
+      padding: max(20px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom)) 24px !important;
       box-sizing: border-box;
       background: #ffffff;
+      min-height: 100vh;
+      min-height: 100dvh;
     }
 
-    /* Inner clean container: fills mobile screen comfortably up to 420px */
+    /* Inner clean container: fills mobile screen comfortably up to 420px, centered vertically */
     .clean-auth-container {
       width: 100%;
       max-width: 420px;
-      margin: 0 auto;
+      margin: auto 0; /* Centers vertically when extra space, scrolls naturally when tall */
       display: flex;
       flex-direction: column;
       box-sizing: border-box;
@@ -5858,9 +5860,6 @@
             </div>
 
           </div>
-
-          <!-- Copyright on brand panel -->
-          <p style="position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; color: rgba(255,255,255,0.35); font-weight: 500;">© 2026 NoxaStore Wallet · PT Noxarianet Nusantara</p>
         </div>
 
         <!-- RIGHT PANEL: Universal Auth Form (Responsive on Mobile & Desktop) -->
@@ -5880,14 +5879,14 @@
             <!-- ============ FORM MASUK (DEFAULT DITAMPILKAN) ============ -->
             <div id="auth-login-form" style="display: block;">
               <h1 class="clean-auth-title">Masuk ke akunmu</h1>
-              <p class="clean-auth-subtitle">Pakai username atau email yang terdaftar.</p>
+              <p class="clean-auth-subtitle">Pakai nomor telepon yang terdaftar.</p>
 
-              <!-- Username atau Email / WhatsApp -->
+              <!-- Nomor Telepon (Strict Integer / Numeric only) -->
               <div class="clean-form-group">
-                <label class="clean-form-label" for="login-username">Username atau Email</label>
+                <label class="clean-form-label" for="login-username">Nomor Telepon</label>
                 <div class="clean-input-box">
-                  <span class="material-symbols-outlined clean-input-icon">person</span>
-                  <input id="login-username" type="text" placeholder="budi.santoso atau 081234567890" autocomplete="username" onkeydown="if(event.key==='Enter') doLogin()" />
+                  <span class="material-symbols-outlined clean-input-icon">call</span>
+                  <input id="login-username" type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="16" placeholder="081234567890" autocomplete="tel" onkeypress="return (event.charCode >= 48 && event.charCode <= 57) || event.key === 'Enter'" oninput="this.value = this.value.replace(/\D/g, '')" onkeydown="if(event.key==='Enter') doLogin()" />
                 </div>
               </div>
 
@@ -6017,10 +6016,6 @@
                 </button>
               </div>
             </div>
-
-
-            <!-- Footer Copyright -->
-            <p style="text-align: center; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; color: #94a3b8; margin-top: 14px; margin-bottom: 8px;">© 2026 NoxaStore Wallet · PT Noxarianet Nusantara</p>
 
           </div>
         </div>
@@ -7658,7 +7653,7 @@
         const password = document.getElementById('login-password').value.trim();
 
         if (!user || !password) {
-          showNotification('❌ Harap isi nomor WhatsApp dan kata sandi!');
+          showNotification('❌ Harap isi nomor telepon dan kata sandi!');
           return;
         }
 
