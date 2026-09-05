@@ -6579,17 +6579,47 @@
     <script>
 
       // Fetch Wrapper for Auth & Suspension Interceptor
+      // Helper function to obtain active valid auth token
+      function getAuthToken() {
+        return localStorage.getItem('noxaAuthToken') || localStorage.getItem('noxaUsername') || '';
+      }
+
+      function getAuthHeader() {
+        const token = getAuthToken();
+        return token ? { 'Authorization': 'Bearer ' + token } : {};
+      }
+
+      // Fetch Wrapper for Auth & Suspension Interceptor
       const originalFetch = window.fetch;
       window.fetch = async (...args) => {
         let [resource, config] = args;
         const authToken = localStorage.getItem('noxaAuthToken');
         const username = localStorage.getItem('noxaUsername');
         const token = authToken || username;
+
         if (token) {
           config = config || {};
-          config.headers = config.headers || {};
-          if (!config.headers['Authorization']) {
-            config.headers['Authorization'] = 'Bearer ' + token;
+          if (typeof Headers !== 'undefined' && config.headers instanceof Headers) {
+            const curAuth = config.headers.get('Authorization') || config.headers.get('authorization');
+            if (!curAuth || (authToken && curAuth.startsWith('Bearer ') && !curAuth.includes(authToken))) {
+              config.headers.set('Authorization', 'Bearer ' + token);
+            }
+          } else if (Array.isArray(config.headers)) {
+            let found = false;
+            for (let i = 0; i < config.headers.length; i++) {
+              if (String(config.headers[i][0]).toLowerCase() === 'authorization') {
+                if (authToken) config.headers[i][1] = 'Bearer ' + token;
+                found = true;
+                break;
+              }
+            }
+            if (!found) config.headers.push(['Authorization', 'Bearer ' + token]);
+          } else {
+            config.headers = config.headers || {};
+            const curAuth = config.headers['Authorization'] || config.headers['authorization'];
+            if (!curAuth || (authToken && curAuth.startsWith('Bearer ') && curAuth !== 'Bearer ' + authToken)) {
+              config.headers['Authorization'] = 'Bearer ' + token;
+            }
           }
         }
         const response = await originalFetch(resource, config);
@@ -7811,7 +7841,7 @@
           const brandMap = { DANA: 'DANA', OVO: 'OVO', GOPAY: 'GO PAY', SHOPEEPAY: 'SHOPEE PAY' };
           const brand = brandMap[_activeWithdrawMethod || 'DANA'] || 'DANA';
           const r = await fetch('/api/ppob/products?category=E-Money&brand=' + encodeURIComponent(brand), {
-            headers: { 'Authorization': 'Bearer ' + localStorage.getItem('noxaUsername') }
+            headers: { 'Authorization': 'Bearer ' + getAuthToken() }
           });
           const d = await r.json();
           if (d && d.data && d.data.length > 0) {
@@ -7837,7 +7867,7 @@
             row.style.display = 'flex';
             const res = await fetch('/api/ppob/validate-account', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('noxaUsername') },
+              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
               body: JSON.stringify({ product_id: itemId, target: phone })
             });
             const data = await res.json();
@@ -7930,7 +7960,7 @@
         try {
           const uname = localStorage.getItem('noxaUsername') || 'guest';
           const res = await fetch(`/api/ppob/products?category=E-Money&brand=${encodeURIComponent(brand)}`, {
-            headers: { 'Authorization': 'Bearer ' + uname }
+            headers: { 'Authorization': 'Bearer ' + getAuthToken() }
           });
           const result = await res.json();
 
@@ -8133,7 +8163,7 @@
         }
 
         try {
-          const res = await fetch('/pin-status', { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('noxaUsername') } });
+          const res = await fetch('/pin-status', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
           const data = await res.json();
           if (!data.hasPin) {
             showNotification('⚠ Buat PIN transaksi terlebih dahulu.');
@@ -8200,7 +8230,7 @@
           try {
             const response = await fetch('/transfer-saldo', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('noxaUsername') },
+              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
               body: JSON.stringify({ ..._pendingTransferData, pin })
             });
             const result = await response.json();
@@ -8231,7 +8261,7 @@
         try {
           const response = await fetch('/withdraw-buatqris', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('noxaUsername') },
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
             body: JSON.stringify({ ..._pendingWithdrawData, pin })
           });
           const result = await response.json();
@@ -8529,7 +8559,7 @@
 
         try {
           const res = await fetch('/pin-status', {
-            headers: { 'Authorization': 'Bearer ' + username }
+            headers: { 'Authorization': 'Bearer ' + getAuthToken() }
           });
           const data = await res.json();
           if (!data.hasPin) {
@@ -8650,7 +8680,7 @@
           try {
             const res = await fetch('/verify-pin', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('noxaUsername') },
+              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
               body: JSON.stringify({ pin: pinVal })
             });
             const data = await res.json();
@@ -8709,7 +8739,7 @@
           try {
             const res = await fetch('/set-pin', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('noxaUsername') },
+              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
               body: JSON.stringify({ pin: pinVal, oldPin: _currentVerifiedOldPin })
             });
             const data = await res.json();
@@ -8756,7 +8786,7 @@
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': 'Bearer ' + localStorage.getItem('noxaUsername')
+              'Authorization': 'Bearer ' + getAuthToken()
             },
             body: JSON.stringify({ amount: amount, phone: phoneInput })
           });
@@ -9009,7 +9039,7 @@
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': 'Bearer ' + (localStorage.getItem('noxaUsername') || '')
+              'Authorization': 'Bearer ' + getAuthToken()
             },
             body: JSON.stringify({ amount: amount })
           });
@@ -9352,7 +9382,7 @@
         try {
           const username = localStorage.getItem('noxaUsername') || '';
           const res = await fetch('/api/transfer/check-user/' + encodeURIComponent(target), {
-            headers: { 'Authorization': 'Bearer ' + username }
+            headers: { 'Authorization': 'Bearer ' + getAuthToken() }
           });
           const data = await res.json();
           if (data.success && recipName) {
@@ -9407,7 +9437,7 @@
             const username = localStorage.getItem('noxaUsername') || '';
             const res = await fetch('/transfer-saldo', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + username },
+              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
               body: JSON.stringify({ target, amount, pin, note })
             });
             const data = await res.json();
@@ -9923,7 +9953,7 @@
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': 'Bearer ' + localStorage.getItem('noxaUsername')
+              'Authorization': 'Bearer ' + getAuthToken()
             },
             body: JSON.stringify({ amount })
           });
@@ -9969,7 +9999,7 @@
       async function pollDepositStatus(trxId) {
         try {
           const response = await fetch('/deposit-status/' + trxId, {
-            headers: { 'Authorization': 'Bearer ' + localStorage.getItem('noxaUsername') }
+            headers: { 'Authorization': 'Bearer ' + getAuthToken() }
           });
           const data = await response.json();
 
@@ -10104,7 +10134,7 @@
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': 'Bearer ' + localStorage.getItem('noxaUsername')
+              'Authorization': 'Bearer ' + getAuthToken()
             },
             body: JSON.stringify({ amount: amount })
           });
@@ -10197,7 +10227,7 @@
       // Sync current balance & history from server
       async function syncServerState() {
         const username = localStorage.getItem('noxaUsername');
-        const authHeader = { 'Authorization': 'Bearer ' + username };
+        const authHeader = { 'Authorization': 'Bearer ' + getAuthToken() };
         try {
           // Fetch Balance
           const balanceRes = await fetch('/balance', { headers: authHeader });
@@ -10782,7 +10812,7 @@
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
-                  'Authorization': 'Bearer ' + username
+                  'Authorization': 'Bearer ' + getAuthToken()
                 },
                 body: JSON.stringify({
                   latitude: lat,
@@ -11321,7 +11351,7 @@
         try {
           const response = await fetch('/upload', {
             method: 'POST',
-            headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('noxaUsername') || '') },
+            headers: { 'Authorization': 'Bearer ' + getAuthToken() },
             body: formData
           });
 
@@ -11357,7 +11387,7 @@
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': 'Bearer ' + (localStorage.getItem('noxaUsername') || '')
+              'Authorization': 'Bearer ' + getAuthToken()
             },
             body: JSON.stringify(pendingTransaction)
           });
@@ -13756,6 +13786,9 @@
           const data = await res.json();
           if (data.success) {
             showNotification('✅ Profil berhasil diperbarui!');
+            if (data.token) {
+              localStorage.setItem('noxaAuthToken', data.token);
+            }
             localStorage.setItem('noxaFullname', fullname);
             localStorage.setItem('noxaEmail', email);
             localStorage.setItem('noxaUsername', data.newUsername);
@@ -14348,7 +14381,7 @@
         try {
           const uname = localStorage.getItem('noxaUsername') || 'guest';
           const res = await fetch(`/api/ppob/products?category=${encodeURIComponent(category)}&brand=${encodeURIComponent(brand)}`, {
-            headers: { 'Authorization': 'Bearer ' + uname }
+            headers: { 'Authorization': 'Bearer ' + getAuthToken() }
           });
           const result = await res.json();
 
@@ -14482,7 +14515,7 @@
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': 'Bearer ' + localStorage.getItem('noxaUsername')
+              'Authorization': 'Bearer ' + getAuthToken()
             },
             body: JSON.stringify({ product_id: product.id, sku: product.sku, target: target })
           }).then(res => res.json()).then(data => {
@@ -14594,7 +14627,7 @@
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': 'Bearer ' + username
+              'Authorization': 'Bearer ' + getAuthToken()
             },
             body: JSON.stringify({
               sku: product.sku,
@@ -15184,7 +15217,7 @@
           var username = localStorage.getItem('noxaUsername');
           var res = await fetch('/api/ppob/order', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + username },
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
             body: JSON.stringify({ sku: product.sku, target: target, price: product.price, pin: pin })
           });
           var result = await res.json();
@@ -15233,7 +15266,7 @@
           if (typeof _checkoutType !== 'undefined' && _checkoutType === 'TRANSFER') {
             var resp = await fetch('/transfer-saldo', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('noxaUsername') },
+              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
               body: JSON.stringify(Object.assign({}, _pendingTransferData, { pin: pin }))
             });
             var res = await resp.json();
@@ -15253,7 +15286,7 @@
           // WITHDRAW / EWALLET TOPUP
           var resp2 = await fetch('/withdraw-buatqris', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('noxaUsername') },
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
             body: JSON.stringify(Object.assign({}, _pendingWithdrawData, { pin: pin }))
           });
           var res2 = await resp2.json();

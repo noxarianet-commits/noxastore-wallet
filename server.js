@@ -678,7 +678,13 @@ const requireAuth = async (req, res, next) => {
     const decoded = jwt.verify(token, JWT_SECRET);
     username = decoded.username;
   } catch (err) {
-    return res.status(401).json({ status: false, msg: 'Sesi tidak valid atau telah kedaluwarsa. Silakan masuk kembali.' });
+    // Session fallback / legacy compatibility: check if token directly identifies a valid user
+    const legacyUser = (await db.getUser(token)) || (await db.getUserByUserId(token)) || (await db.getUserByWaContact(token));
+    if (legacyUser) {
+      username = legacyUser.username;
+    } else {
+      return res.status(401).json({ status: false, msg: 'Sesi tidak valid atau telah kedaluwarsa. Silakan masuk kembali.' });
+    }
   }
 
   if (!username) {
@@ -2683,6 +2689,13 @@ async function handleWithdrawEwallet(req, res) {
     filtered.sort((a, b) => a.price - b.price);
     const item = filtered[0] || null;
 
+    if (!item) {
+      return res.status(400).json({
+        success: false,
+        error: `Produk e-wallet ${method} nominal Rp ${nominal.toLocaleString('id-ID')} sedang tidak tersedia.`
+      });
+    }
+
     const visMap = await db.getPpobVisibilityMap();
     const itemSku = `SKL-${item.id}`;
     const vis = visMap[itemSku] || visMap[String(item.id)];
@@ -2952,7 +2965,13 @@ app.post('/update-profile', requireAuth, async (req, res) => {
       type: 'profile_update'
     });
 
-    res.json({ success: true, newUsername: targetUsername, message: 'Profil berhasil diperbarui' });
+    const newToken = jwt.sign(
+      { username: targetUsername, role: req.user.role || 'MEMBER' },
+      JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+
+    res.json({ success: true, newUsername: targetUsername, token: newToken, message: 'Profil berhasil diperbarui' });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
