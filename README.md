@@ -1,4 +1,4 @@
-# NoxaStore Wallet (NoxaPay) 💳
+# NoxarianetApp 💳
 
 A lightweight DANA-inspired mobile web application and payment receipt verification engine.
 
@@ -37,4 +37,4 @@ npm run dev
 ```
 
 ---
-*Created for NoxaStore / NoxaPay Wallet.*
+*Created for NoxarianetApp.*

@@ -1,7 +1,7 @@
 {
-  "name": "noxastore-wallet",
+  "name": "noxarianetapp",
   "version": "1.0.0",
-  "description": "Lightweight DANA-inspired mobile web application for verifying payment receipts",
+  "description": "NoxarianetApp - Digital Payment & Wallet Platform",
   "main": "server.js",
   "scripts": {
     "build": "npm install",

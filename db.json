@@ -52,7 +52,7 @@
         {
           "id": "WDR-1782567004956",
           "orderId": "WD-QRIS-ACC",
-          "merchant": "noxastore wallet",
+          "merchant": "NoxarianetApp",
           "amount": 1100000,
           "date": "27 Jun 2026",
           "time": "13.30.04",
@@ -112,7 +112,7 @@
         {
           "id": "WDR-1782612561193",
           "orderId": "WD-QRIS-ACC",
-          "merchant": "noxastore wallet",
+          "merchant": "NoxarianetApp",
           "amount": 1,
           "date": "28 Jun 2026",
           "time": "02.09.21",
@@ -630,7 +630,7 @@
         {
           "id": "WDR-1784427144121",
           "orderId": "WD-QRIS-ACC",
-          "merchant": "noxastore wallet",
+          "merchant": "NoxarianetApp",
           "amount": 12,
           "date": "19 Jul 2026",
           "time": "02.12.24",
@@ -25067,7 +25067,7 @@
     }
   ],
   "announcement": {
-    "text": "Saat ini fitur yang tersedia di aplikasi noxastore wallet ada top up saldo Min 1000 dan penarikan saldo ke DANA dan GOPAY Min 1.000",
+    "text": "Saat ini fitur yang tersedia di aplikasi NoxarianetApp ada top up saldo Min 1000 dan penarikan saldo ke DANA dan GOPAY Min 1.000",
     "active": true
   },
   "appUpdate": {

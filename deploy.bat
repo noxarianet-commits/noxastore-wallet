@@ -1,7 +1,7 @@
 @echo off
-title NoxaStore Wallet - Deploy to GitHub
+title NoxarianetApp - Deploy to GitHub
 echo =====================================================
-echo    NoxaStore Wallet - Auto Git Push to GitHub
+echo    NoxarianetApp - Auto Git Push to GitHub
 echo =====================================================
 echo.
 echo [1/3] Menyiapkan perubahan (git add)...

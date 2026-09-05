@@ -1,7 +1,7 @@
 {
-  "name": "NoxariaNet Wallet",
-  "short_name": "NoxaWallet",
-  "description": "NoxariaNet Digital Wallet & Payment Verification",
+  "name": "NoxarianetApp",
+  "short_name": "NoxarianetApp",
+  "description": "NoxarianetApp Digital Platform & Payment Verification",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#6d23f9",

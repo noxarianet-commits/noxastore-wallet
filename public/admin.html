@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>noxastore wallet — Dashboard Admin</title>
+  <title>NoxarianetApp — Dashboard Admin</title>
   <!-- Google Fonts: Inter & Outfit -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1275,7 +1275,7 @@
           <span class="material-symbols-outlined" style="font-size: 24px;">shield</span>
         </div>
         <div>
-          <h1>noxastore wallet</h1>
+          <h1>NoxarianetApp</h1>
           <p>SYSTEM CONTROL CONSOLE</p>
         </div>
       </div>
@@ -1337,7 +1337,7 @@
             <span class="material-symbols-outlined" style="font-size: 20px;">shield</span>
           </div>
           <div>
-            <h1>noxastore wallet</h1>
+            <h1>NoxarianetApp</h1>
             <p style="font-size: 9.5px; color: rgba(255,255,255,0.7); font-weight: 700; margin: 0;">CONTROL CONSOLE</p>
           </div>
         </div>
@@ -2030,6 +2030,48 @@
     </main>
   </div>
 
+  <!-- Dedicated Secure Admin Login Modal -->
+  <div id="admin-login-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 999999; align-items: center; justify-content: center; padding: 20px;">
+    <div style="background: #ffffff; width: 100%; max-width: 400px; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); padding: 32px 28px; border: 1px solid #e2e8f0; text-align: left;">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+        <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(123, 45, 142, 0.1); display: flex; align-items: center; justify-content: center; color: #7B2D8E;">
+          <span class="material-symbols-outlined" style="font-size: 26px;">shield_person</span>
+        </div>
+        <div>
+          <h2 style="font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 800; color: #0f172a; margin: 0;">Portal Administrator</h2>
+          <p style="font-size: 12px; color: #64748b; margin: 2px 0 0;">NoxarianetApp Management</p>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 16px;">
+        <label style="display: block; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 6px;">Username Admin</label>
+        <div style="display: flex; align-items: center; background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 0 12px;">
+          <span class="material-symbols-outlined" style="color: #94a3b8; font-size: 20px; margin-right: 8px;">person</span>
+          <input id="modal-admin-user" type="text" placeholder="andika123" style="width: 100%; border: none; background: transparent; padding: 12px 0; font-size: 14px; font-weight: 600; color: #0f172a; outline: none;" onkeydown="if(event.key==='Enter') submitAdminModalLogin()" />
+        </div>
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <label style="display: block; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 6px;">Password Admin</label>
+        <div style="display: flex; align-items: center; background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 0 12px;">
+          <span class="material-symbols-outlined" style="color: #94a3b8; font-size: 20px; margin-right: 8px;">lock</span>
+          <input id="modal-admin-pass" type="password" placeholder="Password" style="width: 100%; border: none; background: transparent; padding: 12px 0; font-size: 14px; font-weight: 600; color: #0f172a; outline: none;" onkeydown="if(event.key==='Enter') submitAdminModalLogin()" />
+        </div>
+      </div>
+
+      <div id="modal-admin-err" style="display: none; color: #dc2626; font-size: 12px; font-weight: 600; margin-bottom: 14px; padding: 8px 12px; background: #fee2e2; border-radius: 8px;"></div>
+
+      <button id="modal-admin-btn" type="button" onclick="submitAdminModalLogin()" style="width: 100%; background: linear-gradient(135deg, #7B2D8E 0%, #5b21b6 100%); color: white; border: none; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(123, 45, 142, 0.35);">
+        <span>Masuk Dashboard Admin</span>
+        <span class="material-symbols-outlined" style="font-size: 18px;">arrow_forward</span>
+      </button>
+
+      <div style="text-align: center; margin-top: 16px;">
+        <a href="/index.html" style="font-size: 12px; color: #64748b; text-decoration: none; font-weight: 600;">← Kembali ke Aplikasi Utama</a>
+      </div>
+    </div>
+  </div>
+
   <!-- JavaScript Admin Console -->
   <script>
     let usersData = {};
@@ -2037,15 +2079,78 @@
     let currentTab = 'profile'; // 'profile' or 'history'
     let adminToken = '';
 
-    // Check existing auth on load — redirect to index.html if no valid admin token
+    function showAdminLoginModal() {
+      const modal = document.getElementById('admin-login-modal');
+      if (modal) modal.style.display = 'flex';
+      setTimeout(() => {
+        const inp = document.getElementById('modal-admin-user');
+        if (inp) inp.focus();
+      }, 100);
+    }
+
+    async function submitAdminModalLogin() {
+      const userEl = document.getElementById('modal-admin-user');
+      const passEl = document.getElementById('modal-admin-pass');
+      const errEl = document.getElementById('modal-admin-err');
+      const btn = document.getElementById('modal-admin-btn');
+      
+      const username = (userEl ? userEl.value : '').trim();
+      const password = (passEl ? passEl.value : '').trim();
+
+      if (!username || !password) {
+        if (errEl) {
+          errEl.textContent = 'Harap isi Username dan Password Admin!';
+          errEl.style.display = 'block';
+        }
+        return;
+      }
+
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="material-symbols-outlined" style="animation: spin 0.8s linear infinite; font-size: 18px;">sync</span><span>Memverifikasi...</span>';
+      }
+      if (errEl) errEl.style.display = 'none';
+
+      try {
+        const res = await fetch('/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (data.success && data.token) {
+          localStorage.setItem('noxAdminToken', data.token);
+          adminToken = data.token;
+          const modal = document.getElementById('admin-login-modal');
+          if (modal) modal.style.display = 'none';
+          loadAdminDashboard();
+        } else {
+          if (errEl) {
+            errEl.textContent = data.error || data.msg || 'Kredensial salah atau akses ditolak.';
+            errEl.style.display = 'block';
+          }
+        }
+      } catch (err) {
+        if (errEl) {
+          errEl.textContent = 'Terjadi kesalahan koneksi server.';
+          errEl.style.display = 'block';
+        }
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<span>Masuk Dashboard Admin</span><span class="material-symbols-outlined" style="font-size: 18px;">arrow_forward</span>';
+        }
+      }
+    }
+
+    // Check existing auth on load — show modal if no valid admin token
     window.addEventListener('DOMContentLoaded', () => {
       const savedToken = localStorage.getItem('noxAdminToken');
       if (savedToken) {
         adminToken = savedToken;
         loadAdminDashboard();
       } else {
-        // Not authenticated — send back to the main login page
-        window.location.href = '/index.html';
+        showAdminLoginModal();
       }
     });
 

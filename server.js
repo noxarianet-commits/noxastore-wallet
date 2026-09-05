@@ -185,7 +185,7 @@ app.get('/api/github-deploy', (req, res) => {
   res.json({
     status: 'active',
     endpoint: '/api/github-deploy',
-    message: 'NoxaStore Auto-Deploy Webhook endpoint is active. Use POST to trigger deployment.'
+    message: 'NoxarianetApp Auto-Deploy Webhook endpoint is active. Use POST to trigger deployment.'
   });
 });
 
