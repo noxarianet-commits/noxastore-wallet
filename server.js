@@ -1783,8 +1783,15 @@ app.get('/api/ppob/products', async (req, res) => {
       const globalMarkup = await db.getGlobalPpobMarkup();
       const formatted = items.map(item => {
         const itemSku = `SKL-${item.id}`;
-        const vis = visMap[itemSku] || visMap[String(item.id)] || (item.sku ? visMap[String(item.sku)] : undefined);
-        const markup = (vis && vis.markup !== undefined && vis.markup !== null) ? Math.max(0, Math.ceil(Number(vis.markup) || 0)) : globalMarkup;
+        const numSku = String(item.id);
+        const rawSku = String(item.sku || '');
+        const vis = visMap[itemSku] || visMap[numSku] || (rawSku ? visMap[rawSku] : undefined);
+        let markup = globalMarkup;
+        if (vis && vis.markup !== undefined && vis.markup !== null && Number(vis.markup) > 0) {
+          markup = Math.max(0, Math.ceil(Number(vis.markup)));
+        } else if (vis && vis.markup !== undefined && vis.markup !== null && globalMarkup === 0) {
+          markup = Math.max(0, Math.ceil(Number(vis.markup)));
+        }
         const basePrice = Math.ceil(Number(item.price) || 0);
         return {
           id: item.id,
@@ -1880,8 +1887,15 @@ app.get('/admin/ppob/products', requireAdminAuth, async (req, res) => {
     const products = [];
     for (const item of items) {
       const itemSku = `SKL-${item.id}`;
-      const vis = visMap[itemSku] || visMap[String(item.id)];
-      const markup = (vis && vis.markup !== undefined && vis.markup !== null) ? Math.max(0, Math.ceil(Number(vis.markup) || 0)) : globalMarkup;
+      const numSku = String(item.id);
+      const rawSku = String(item.sku || '');
+      const vis = visMap[itemSku] || visMap[numSku] || (rawSku ? visMap[rawSku] : undefined);
+      let markup = globalMarkup;
+      if (vis && vis.markup !== undefined && vis.markup !== null && Number(vis.markup) > 0) {
+        markup = Math.max(0, Math.ceil(Number(vis.markup)));
+      } else if (vis && vis.markup !== undefined && vis.markup !== null && globalMarkup === 0) {
+        markup = Math.max(0, Math.ceil(Number(vis.markup)));
+      }
       const basePrice = Math.ceil(Number(item.price) || 0);
       products.push({
         id: item.id,
@@ -2588,8 +2602,15 @@ async function handlePpobCheckout(req, res) {
     const globalMarkup = await db.getGlobalPpobMarkup();
     const visMap = await db.getPpobVisibilityMap();
     const itemSku = `SKL-${item.id}`;
-    const vis = visMap[itemSku] || visMap[String(item.id)];
-    const markup = (vis && vis.markup !== undefined && vis.markup !== null) ? Math.max(0, Math.ceil(Number(vis.markup) || 0)) : globalMarkup;
+    const numSku = String(item.id);
+    const rawSku = String(item.sku || '');
+    const vis = visMap[itemSku] || visMap[numSku] || (rawSku ? visMap[rawSku] : undefined);
+    let markup = globalMarkup;
+    if (vis && vis.markup !== undefined && vis.markup !== null && Number(vis.markup) > 0) {
+      markup = Math.max(0, Math.ceil(Number(vis.markup)));
+    } else if (vis && vis.markup !== undefined && vis.markup !== null && globalMarkup === 0) {
+      markup = Math.max(0, Math.ceil(Number(vis.markup)));
+    }
     const basePrice = Math.ceil(Number(item.price) || 0);
     const totalPrice = basePrice + markup;
 
@@ -2891,8 +2912,15 @@ async function handleWithdrawEwallet(req, res) {
     const globalMarkup = await db.getGlobalPpobMarkup();
     const visMap = await db.getPpobVisibilityMap();
     const itemSku = `SKL-${item.id}`;
-    const vis = visMap[itemSku] || visMap[String(item.id)];
-    const markup = (vis && vis.markup !== undefined && vis.markup !== null) ? Math.max(0, Math.ceil(Number(vis.markup) || 0)) : globalMarkup;
+    const numSku = String(item.id);
+    const rawSku = String(item.sku || '');
+    const vis = visMap[itemSku] || visMap[numSku] || (rawSku ? visMap[rawSku] : undefined);
+    let markup = globalMarkup;
+    if (vis && vis.markup !== undefined && vis.markup !== null && Number(vis.markup) > 0) {
+      markup = Math.max(0, Math.ceil(Number(vis.markup)));
+    } else if (vis && vis.markup !== undefined && vis.markup !== null && globalMarkup === 0) {
+      markup = Math.max(0, Math.ceil(Number(vis.markup)));
+    }
     const basePrice = Math.ceil(Number(item.price) || 0);
     const totalPrice = basePrice + markup;
     const currentBal = user.mainBalance !== undefined ? user.mainBalance : user.saldo || 0;

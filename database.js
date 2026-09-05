@@ -445,33 +445,42 @@ async function updateAdminCredentials(oldUsername, oldPassword, newUsername, new
 
 // CONFIG FUNCTIONS
 async function getConfig(key) {
-  if (!sqlite3) {
-    const configMap = readJSONFile(CONFIG_FILE, {});
-    return configMap[key] !== undefined ? configMap[key] : null;
-  }
-  const row = await get('SELECT value FROM app_config WHERE key = ?', [key]);
-  if (row && row.value) {
+  let val = null;
+  if (sqlite3) {
     try {
-      return JSON.parse(row.value);
-    } catch (e) {
-      return row.value;
-    }
+      const row = await get('SELECT value FROM app_config WHERE key = ?', [key]);
+      if (row && row.value !== undefined && row.value !== null) {
+        try {
+          val = JSON.parse(row.value);
+        } catch (e) {
+          val = row.value;
+        }
+      }
+    } catch (e) {}
   }
-  return null;
+  if (val === null || val === undefined) {
+    const configMap = readJSONFile(CONFIG_FILE, {});
+    val = configMap[key] !== undefined ? configMap[key] : null;
+  }
+  return val;
 }
 
 async function setConfig(key, value) {
-  if (!sqlite3) {
-    const configMap = readJSONFile(CONFIG_FILE, {});
-    configMap[key] = value;
-    writeJSONFile(CONFIG_FILE, configMap);
-    return;
+  // 1. Always write to config.json
+  const configMap = readJSONFile(CONFIG_FILE, {});
+  configMap[key] = value;
+  writeJSONFile(CONFIG_FILE, configMap);
+
+  // 2. Always write to SQLite if available
+  if (sqlite3) {
+    try {
+      const strVal = typeof value === 'object' ? JSON.stringify(value) : String(value);
+      await run(`
+        INSERT INTO app_config (key, value, updatedAt) VALUES (?, ?, CURRENT_TIMESTAMP)
+        ON CONFLICT(key) DO UPDATE SET value = excluded.value, updatedAt = CURRENT_TIMESTAMP;
+      `, [key, strVal]);
+    } catch (e) {}
   }
-  const strVal = typeof value === 'object' ? JSON.stringify(value) : String(value);
-  await run(`
-    INSERT INTO app_config (key, value, updatedAt) VALUES (?, ?, CURRENT_TIMESTAMP)
-    ON CONFLICT(key) DO UPDATE SET value = excluded.value, updatedAt = CURRENT_TIMESTAMP;
-  `, [key, strVal]);
 }
 
 // USER FUNCTIONS
@@ -1447,7 +1456,7 @@ async function getPpobVisibilityMap() {
     return map;
   }
 
-  const rows = await all('SELECT * FROM ppob_visibility');
+  const rows = sqlite3 ? await all('SELECT * FROM ppob_visibility') : [];
   for (const r of rows) {
     const rawSku = String(r.sku || '').trim();
     const sklSku = rawSku.startsWith('SKL-') ? rawSku : `SKL-${rawSku}`;
@@ -1460,12 +1469,9 @@ async function getPpobVisibilityMap() {
       markup: Math.max(0, Math.ceil(Number(r.markup) || 0))
     };
 
-    const existing = map[sklSku];
-    if (!existing || entry.markup >= existing.markup) {
-      map[rawSku] = entry;
-      map[sklSku] = entry;
-      map[numSku] = entry;
-    }
+    map[rawSku] = entry;
+    map[sklSku] = entry;
+    map[numSku] = entry;
   }
   return map;
 }
@@ -1482,41 +1488,36 @@ async function setPpobVisibility(sku, active, category = '', brand = '', markup 
   const newActive = active !== undefined && active !== null ? (active ? true : false) : (existing.active !== undefined ? existing.active : true);
   const newCat = category || existing.category || '';
   const newBrand = brand || existing.brand || '';
-  const newMarkup = markup !== undefined && markup !== null ? Math.max(0, Math.ceil(Number(markup) || 0)) : (existing.markup || 0);
+  const globalMarkup = await getGlobalPpobMarkup();
+  const newMarkup = markup !== undefined && markup !== null ? Math.max(0, Math.ceil(Number(markup) || 0)) : (existing.markup !== undefined ? existing.markup : globalMarkup);
 
-  if (!sqlite3) {
-    const map = readJSONFile(PPOB_FILE, {});
-    const val = {
-      sku: sklSku,
-      active: newActive,
-      category: newCat,
-      brand: newBrand,
-      markup: newMarkup
-    };
-
-    map[sklSku] = val;
-    map[numSku] = val;
-    map[rawSku] = val;
-    writeJSONFile(PPOB_FILE, map);
-    return val;
-  }
-
-  // Clean duplicate non-canonical SKU rows first
-  await run('DELETE FROM ppob_visibility WHERE sku = ? OR sku = ? OR sku = ?', [sklSku, numSku, rawSku]);
-
-  // Insert canonical row
-  await run(`
-    INSERT INTO ppob_visibility (sku, active, category, brand, markup, updatedAt)
-    VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-  `, [sklSku, newActive ? 1 : 0, newCat, newBrand, newMarkup]);
-
-  return {
+  const val = {
     sku: sklSku,
     active: newActive,
     category: newCat,
     brand: newBrand,
     markup: newMarkup
   };
+
+  // 1. Always update JSON file
+  const jsonMap = readJSONFile(PPOB_FILE, {});
+  jsonMap[sklSku] = val;
+  jsonMap[numSku] = val;
+  jsonMap[rawSku] = val;
+  writeJSONFile(PPOB_FILE, jsonMap);
+
+  // 2. Always update SQLite if available
+  if (sqlite3) {
+    try {
+      await run('DELETE FROM ppob_visibility WHERE sku = ? OR sku = ? OR sku = ?', [sklSku, numSku, rawSku]);
+      await run(`
+        INSERT INTO ppob_visibility (sku, active, category, brand, markup, updatedAt)
+        VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+      `, [sklSku, newActive ? 1 : 0, newCat, newBrand, newMarkup]);
+    } catch (e) {}
+  }
+
+  return val;
 }
 
 async function getGlobalPpobMarkup() {
@@ -1528,24 +1529,28 @@ async function bulkSetPpobMarkup(skus, markup) {
   const numMarkup = Math.max(0, Math.ceil(Number(markup) || 0));
 
   if (!skus || skus === 'ALL' || (Array.isArray(skus) && skus.length === 0)) {
-    // 1. Store global markup in database config table
+    // 1. Store global markup in database config table & config.json
     await setConfig('global_ppob_markup', numMarkup);
 
-    // 2. Bulk update all existing records
-    if (!sqlite3) {
-      const map = readJSONFile(PPOB_FILE, {});
-      for (const k of Object.keys(map)) {
-        if (map[k]) map[k].markup = numMarkup;
-      }
-      writeJSONFile(PPOB_FILE, map);
-    } else {
-      await run('UPDATE ppob_visibility SET markup = ?, updatedAt = CURRENT_TIMESTAMP', [numMarkup]);
+    // 2. Always update ppob_visibility.json
+    const map = readJSONFile(PPOB_FILE, {});
+    for (const k of Object.keys(map)) {
+      if (map[k]) map[k].markup = numMarkup;
+    }
+    writeJSONFile(PPOB_FILE, map);
+
+    // 3. Always update SQLite if available
+    if (sqlite3) {
+      try {
+        await run('UPDATE ppob_visibility SET markup = ?, updatedAt = CURRENT_TIMESTAMP', [numMarkup]);
+      } catch (e) {}
     }
     return { updatedCount: 'ALL', markup: numMarkup };
   }
 
   const targetSkus = Array.isArray(skus) ? skus : [skus];
   const visMap = await getPpobVisibilityMap();
+  const map = readJSONFile(PPOB_FILE, {});
   let updatedCount = 0;
 
   for (const rawSku of targetSkus) {
@@ -1557,23 +1562,24 @@ async function bulkSetPpobMarkup(skus, markup) {
     const newCat = existing.category || '';
     const newBrand = existing.brand || '';
 
-    if (!sqlite3) {
-      const map = readJSONFile(PPOB_FILE, {});
-      const val = { sku: sklSku, active: newActive, category: newCat, brand: newBrand, markup: numMarkup };
-      map[sklSku] = val;
-      map[numSku] = val;
-      map[rawSku] = val;
-      writeJSONFile(PPOB_FILE, map);
-    } else {
-      await run('DELETE FROM ppob_visibility WHERE sku = ? OR sku = ? OR sku = ?', [sklSku, numSku, rawSku]);
-      await run(`
-        INSERT INTO ppob_visibility (sku, active, category, brand, markup, updatedAt)
-        VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-      `, [sklSku, newActive ? 1 : 0, newCat, newBrand, numMarkup]);
+    const val = { sku: sklSku, active: newActive, category: newCat, brand: newBrand, markup: numMarkup };
+    map[sklSku] = val;
+    map[numSku] = val;
+    map[rawSku] = val;
+
+    if (sqlite3) {
+      try {
+        await run('DELETE FROM ppob_visibility WHERE sku = ? OR sku = ? OR sku = ?', [sklSku, numSku, rawSku]);
+        await run(`
+          INSERT INTO ppob_visibility (sku, active, category, brand, markup, updatedAt)
+          VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        `, [sklSku, newActive ? 1 : 0, newCat, newBrand, numMarkup]);
+      } catch (e) {}
     }
     updatedCount++;
   }
 
+  writeJSONFile(PPOB_FILE, map);
   return { updatedCount, markup: numMarkup };
 }
 
