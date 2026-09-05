@@ -163,6 +163,32 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// ==========================================
+// GITHUB AUTO-DEPLOY WEBHOOK (FINCLOUD AUTO-RESTART)
+// ==========================================
+app.post('/api/github-deploy', (req, res) => {
+  const event = req.headers['x-github-event'] || 'push';
+  console.log(`[AutoDeploy] Webhook diterima dari GitHub (Event: ${event}).`);
+  
+  res.status(200).json({
+    success: true,
+    message: 'Deploy webhook received. Server will pull latest code and restart.'
+  });
+
+  setTimeout(() => {
+    console.log('[AutoDeploy] Mematikan proses untuk auto-restart FinCloud (git pull origin main)...');
+    process.exit(0);
+  }, 1200);
+});
+
+app.get('/api/github-deploy', (req, res) => {
+  res.json({
+    status: 'active',
+    endpoint: '/api/github-deploy',
+    message: 'NoxaStore Auto-Deploy Webhook endpoint is active. Use POST to trigger deployment.'
+  });
+});
+
 // Anti-race condition credit lock
 const processingCredits = new Set();
 
