@@ -308,6 +308,13 @@ async function initDb() {
     });
   }
 
+  const globalPpobConfig = await getConfig('global_ppob_markup');
+  if (globalPpobConfig === null || globalPpobConfig === undefined) {
+    const configMap = readJSONFile(CONFIG_FILE, {});
+    const initMarkup = configMap.global_ppob_markup !== undefined ? Number(configMap.global_ppob_markup) : 1000;
+    await setConfig('global_ppob_markup', initMarkup);
+  }
+
   await run(`
     CREATE TABLE IF NOT EXISTS admin_users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1433,46 +1440,50 @@ async function deleteInformation(id) {
 // PPOB VISIBILITY & MARKUP FUNCTIONS
 async function getPpobVisibilityMap() {
   const map = {};
-  if (!sqlite3) {
-    const rawMap = readJSONFile(PPOB_FILE, {});
-    for (const [k, v] of Object.entries(rawMap)) {
-      const rawSku = String(k || '').trim();
-      const sklSku = rawSku.startsWith('SKL-') ? rawSku : `SKL-${rawSku}`;
-      const numSku = rawSku.replace(/^SKL-/, '');
-      const entry = {
-        sku: sklSku,
-        active: v.active !== false,
-        category: v.category || '',
-        brand: v.brand || '',
-        markup: Math.max(0, Math.ceil(Number(v.markup) || 0))
-      };
-      const existing = map[sklSku];
-      if (!existing || entry.markup >= existing.markup) {
-        map[rawSku] = entry;
-        map[sklSku] = entry;
-        map[numSku] = entry;
-      }
-    }
-    return map;
-  }
 
-  const rows = sqlite3 ? await all('SELECT * FROM ppob_visibility') : [];
-  for (const r of rows) {
-    const rawSku = String(r.sku || '').trim();
+  // 1. Load from ppob_visibility.json first as base
+  const rawMap = readJSONFile(PPOB_FILE, {});
+  for (const [k, v] of Object.entries(rawMap)) {
+    if (!v) continue;
+    const rawSku = String(k || '').trim();
+    if (!rawSku) continue;
     const sklSku = rawSku.startsWith('SKL-') ? rawSku : `SKL-${rawSku}`;
     const numSku = rawSku.replace(/^SKL-/, '');
     const entry = {
       sku: sklSku,
-      active: r.active !== 0,
-      category: r.category || '',
-      brand: r.brand || '',
-      markup: Math.max(0, Math.ceil(Number(r.markup) || 0))
+      active: v.active !== false,
+      category: v.category || '',
+      brand: v.brand || '',
+      markup: Math.max(0, Math.ceil(Number(v.markup) || 0))
     };
-
     map[rawSku] = entry;
     map[sklSku] = entry;
     map[numSku] = entry;
   }
+
+  // 2. If SQLite is active, overlay latest records from SQLite
+  if (sqlite3) {
+    try {
+      const rows = await all('SELECT * FROM ppob_visibility');
+      for (const r of rows) {
+        if (!r || !r.sku) continue;
+        const rawSku = String(r.sku || '').trim();
+        const sklSku = rawSku.startsWith('SKL-') ? rawSku : `SKL-${rawSku}`;
+        const numSku = rawSku.replace(/^SKL-/, '');
+        const entry = {
+          sku: sklSku,
+          active: r.active !== 0,
+          category: r.category || '',
+          brand: r.brand || '',
+          markup: Math.max(0, Math.ceil(Number(r.markup) || 0))
+        };
+        map[rawSku] = entry;
+        map[sklSku] = entry;
+        map[numSku] = entry;
+      }
+    } catch (e) {}
+  }
+
   return map;
 }
 
@@ -1522,65 +1533,99 @@ async function setPpobVisibility(sku, active, category = '', brand = '', markup 
 
 async function getGlobalPpobMarkup() {
   const val = await getConfig('global_ppob_markup');
-  return val !== null && val !== undefined ? Math.max(0, Math.ceil(Number(val) || 0)) : 0;
+  if (val !== null && val !== undefined && val !== '') {
+    return Math.max(0, Math.ceil(Number(val) || 0));
+  }
+  const configMap = readJSONFile(CONFIG_FILE, {});
+  if (configMap.global_ppob_markup !== undefined && configMap.global_ppob_markup !== null) {
+    return Math.max(0, Math.ceil(Number(configMap.global_ppob_markup) || 0));
+  }
+  return 1000;
 }
 
-async function bulkSetPpobMarkup(skus, markup) {
+async function bulkSetPpobMarkup(skus, markup, isAll = false) {
   const numMarkup = Math.max(0, Math.ceil(Number(markup) || 0));
+  const isGlobalApply = isAll || !skus || skus === 'ALL' || (Array.isArray(skus) && skus.length === 0);
 
-  if (!skus || skus === 'ALL' || (Array.isArray(skus) && skus.length === 0)) {
-    // 1. Store global markup in database config table & config.json
+  // 1. Always store global markup in database config table & config.json
+  if (isGlobalApply) {
     await setConfig('global_ppob_markup', numMarkup);
-
-    // 2. Always update ppob_visibility.json
-    const map = readJSONFile(PPOB_FILE, {});
-    for (const k of Object.keys(map)) {
-      if (map[k]) map[k].markup = numMarkup;
-    }
-    writeJSONFile(PPOB_FILE, map);
-
-    // 3. Always update SQLite if available
-    if (sqlite3) {
-      try {
-        await run('UPDATE ppob_visibility SET markup = ?, updatedAt = CURRENT_TIMESTAMP', [numMarkup]);
-      } catch (e) {}
-    }
-    return { updatedCount: 'ALL', markup: numMarkup };
   }
 
-  const targetSkus = Array.isArray(skus) ? skus : [skus];
   const visMap = await getPpobVisibilityMap();
-  const map = readJSONFile(PPOB_FILE, {});
-  let updatedCount = 0;
+  const jsonMap = readJSONFile(PPOB_FILE, {});
 
-  for (const rawSku of targetSkus) {
+  let targetList = [];
+  if (Array.isArray(skus) && skus.length > 0) {
+    targetList = skus;
+  } else if (isGlobalApply) {
+    const allKnown = new Set(Object.keys(jsonMap));
+    Object.keys(visMap).forEach(k => allKnown.add(k));
+    targetList = Array.from(allKnown);
+  }
+
+  const itemsToSave = [];
+  for (const rawSku of targetList) {
     if (!rawSku) continue;
-    const sklSku = rawSku.startsWith('SKL-') ? rawSku : `SKL-${rawSku}`;
-    const numSku = rawSku.replace(/^SKL-/, '');
-    const existing = visMap[sklSku] || visMap[numSku] || visMap[rawSku] || {};
+    const strSku = String(rawSku).trim();
+    if (!strSku) continue;
+    const sklSku = strSku.startsWith('SKL-') ? strSku : `SKL-${strSku}`;
+    const numSku = strSku.replace(/^SKL-/, '');
+    const existing = visMap[sklSku] || visMap[numSku] || visMap[strSku] || {};
     const newActive = existing.active !== false;
     const newCat = existing.category || '';
     const newBrand = existing.brand || '';
 
-    const val = { sku: sklSku, active: newActive, category: newCat, brand: newBrand, markup: numMarkup };
-    map[sklSku] = val;
-    map[numSku] = val;
-    map[rawSku] = val;
+    const entry = {
+      sku: sklSku,
+      active: newActive,
+      category: newCat,
+      brand: newBrand,
+      markup: numMarkup
+    };
 
-    if (sqlite3) {
-      try {
-        await run('DELETE FROM ppob_visibility WHERE sku = ? OR sku = ? OR sku = ?', [sklSku, numSku, rawSku]);
-        await run(`
-          INSERT INTO ppob_visibility (sku, active, category, brand, markup, updatedAt)
-          VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-        `, [sklSku, newActive ? 1 : 0, newCat, newBrand, numMarkup]);
-      } catch (e) {}
-    }
-    updatedCount++;
+    jsonMap[sklSku] = entry;
+    jsonMap[numSku] = entry;
+    jsonMap[strSku] = entry;
+    itemsToSave.push(entry);
   }
 
-  writeJSONFile(PPOB_FILE, map);
-  return { updatedCount, markup: numMarkup };
+  // 2. Persist to ppob_visibility.json
+  writeJSONFile(PPOB_FILE, jsonMap);
+
+  // 3. Persist to SQLite in an atomic, high-performance transaction
+  if (sqlite3) {
+    try {
+      if (isGlobalApply) {
+        await run('UPDATE ppob_visibility SET markup = ?, updatedAt = CURRENT_TIMESTAMP', [numMarkup]);
+      }
+
+      if (itemsToSave.length > 0) {
+        await run('BEGIN TRANSACTION;');
+        for (const item of itemsToSave) {
+          await run(`
+            INSERT INTO ppob_visibility (sku, active, category, brand, markup, updatedAt)
+            VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(sku) DO UPDATE SET
+              markup = excluded.markup,
+              active = excluded.active,
+              category = excluded.category,
+              brand = excluded.brand,
+              updatedAt = CURRENT_TIMESTAMP;
+          `, [item.sku, item.active ? 1 : 0, item.category, item.brand, item.markup]);
+        }
+        await run('COMMIT;');
+      }
+    } catch (e) {
+      await run('ROLLBACK;').catch(() => {});
+      console.error('[DB Error] bulkSetPpobMarkup SQLite error:', e.message);
+    }
+  }
+
+  return {
+    updatedCount: itemsToSave.length > 0 ? itemsToSave.length : (isGlobalApply ? 'ALL' : 0),
+    markup: numMarkup
+  };
 }
 
 // WEB PUSH SUBSCRIPTIONS

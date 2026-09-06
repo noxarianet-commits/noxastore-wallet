@@ -3495,13 +3495,40 @@
       top: 58%;
       left: -6%;
       animation-delay: 0.75s;
+    }    /* ─── STATUS ANIMATION CONTAINER (100% PERFECT CIRCLE & RESPONSIVE) ─── */
+    .receipt-status-icon-circle {
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 12px;
+      flex-shrink: 0;
+      box-sizing: border-box;
+      aspect-ratio: 1 / 1;
     }
-
-    /* ─── STATUS ANIMATION CONTAINER (100% PERFECT CIRCLE & RESPONSIVE) ─── */
+    .receipt-status-icon-circle svg {
+      width: 40px;
+      height: 40px;
+      display: block;
+    }
+    .receipt-icon-success {
+      background: #22c55e !important;
+      box-shadow: 0 8px 24px rgba(34, 197, 94, 0.28);
+    }
+    .receipt-icon-failed {
+      background: #ef4444 !important;
+      box-shadow: 0 8px 24px rgba(239, 68, 68, 0.28);
+    }
+    .receipt-icon-pending {
+      background: #f59e0b !important;
+      box-shadow: 0 8px 24px rgba(245, 158, 11, 0.28);
+    }
     .status-anim-container-box {
       position: relative;
-      width: clamp(72px, 20vw, 90px);
-      height: clamp(72px, 20vw, 90px);
+      width: 76px;
+      height: 76px;
       aspect-ratio: 1 / 1;
       margin: 0 auto;
       flex-shrink: 0;
@@ -3558,29 +3585,15 @@
       inset: -6px;
       border-radius: 50%;
       border: 2px solid rgba(139, 92, 246, 0.15);
-      animation: pulseRing 2s ease-in-out infinite;
-      pointer-events: none;
+      animation: pulseRing 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
     }
     .pulse-ring:nth-child(2) {
-      inset: -14px;
-      border-color: rgba(139, 92, 246, 0.08);
       animation-delay: 0.5s;
+      border-color: rgba(139, 92, 246, 0.1);
     }
     .pulse-ring:nth-child(3) {
-      inset: -22px;
-      border-color: rgba(139, 92, 246, 0.04);
       animation-delay: 1s;
-    }
-
-    @keyframes pulseRing {
-      0%, 100% {
-        transform: scale(0.85);
-        opacity: 0.4;
-      }
-      50% {
-        transform: scale(1.05);
-        opacity: 0.9;
-      }
+      border-color: rgba(139, 92, 246, 0.05);
     }
 
     .purple-spinner {
@@ -3636,43 +3649,30 @@
       100% { transform: translateY(-50%) scale(1.2); opacity: 1; }
     }
 
-    /* Anti-Forgery DANA-Style Watermark Grid */
+    /* Anti-Forgery Repeating Watermark Grid (NoxarianetApp) */
     .watermark-grid {
       position: absolute;
       inset: 0;
       display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      grid-template-rows: repeat(12, 1fr);
-      gap: 4px;
+      gap: 8px 4px;
       pointer-events: none;
       z-index: 0;
       user-select: none;
-      opacity: 0.65;
-      padding: 8px;
+      padding: 10px 8px;
       overflow: hidden;
     }
     .watermark-item {
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: 9.5px;
-      font-weight: 800;
-      color: rgba(123, 45, 142, 0.045);
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
+      font-size: 10.5px;
+      font-weight: 700;
+      color: rgba(123, 45, 142, 0.08);
+      letter-spacing: 0.5px;
       transform: rotate(-25deg);
-      font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
       white-space: nowrap;
-    }
-    @keyframes watermarkFloat {
-      0% {
-        opacity: 0.2;
-        transform: rotate(var(--rot, -12deg)) scale(0.85);
-      }
-      100% {
-        opacity: 0.7;
-        transform: rotate(var(--rot, -12deg)) scale(1.1);
-      }
+      line-height: 1;
     }
 
     /* Struk Premium styles */
@@ -3737,10 +3737,7 @@
     .struk-row .value.amount {
       font-size: 19px;
       font-weight: 800;
-      background: linear-gradient(135deg, #9B4DB8, #7B2D8E);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      color: #7B2D8E;
     }
     .struk-row .value.success {
       color: #7B2D8E;
@@ -4866,7 +4863,7 @@
           </button>
           <div>
             <h2 style="color: white; font-size: 16px; font-weight: 800; margin: 0;">Detail Transaksi</h2>
-            <p style="color: rgba(255,255,255,0.7); font-size: 11px; margin: 2px 0 0;">NoxaPay • Struk Digital Resmi</p>
+            <p style="color: rgba(255,255,255,0.7); font-size: 11px; margin: 2px 0 0;">NoxarianetApp • Struk Digital Resmi</p>
           </div>
         </div>
         <!-- Real-time Clock in header -->
@@ -4876,23 +4873,23 @@
         </div>
       </div>
 
-      <div style="padding: 16px; overflow-y: auto; flex: 1; background-image: url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'150\' height=\'100\' viewBox=\'0 0 150 100\'%3E%3Ctext x=\'50%25\' y=\'50%25\' font-family=\'Inter, sans-serif\' font-size=\'14\' fill=\'%237B2D8E\' fill-opacity=\'0.03\' text-anchor=\'middle\' transform=\'rotate(-30 75 50)\'%3ENoxaPay%3C/text%3E%3C/svg%3E'); background-repeat: repeat;">
+      <div style="padding: 16px; overflow-y: auto; flex: 1; background-image: url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'180\' height=\'110\' viewBox=\'0 0 180 110\'%3E%3Ctext x=\'50%25\' y=\'50%25\' font-family=\'Inter, sans-serif\' font-size=\'13\' fill=\'%237B2D8E\' fill-opacity=\'0.035\' text-anchor=\'middle\' transform=\'rotate(-30 90 55)\'%3ENoxarianetApp%3C/text%3E%3C/svg%3E'); background-repeat: repeat;">
 
         <!-- MAIN RECEIPT CARD (Target Capturing html2canvas) -->
-        <div id="trx-receipt-card" style="background: #ffffff; border-radius: 36px; box-shadow: 0 20px 60px rgba(123,45,142,0.06); overflow: hidden; display: flex; flex-direction: column; position: relative; border: 1px solid rgba(123,45,142,0.08); margin-bottom: 20px; padding: 24px 20px 24px;">
+        <div id="trx-receipt-card" style="background: #ffffff; border-radius: 32px; box-shadow: 0 20px 60px rgba(123,45,142,0.06); overflow: hidden; display: flex; flex-direction: column; position: relative; border: 1px solid rgba(123,45,142,0.08); margin-bottom: 20px; padding: 24px 20px 24px;">
 
-          <!-- WATERMARK "Noxarianet" -->
+          <!-- WATERMARK "NoxarianetApp" (Anti-Copy / Anti-Pemalsuan Rapat) -->
           <div class="watermark-grid" id="watermarkGrid"></div>
 
           <div class="card-content" style="position: relative; z-index: 2; width: 100%;">
 
-            <!-- ANIMASI CENTANG / STATUS -->
+            <!-- IKON STATUS CENTANG SOLID & RESPONSIVE -->
             <div class="check-container" id="receipt-status-animation-container"></div>
 
-            <h1 class="title" id="receipt-branding-title" style="font-size: 24px; font-weight: 800; color: #0f172a; text-align: center; margin-top: 6px; letter-spacing: -0.3px;">Pembayaran Berhasil</h1>
-            <p class="sub" id="receipt-success-subtitle" style="font-size: 13px; font-weight: 600; color: #64748b; text-align: center; margin: 4px 0 12px; text-transform: uppercase; letter-spacing: 0.5px;">Transaksi selesai · dana telah diterima</p>
+            <h1 class="title" id="receipt-branding-title" style="font-size: 24px; font-weight: 800; color: #0f172a; text-align: center; margin-top: 4px; letter-spacing: -0.3px;">Pembayaran Berhasil</h1>
+            <p class="sub" id="receipt-success-subtitle" style="font-size: 13px; font-weight: 600; color: #64748b; text-align: center; margin: 4px 0 14px; text-transform: uppercase; letter-spacing: 0.5px;">TRANSAKSI SELESAI • DANA DITERIMA</p>
 
-            <!-- STRUK SEPERTI DANA -->
+            <!-- STRUK KARTU -->
             <div class="struk-box">
               <!-- Header -->
               <div class="struk-header">
@@ -4909,7 +4906,7 @@
               </div>
               <div class="struk-row">
                 <span class="label">Metode Pembayaran</span>
-                <span class="value" id="receipt-method">NoxaPay Wallet</span>
+                <span class="value" id="receipt-method">NoxarianetApp Wallet</span>
               </div>
               <div class="struk-row">
                 <span class="label">ID Transaksi</span>
@@ -4932,28 +4929,19 @@
                   <span class="label">Atas Nama</span>
                   <span class="value" id="receipt-account-name">-</span>
                 </div>
+                <div class="struk-row" id="receipt-sn-row" style="display: none;">
+                  <span class="label">No. Seri (SN)</span>
+                  <span class="value id-text" id="receipt-sn-text" style="color: #7B2D8E; font-weight: 700;">-</span>
+                </div>
                 <div class="struk-row" id="receipt-note-row" style="display: none;">
                   <span class="label">Catatan Transfer</span>
                   <span class="value" id="receipt-note" style="font-weight: 700; color: #7B2D8E; font-style: italic;">-</span>
                 </div>
               </div>
 
-              <!-- Detail Lisensi / SN (Dapat disalin) -->
-              <div id="receipt-sn-container" style="padding: 12px 14px; background: rgba(123, 45, 142, 0.03); border: 1.5px solid rgba(123, 45, 142, 0.15); border-radius: 14px; margin: 10px 0; display: none;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                  <span style="font-size: 11px; font-weight: 800; color: #7B2D8E; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 4px;">
-                    <span class="material-symbols-outlined" style="font-size: 16px; color: #7B2D8E;">key</span> Detail Lisensi / SN
-                  </span>
-                  <button onclick="copyReceiptSN()" style="background: #7B2D8E; border: none; color: white; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px;">
-                    <span class="material-symbols-outlined" style="font-size: 14px;">content_copy</span> Salin
-                  </button>
-                </div>
-                <div id="receipt-sn-value" style="background: #ffffff; border: 1px solid rgba(123, 45, 142, 0.12); border-radius: 8px; padding: 8px 10px; font-family: monospace; font-size: 12px; font-weight: 700; color: #7B2D8E; word-break: break-all; -webkit-user-select: all; user-select: all;">-</div>
-              </div>
-
               <hr class="struk-divider" />
 
-              <!-- Ringkasan Biaya -->
+              <!-- Ringkasan Biaya: Subtotal (Nominal Utama), Biaya Admin, Total Bayar -->
               <div class="struk-detail">
                 <div class="struk-row">
                   <span class="label">Subtotal</span>
@@ -4985,14 +4973,14 @@
 
               <!-- Footer struk -->
               <div class="struk-footer">
-                <span>Transaksi Aman • NoxaPay Encrypted verified</span>
+                <span>Transaksi Aman • NoxarianetApp Encrypted verified</span>
               </div>
             </div> <!-- end struk-box -->
 
             <!-- Legal Warning -->
             <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 10px 12px;">
               <p style="font-size: 8.5px; color: #b91c1c; line-height: 1.5; text-align: justify; margin: 0; font-weight: 500;">
-                <strong>⚠ PERINGATAN HUKUM:</strong> Struk digital ini diterbitkan secara sah dan terekam dalam sistem NoxaPay. Pemalsuan atau manipulasi dokumen elektronik ini merupakan Tindakan Kriminal berdasarkan <strong>Pasal 35 UU ITE</strong>.
+                <strong>⚠ PERINGATAN HUKUM:</strong> Struk digital ini diterbitkan secara sah dan terekam dalam sistem NoxarianetApp. Pemalsuan atau manipulasi dokumen elektronik ini merupakan Tindakan Kriminal berdasarkan <strong>Pasal 35 UU ITE</strong>.
               </p>
             </div>
 
@@ -5022,7 +5010,7 @@
           </button>
         </div>
 
-        <p style="text-align: center; font-size: 11px; color: #94a3b8; margin: 0 0 16px;">Struk ini sah dan terekam secara enkripsi di sistem NoxaPay</p>
+        <p style="text-align: center; font-size: 11px; color: #94a3b8; margin: 0 0 16px;">Struk ini sah dan terekam secara enkripsi di sistem NoxarianetApp</p>
       </div>
     </div>
 
@@ -12127,7 +12115,7 @@
         const statusStr = String(tx.status || 'BERHASIL').toUpperCase();
         const statusEmoji = (statusStr === 'BERHASIL' || statusStr === 'PAID') ? '✅' : ((statusStr === 'GAGAL' || statusStr === 'FAILED') ? '❌' : '⏳');
 
-        const productName = tx.merchant || tx.product_name || tx.title || tx.service || 'NoxaPay Wallet';
+        const productName = tx.merchant || tx.product_name || tx.title || tx.service || 'NoxarianetApp Wallet';
         const targetNo = tx.target || tx.phoneNumber || tx.customerNo || tx.noTujuan || '-';
         const accName = tx.account_name || tx.customerName || tx.accountName || '';
         const priceVal = tx.amount || tx.price || 0;
@@ -12149,7 +12137,7 @@
         let snVal = extractProductLicenseOrSN(tx);
 
         let lines = [
-          `🧾 RINCIAN TRANSAKSI - NOXAPAY`,
+          `🧾 RINCIAN TRANSAKSI - NOXARIANETAPP`,
           `---------------------------------`,
           `Status Transaksi : ${statusEmoji} ${statusStr}`,
           `Nama Layanan     : ${productName}`,
@@ -12176,7 +12164,7 @@
         }
 
         lines.push(`---------------------------------`);
-        lines.push(`Noxarianet Wallet • Transaksi Aman & Cepat`);
+        lines.push(`NoxarianetApp Wallet • Transaksi Aman & Cepat`);
 
         const fullText = lines.join('\n');
         copyText(fullText, 'Seluruh Rincian Transaksi');
@@ -12186,53 +12174,27 @@
         const norm = String(status || 'BERHASIL').toUpperCase();
         if (norm === 'BERHASIL' || norm === 'PAID' || norm === 'SUCCESS') {
           return `
-            <div class="status-anim-container-box">
-              <div class="ripple-ring ripple-ring-success"></div>
-              <div class="ripple-ring ripple-ring-success"></div>
-              <div class="ripple-ring ripple-ring-success"></div>
-              <div class="circle-solid circle-solid-success"></div>
-              <div class="sparkle sparkle-success"></div>
-              <div class="sparkle sparkle-success"></div>
-              <div class="sparkle sparkle-success"></div>
-              <div class="sparkle sparkle-success"></div>
-              <div class="sparkle sparkle-success"></div>
-              <div class="sparkle sparkle-success"></div>
-              <svg class="checkmark-svg" viewBox="0 0 100 100" fill="none">
-                <path d="M28 52 L44 68 L74 32" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+            <div class="receipt-status-icon-circle receipt-icon-success">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 13l4 4L19 7" />
               </svg>
             </div>
           `;
         } else if (norm === 'GAGAL' || norm === 'FAILED' || norm === 'ERROR' || norm === 'CANCELLED') {
           return `
-            <div class="status-anim-container-box">
-              <div class="ripple-ring ripple-ring-failed"></div>
-              <div class="ripple-ring ripple-ring-failed"></div>
-              <div class="ripple-ring ripple-ring-failed"></div>
-              <div class="circle-solid circle-solid-failed"></div>
-              <div class="sparkle sparkle-failed"></div>
-              <div class="sparkle sparkle-failed"></div>
-              <div class="sparkle sparkle-failed"></div>
-              <div class="sparkle sparkle-failed"></div>
-              <div class="sparkle sparkle-failed"></div>
-              <div class="sparkle sparkle-failed"></div>
-              <svg class="checkmark-svg" viewBox="0 0 100 100" fill="none">
-                <path class="x-svg-path" d="M32 32 L68 68 M68 32 L32 68" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+            <div class="receipt-status-icon-circle receipt-icon-failed">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 18L18 6M6 6l12 12" />
               </svg>
             </div>
           `;
         } else {
           // DIPROSES / PENDING / PROCESSING
           return `
-            <div class="status-anim-container-box">
-              <div class="pulse-ring"></div>
-              <div class="pulse-ring"></div>
-              <div class="pulse-ring"></div>
-              <div class="purple-spinner"></div>
-              <div class="inner-glow"></div>
-              <div class="dot-glow d-top"></div>
-              <div class="dot-glow d-bottom"></div>
-              <div class="dot-glow d-left"></div>
-              <div class="dot-glow d-right"></div>
+            <div class="receipt-status-icon-circle receipt-icon-pending">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 2s linear infinite;">
+                <circle cx="12" cy="12" r="9" stroke-dasharray="14 6" />
+              </svg>
             </div>
           `;
         }
@@ -12397,7 +12359,7 @@
 
       function renderPostCheckoutContent(tx) {
         const status = String(tx.status || 'BERHASIL').toUpperCase();
-        const merchantName = tx.merchant || tx.product_name || 'Produk NoxaPay';
+        const merchantName = tx.merchant || tx.product_name || 'Produk NoxarianetApp';
 
         // Categorize transaction types
         const isEwallet = (tx.type === 'EWALLET') || (tx.category === 'E-Money') || (tx.category === 'E-Wallet') || (tx.type === 'TOPUP_EWALLET') || merchantName.toLowerCase().includes('top up e-wallet') || merchantName.toLowerCase().includes('ewallet');
@@ -12512,8 +12474,9 @@
         }
 
         const totalVal = Math.ceil(Number(tx.amount || tx.price || 0));
-        const feeVal = (tx.adminFee !== undefined && tx.adminFee !== null) ? Number(tx.adminFee) : Number(tx.markup || 0);
-        const subtotalVal = (tx.base_price !== undefined && tx.base_price > 0) ? Math.max(0, Number(tx.base_price)) : Math.max(0, totalVal - feeVal);
+        const nominalUtamaVal = getProductNominalUtama(tx);
+        const feeVal = Math.max(0, totalVal - nominalUtamaVal);
+        const subtotalVal = nominalUtamaVal;
 
         setTextIfExists('post-checkout-subtotal', formatRupiah(subtotalVal));
         setTextIfExists('post-checkout-fee', formatRupiah(feeVal));
@@ -12563,7 +12526,7 @@
         renderPostCheckoutContent(tx);
 
         const status = String(tx.status || 'BERHASIL').toUpperCase();
-        const merchantName = tx.merchant || tx.product_name || 'Produk NoxaPay';
+        const merchantName = tx.merchant || tx.product_name || 'Produk NoxarianetApp';
         const isEwallet = (tx.type === 'EWALLET') || (tx.category === 'E-Money') || (tx.category === 'E-Wallet') || (tx.type === 'TOPUP_EWALLET') || merchantName.toLowerCase().includes('top up e-wallet') || merchantName.toLowerCase().includes('ewallet');
         const isInternalTx = (tx.type === 'TRANSFER') || (tx.type === 'DEPOSIT') || (tx.type === 'TOPUP') || (tx.type === 'RECEIVE') || (tx.category === 'Deposit') || (tx.category === 'Transfer') || (tx.category === 'QRIS Deposit') || merchantName.toLowerCase().includes('deposit') || merchantName.toLowerCase().includes('transfer saldo') || merchantName.toLowerCase().includes('top up saldo');
         const isSekalipayProduct = !isEwallet && !isInternalTx;
@@ -12602,21 +12565,75 @@
         }
       }
 
+      function getProductNominalUtama(tx) {
+        if (!tx) return 0;
+        const total = Math.ceil(Number(tx.amount || tx.price || 0));
+
+        // 1. Explicitly stored nominal or denom
+        if (tx.nominal !== undefined && tx.nominal !== null && Number(tx.nominal) > 0) {
+          const nom = Number(tx.nominal);
+          if (nom <= total) return nom;
+        }
+        if (tx.denom !== undefined && tx.denom !== null && Number(tx.denom) > 0) {
+          const dnom = Number(tx.denom);
+          if (dnom <= total) return dnom;
+        }
+
+        // 2. Parse product name / merchant / service (e.g. "DANA 1.000", "PULSA TELKOMSEL 5.000", "10k", "10rb")
+        const nameStr = String(tx.merchant || tx.product_name || tx.title || tx.service || '');
+        if (nameStr) {
+          const matchDotted = nameStr.match(/(\d{1,3}(?:\.\d{3})+)/);
+          if (matchDotted) {
+            const val = parseInt(matchDotted[1].replace(/\./g, ''), 10);
+            if (val > 0 && val <= total) return val;
+          }
+          const matchK = nameStr.match(/(\d+)\s*(?:rb|k)\b/i);
+          if (matchK) {
+            const val = parseInt(matchK[1], 10) * 1000;
+            if (val > 0 && val <= total) return val;
+          }
+          const matchNum = nameStr.match(/\b(\d{3,7})\b/);
+          if (matchNum) {
+            const val = parseInt(matchNum[1], 10);
+            if (val >= 1000 && val <= total) return val;
+          }
+        }
+
+        // 3. Base price check
+        if (tx.base_price !== undefined && tx.base_price !== null && Number(tx.base_price) > 0) {
+          const bp = Number(tx.base_price);
+          if (bp <= total) return bp;
+        }
+
+        // 4. If adminFee is provided
+        if (tx.adminFee !== undefined && tx.adminFee !== null && Number(tx.adminFee) >= 0) {
+          const fee = Number(tx.adminFee);
+          if (fee < total) return total - fee;
+        }
+
+        // 5. If markup is provided
+        if (tx.markup !== undefined && tx.markup !== null && Number(tx.markup) > 0) {
+          const mk = Number(tx.markup);
+          if (mk < total) return total - mk;
+        }
+
+        return total;
+      }
+
       function openTrxDetail(tx) {
         pushNavigationState('trx-detail');
         currentPrintTx = tx;
         if (_receiptPollTimer) { clearInterval(_receiptPollTimer); _receiptPollTimer = null; }
 
         // Populate receipt fields (safe)
-        setTextIfExists('receipt-amount', formatRupiah(tx.amount));
-        setTextIfExists('receipt-merchant', tx.merchant || tx.product_name || 'NoxaPay');
+        setTextIfExists('receipt-merchant', tx.merchant || tx.product_name || 'NoxarianetApp');
 
         // Populate target number
         const targetVal = tx.target || tx.phoneNumber || tx.customerNo || tx.noTujuan || '';
         const targetRow = document.getElementById('receipt-target-row');
         if (targetVal) {
           setTextIfExists('receipt-target', targetVal);
-          if (targetRow) targetRow.style.display = 'block';
+          if (targetRow) targetRow.style.display = 'flex';
         } else {
           if (targetRow) targetRow.style.display = 'none';
         }
@@ -12626,7 +12643,7 @@
         const accRow = document.getElementById('receipt-account-name-row');
         if (accNameVal) {
           setTextIfExists('receipt-account-name', accNameVal);
-          if (accRow) accRow.style.display = 'block';
+          if (accRow) accRow.style.display = 'flex';
         } else {
           if (accRow) accRow.style.display = 'none';
         }
@@ -12642,13 +12659,14 @@
             !isRawSystemCode(receiptNoteVal) &&
             !isTxFailed) {
           setTextIfExists('receipt-note', `"${receiptNoteVal}"`);
-          if (rNoteRow) rNoteRow.style.display = 'block';
+          if (rNoteRow) rNoteRow.style.display = 'flex';
         } else {
           if (rNoteRow) rNoteRow.style.display = 'none';
         }
 
         // Populate SN / Voucher / Detail Produk / Akun Lisensi Premium
         let snVal = extractProductLicenseOrSN(tx);
+        const snRow = document.getElementById('receipt-sn-row');
         const snBox = document.getElementById('receipt-sn-container');
         const merchantTitle = tx.merchant || tx.product_name || '';
         const isEwalletTx = (tx.type === 'EWALLET') || (tx.category === 'E-Money') || (tx.category === 'E-Wallet') || (tx.type === 'TOPUP_EWALLET') || merchantTitle.toLowerCase().includes('top up e-wallet') || merchantTitle.toLowerCase().includes('ewallet');
@@ -12656,11 +12674,15 @@
         const isProductItem = !isEwalletTx && !isInternalTransfer;
 
         if (snVal && String(snVal).trim() !== '') {
+          setTextIfExists('receipt-sn-text', snVal.trim());
           setTextIfExists('receipt-sn-value', snVal.trim());
+          if (snRow) snRow.style.display = 'flex';
           if (snBox) snBox.style.display = 'block';
         } else if (isProductItem || tx.type === 'PPOB') {
           // Display status message if license is still being processed by provider (never show raw TRX ID)
+          setTextIfExists('receipt-sn-text', '⏳ Sedang diproses...');
           setTextIfExists('receipt-sn-value', '⏳ Detail akun / lisensi sedang diproses provider...');
+          if (snRow) snRow.style.display = 'flex';
           if (snBox) snBox.style.display = 'block';
 
           // Background check-status fetch to retrieve live SN from SekaliPay if available
@@ -12673,6 +12695,7 @@
                   if (liveSN && !liveSN.startsWith('TRX_') && !liveSN.startsWith('SN-TRX_')) {
                     tx.sn = liveSN;
                     tx.product_license = liveSN;
+                    setTextIfExists('receipt-sn-text', liveSN);
                     setTextIfExists('receipt-sn-value', liveSN);
                   }
                 }
@@ -12680,6 +12703,7 @@
               .catch(() => {});
           }
         } else {
+          if (snRow) snRow.style.display = 'none';
           if (snBox) snBox.style.display = 'none';
         }
 
@@ -12709,9 +12733,14 @@
         setTextIfExists('receipt-txid', tx.transactionId || tx.id || '-');
         setTextIfExists('receipt-orderid', tx.orderId || '-');
 
+        // Financial Calculation Logic:
+        // Nominal Utama (Subtotal) = denom/face value received
+        // Biaya Admin = Total markup (Provider price - Nominal) + Admin markup = total - nominalUtama
+        // Total Bayar = Nominal Utama + Biaya Admin
         const total = Math.ceil(Number(tx.amount || tx.price || 0));
-        const fee = (tx.adminFee !== undefined && tx.adminFee !== null) ? Number(tx.adminFee) : Number(tx.markup || 0);
-        const subtotal = (tx.base_price !== undefined && tx.base_price > 0) ? Math.max(0, Number(tx.base_price)) : Math.max(0, total - fee);
+        const nominalUtama = getProductNominalUtama(tx);
+        const fee = Math.max(0, total - nominalUtama);
+        const subtotal = nominalUtama;
 
         setTextIfExists('receipt-amount', formatRupiah(total));
         setTextIfExists('receipt-subtotal', formatRupiah(subtotal));
@@ -12767,26 +12796,30 @@
       }
 
       // Generate watermark grid programmatically to fit container dimensions (DANA-style repeating pattern)
-      function generateReceiptWatermark() {
-        const grid = document.getElementById('watermarkGrid');
+      function generateReceiptWatermark(targetEl) {
+        const grid = targetEl || document.getElementById('watermarkGrid');
         if (!grid) return;
-        const text = 'Noxarianet';
+        const text = 'NoxarianetApp';
         
-        let cols = 6, rows = 12;
-        if (window.innerWidth <= 480) { cols = 5; rows = 10; }
-        if (window.innerWidth <= 380) { cols = 4; rows = 10; }
+        const card = grid.closest('#trx-receipt-card') || document.getElementById('trx-receipt-card');
+        const cardHeight = card ? card.offsetHeight : 650;
+        const rows = Math.max(16, Math.ceil((cardHeight || 650) / 36));
+        const cols = 4;
 
         const total = cols * rows;
+        grid.style.display = 'grid';
         grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-        grid.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+        grid.style.gridTemplateRows = `repeat(${rows}, 36px)`;
 
         grid.innerHTML = '';
+        const fragment = document.createDocumentFragment();
         for (let i = 0; i < total; i++) {
           const span = document.createElement('span');
           span.className = 'watermark-item';
           span.textContent = text;
-          grid.appendChild(span);
+          fragment.appendChild(span);
         }
+        grid.appendChild(fragment);
       }
 
       // Add window resize support for watermark
@@ -12925,13 +12958,17 @@
 
               // Live-refresh the SN/credentials box on the open receipt
               const snBox = document.getElementById('receipt-sn-container');
+              const snRow = document.getElementById('receipt-sn-row');
               const snValEl = document.getElementById('receipt-sn-value');
+              const snTextEl = document.getElementById('receipt-sn-text');
               const snToShow = currentPrintTx.product_license || currentPrintTx.license ||
                 currentPrintTx.sn || currentPrintTx.voucher || currentPrintTx.serialNumber || '';
-              if (snBox && snValEl && snToShow && snToShow.trim() &&
+              if (snToShow && snToShow.trim() &&
                   !snToShow.toLowerCase().includes('gagal') && !snToShow.toLowerCase().includes('error')) {
-                snValEl.innerText = snToShow;
-                snBox.style.display = 'block';
+                if (snValEl) snValEl.innerText = snToShow;
+                if (snTextEl) snTextEl.innerText = snToShow;
+                if (snBox) snBox.style.display = 'block';
+                if (snRow) snRow.style.display = 'flex';
               }
 
               const checkStatusBtn = document.getElementById('receipt-check-status-btn');
@@ -13077,12 +13114,12 @@
       }
 
       let _lastGeneratedReceiptDataUrl = null;
-      let _lastGeneratedReceiptFileName = 'Struk_NoxaPay.png';
+      let _lastGeneratedReceiptFileName = 'Struk_NoxarianetApp.png';
       let _lastGeneratedReceiptBlobUrl = null;
 
       async function openReceiptDownloadModal(dataUrl, fileName, blobUrl = null) {
         _lastGeneratedReceiptDataUrl = dataUrl;
-        _lastGeneratedReceiptFileName = fileName || 'Struk_NoxaPay.png';
+        _lastGeneratedReceiptFileName = fileName || 'Struk_NoxarianetApp.png';
         _lastGeneratedReceiptBlobUrl = blobUrl;
 
         const previewImg = document.getElementById('receipt-preview-img');
@@ -13129,7 +13166,7 @@
         try {
           if (_lastGeneratedReceiptBlobUrl || _lastGeneratedReceiptDataUrl) {
             const a = document.createElement('a');
-            a.download = _lastGeneratedReceiptFileName || 'Struk_NoxaPay.png';
+            a.download = _lastGeneratedReceiptFileName || 'Struk_NoxarianetApp.png';
             a.href = _lastGeneratedReceiptBlobUrl || _lastGeneratedReceiptDataUrl;
             a.target = '_blank';
             document.body.appendChild(a);
@@ -13155,12 +13192,12 @@
       async function shareReceiptFromPreviewModal() {
         if (!_lastGeneratedReceiptDataUrl) return;
         
-        const captionText = currentPrintTx ? `*STRUK DIGITAL NOXAPAY*\n\n` +
-          `• *Merchant / Service*: ${currentPrintTx.merchant || currentPrintTx.product_name || 'NoxaPay'}\n` +
+        const captionText = currentPrintTx ? `*STRUK DIGITAL NOXARIANETAPP*\n\n` +
+          `• *Merchant / Service*: ${currentPrintTx.merchant || currentPrintTx.product_name || 'NoxarianetApp'}\n` +
           `• *Nominal*: ${formatRupiah(currentPrintTx.amount || 0)}\n` +
           `• *Status*: ${currentPrintTx.status || 'BERHASIL'}\n` +
           `• *ID Transaksi*: ${currentPrintTx.transactionId || currentPrintTx.id || '-'}\n\n` +
-          `*NoxariaNet Wallet — Transaksi Enkripsi Sah*` : 'Struk Digital NoxaPay';
+          `*NoxarianetApp Wallet — Transaksi Enkripsi Sah*` : 'Struk Digital NoxarianetApp';
 
         const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(captionText)}`;
 
@@ -13172,7 +13209,7 @@
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
               await navigator.share({
                 files: [file],
-                title: 'Struk Transaksi NoxaPay',
+                title: 'Struk Transaksi NoxarianetApp',
                 text: captionText
               });
               return;
@@ -13212,28 +13249,38 @@
         clone.style.border = '1px solid rgba(123, 45, 142, 0.12)';
         clone.style.boxShadow = 'none';
 
-        // Render clean, crisp static status badge in the clone (eliminates animation timing / radial gradient NaN errors)
+        // Render clean, crisp static SVG status badge in the clone (eliminates animation timing / external font rendering bugs)
         const animContainer = clone.querySelector('#receipt-status-animation-container');
         if (animContainer) {
           const isFailed = String(tx.status || '').toUpperCase() === 'GAGAL' || String(tx.status || '').toUpperCase() === 'FAILED';
           const isProcess = String(tx.status || '').toUpperCase() === 'DIPROSES' || String(tx.status || '').toUpperCase() === 'PENDING';
           const badgeBg = isFailed ? '#ef4444' : (isProcess ? '#f59e0b' : '#22c55e');
-          const iconName = isFailed ? 'close' : (isProcess ? 'hourglass_top' : 'check');
+          const shadowColor = isFailed ? 'rgba(239, 68, 68, 0.28)' : (isProcess ? 'rgba(245, 158, 11, 0.28)' : 'rgba(34, 197, 94, 0.28)');
+          const pathD = isFailed ? 'M6 18L18 6M6 6l12 12' : (isProcess ? '' : 'M5 13l4 4L19 7');
 
-          animContainer.innerHTML = `
-            <div style="width: 72px; height: 72px; margin: 0 auto 10px; border-radius: 50%; background: ${badgeBg}; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(0,0,0,0.12);">
-              <span class="material-symbols-outlined" style="color: #ffffff; font-size: 38px; font-weight: 800; display: inline-block;">${iconName}</span>
-            </div>
-          `;
+          if (isProcess) {
+            animContainer.innerHTML = `
+              <div style="width: 76px; height: 76px; margin: 0 auto 12px; border-radius: 50%; background: ${badgeBg}; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px ${shadowColor};">
+                <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="9" stroke-dasharray="14 6" />
+                </svg>
+              </div>
+            `;
+          } else {
+            animContainer.innerHTML = `
+              <div style="width: 76px; height: 76px; margin: 0 auto 12px; border-radius: 50%; background: ${badgeBg}; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px ${shadowColor};">
+                <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="${pathD}" />
+                </svg>
+              </div>
+            `;
+          }
         }
 
-        // Ensure watermark in clone is tiled neatly
+        // Ensure watermark in clone is tiled neatly with NoxarianetApp
         const cloneWatermark = clone.querySelector('#watermarkGrid');
         if (cloneWatermark) {
-          cloneWatermark.style.opacity = '0.04';
-          cloneWatermark.style.display = 'grid';
-          cloneWatermark.style.gridTemplateColumns = 'repeat(5, 1fr)';
-          cloneWatermark.style.gridTemplateRows = 'repeat(10, 1fr)';
+          generateReceiptWatermark(cloneWatermark);
         }
 
         sandbox.appendChild(clone);
@@ -13281,7 +13328,7 @@
           const canvas = await captureReceiptCardToCanvas(tx);
           const dataUrl = canvas.toDataURL('image/png');
           const cleanTxId = (tx.id || tx.transactionId || 'TRX').replace(/[^a-zA-Z0-9_-]/g, '');
-          const fileName = `Struk_NoxaPay_${cleanTxId}.png`;
+          const fileName = `Struk_NoxarianetApp_${cleanTxId}.png`;
 
           // Generate Blob URL for native binary download trigger
           let blobUrl = null;
@@ -13336,8 +13383,8 @@
               if (navigator.canShare({ files: [file] })) {
                 navigator.share({
                   files: [file],
-                  title: 'Struk Pembayaran NoxaPay',
-                  text: `Struk transaksi resmi ${tx.merchant || 'NoxaPay'}`
+                  title: 'Struk Pembayaran NoxarianetApp',
+                  text: `Struk transaksi resmi ${tx.merchant || 'NoxarianetApp'}`
                 }).catch(() => {});
               }
             } catch(shareErr) {}
@@ -13361,6 +13408,48 @@
         } else if (currentPrintTx) {
           downloadReceiptImage(currentPrintTx);
         }
+      }
+
+      function shareReceiptToWA() {
+        const tx = currentPrintTx || _currentPostCheckoutTx;
+        if (!tx) {
+          showNotification('⚠️ Data transaksi belum dimuat.');
+          return;
+        }
+        const total = Math.ceil(Number(tx.amount || tx.price || 0));
+        const nominalUtama = getProductNominalUtama(tx);
+        const fee = Math.max(0, total - nominalUtama);
+        const sn = extractProductLicenseOrSN(tx);
+
+        let lines = [
+          `*🧾 STRUK PEMBAYARAN NOXARIANETAPP*`,
+          `-----------------------------------------`,
+          `• *Status Transaksi* : ${String(tx.status || 'BERHASIL').toUpperCase()}`,
+          `• *Layanan/Produk*   : ${tx.merchant || tx.product_name || 'NoxarianetApp'}`,
+          `• *No. Tujuan/ID*    : ${tx.target || tx.phoneNumber || tx.customerNo || tx.noTujuan || '-'}`
+        ];
+
+        if (tx.account_name || tx.customerName || tx.accountName) {
+          lines.push(`• *Atas Nama*        : ${tx.account_name || tx.customerName || tx.accountName}`);
+        }
+
+        if (sn && sn !== '-') {
+          lines.push(`• *No. Seri (SN)*    : ${sn}`);
+        }
+
+        lines.push(`-----------------------------------------`);
+        lines.push(`• *Subtotal*         : ${formatRupiah(nominalUtama)}`);
+        if (fee > 0) {
+          lines.push(`• *Biaya Admin*      : ${formatRupiah(fee)}`);
+        }
+        lines.push(`• *Total Bayar*      : ${formatRupiah(total)}`);
+        lines.push(`• *ID Transaksi*     : ${tx.transactionId || tx.id || '-'}`);
+        lines.push(`-----------------------------------------`);
+        lines.push(`_Transaksi Resmi & Sah melalui NoxarianetApp Wallet_`);
+
+        const text = lines.join('\n');
+        const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+        window.open(waUrl, '_blank');
       }
 
       // ============================================

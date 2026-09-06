@@ -1786,12 +1786,9 @@ app.get('/api/ppob/products', async (req, res) => {
         const numSku = String(item.id);
         const rawSku = String(item.sku || '');
         const vis = visMap[itemSku] || visMap[numSku] || (rawSku ? visMap[rawSku] : undefined);
-        let markup = globalMarkup;
-        if (vis && vis.markup !== undefined && vis.markup !== null && Number(vis.markup) > 0) {
-          markup = Math.max(0, Math.ceil(Number(vis.markup)));
-        } else if (vis && vis.markup !== undefined && vis.markup !== null && globalMarkup === 0) {
-          markup = Math.max(0, Math.ceil(Number(vis.markup)));
-        }
+        let markup = (vis && vis.markup !== undefined && vis.markup !== null)
+          ? Math.max(0, Math.ceil(Number(vis.markup)))
+          : globalMarkup;
         const basePrice = Math.ceil(Number(item.price) || 0);
         return {
           id: item.id,
@@ -1836,17 +1833,18 @@ app.get('/admin/ppob/products', requireAdminAuth, async (req, res) => {
       return cat.includes('smm') || cat.includes('social media') || name.includes('smm') || name.includes('followers') || name.includes('subscribers') || name.includes('suntik');
     };
 
-    const catTarget = (category || '').toLowerCase().trim();
+    let catTarget = (category || '').toLowerCase().trim();
+    if (catTarget === 'semua' || catTarget === 'all') catTarget = '';
     const brandTarget = (brand || '').toLowerCase().trim();
 
     const isSMMCategoryRequest = catTarget.includes('smm') || catTarget.includes('social media') || brandTarget.includes('smm') || brandTarget.includes('social media');
     if (isSMMCategoryRequest) {
       items = items.filter(i => isSMMItem(i));
-    } else if (category || brand) {
+    } else if (catTarget || brandTarget) {
       items = items.filter(i => !isSMMItem(i));
     }
 
-    if (items.length > 0 && (category || brand)) {
+    if (items.length > 0 && (catTarget || brandTarget)) {
       let brandKeywords = [brandTarget];
       if (brandTarget.includes('telkomsel') || brandTarget === 'tsel') brandKeywords.push('telkomsel', 'tsel', 'by.u', 'byu');
       else if (brandTarget.includes('indosat') || brandTarget === 'isat' || brandTarget === 'im3') brandKeywords.push('indosat', 'isat', 'im3');
@@ -1890,12 +1888,9 @@ app.get('/admin/ppob/products', requireAdminAuth, async (req, res) => {
       const numSku = String(item.id);
       const rawSku = String(item.sku || '');
       const vis = visMap[itemSku] || visMap[numSku] || (rawSku ? visMap[rawSku] : undefined);
-      let markup = globalMarkup;
-      if (vis && vis.markup !== undefined && vis.markup !== null && Number(vis.markup) > 0) {
-        markup = Math.max(0, Math.ceil(Number(vis.markup)));
-      } else if (vis && vis.markup !== undefined && vis.markup !== null && globalMarkup === 0) {
-        markup = Math.max(0, Math.ceil(Number(vis.markup)));
-      }
+      let markup = (vis && vis.markup !== undefined && vis.markup !== null)
+        ? Math.max(0, Math.ceil(Number(vis.markup)))
+        : globalMarkup;
       const basePrice = Math.ceil(Number(item.price) || 0);
       products.push({
         id: item.id,
@@ -1956,24 +1951,39 @@ const handleBulkPpobMarkup = async (req, res) => {
     const isApplyAll = applyAll === true || applyAll === 'true' || skus === 'ALL' || (!Array.isArray(skus) && !category && !brand);
 
     if (isApplyAll) {
-      // 1. Store global markup in database config table & update existing visibility rows
-      await db.bulkSetPpobMarkup('ALL', numMarkup);
+      // 1. Store global markup in database config table & config.json
+      await db.setConfig('global_ppob_markup', numMarkup);
+
+      // 2. Populate all SekaliPay products so every catalog SKU is explicitly written to both SQLite and ppob_visibility.json
+      let allSkus = [];
+      try {
+        const result = await sekalipayService.getItems();
+        if (result && Array.isArray(result.data)) {
+          allSkus = result.data.map(i => `SKL-${i.id}`);
+        }
+      } catch (e) {}
+
+      const updated = await db.bulkSetPpobMarkup(allSkus.length > 0 ? allSkus : 'ALL', numMarkup, true);
 
       return res.json({
         success: true,
-        message: `Markup/Fee Rp ${numMarkup.toLocaleString('id-ID')} berhasil diterapkan ke SEMUA produk.`,
+        message: `Markup/Fee Rp ${numMarkup.toLocaleString('id-ID')} berhasil diterapkan dan disimpan untuk SEMUA produk.`,
         markup: numMarkup,
-        updatedCount: 'SEMUA'
+        globalMarkup: numMarkup,
+        updatedCount: allSkus.length || updated.updatedCount || 'SEMUA'
       });
     }
 
-    // Specific filtered products
+    // Specific filtered products (e.g. category or brand)
     let targetSkus = Array.isArray(skus) ? skus : [];
     if (targetSkus.length === 0 && (category || brand)) {
       const result = await sekalipayService.getItems();
       if (result && Array.isArray(result.data)) {
         let items = result.data;
-        if (category) items = items.filter(i => String(i.category || '').toLowerCase().includes(category.toLowerCase()));
+        const catTarget = String(category || '').toLowerCase().trim();
+        if (catTarget && catTarget !== 'semua' && catTarget !== 'all') {
+          items = items.filter(i => String(i.category || '').toLowerCase().includes(catTarget));
+        }
         if (brand) items = items.filter(i => String(i.name || '').toLowerCase().includes(brand.toLowerCase()));
         targetSkus = items.map(i => `SKL-${i.id}`);
       }
@@ -2605,12 +2615,9 @@ async function handlePpobCheckout(req, res) {
     const numSku = String(item.id);
     const rawSku = String(item.sku || '');
     const vis = visMap[itemSku] || visMap[numSku] || (rawSku ? visMap[rawSku] : undefined);
-    let markup = globalMarkup;
-    if (vis && vis.markup !== undefined && vis.markup !== null && Number(vis.markup) > 0) {
-      markup = Math.max(0, Math.ceil(Number(vis.markup)));
-    } else if (vis && vis.markup !== undefined && vis.markup !== null && globalMarkup === 0) {
-      markup = Math.max(0, Math.ceil(Number(vis.markup)));
-    }
+    let markup = (vis && vis.markup !== undefined && vis.markup !== null)
+      ? Math.max(0, Math.ceil(Number(vis.markup)))
+      : globalMarkup;
     const basePrice = Math.ceil(Number(item.price) || 0);
     const totalPrice = basePrice + markup;
 
@@ -2677,22 +2684,37 @@ async function handlePpobCheckout(req, res) {
         createdAt: new Date().toISOString()
       };
 
-      await db.addHistory(username, {
+      let denom = 0;
+      const matchDotted = item.name.match(/(\d{1,3}(?:\.\d{3})+)/);
+      if (matchDotted) {
+        denom = parseInt(matchDotted[1].replace(/\./g, ''), 10);
+      } else {
+        const matchK = item.name.match(/(\d+)\s*(?:rb|k)\b/i);
+        if (matchK) denom = parseInt(matchK[1], 10) * 1000;
+      }
+      const finalBasePrice = (denom > 0 && denom < totalPrice) ? denom : basePrice;
+      const finalAdminFee = Math.max(0, totalPrice - finalBasePrice);
+
+      const trxRecord = {
         id: refId,
         merchant: item.name,
         product_name: item.name,
         target: target,
         account_name: accountName,
-        base_price: basePrice,
-        adminFee: markup,
-        markup: markup,
+        nominal: finalBasePrice,
+        denom: finalBasePrice,
+        base_price: finalBasePrice,
+        adminFee: finalAdminFee,
+        markup: finalAdminFee,
         amount: totalPrice,
         status: 'BERHASIL',
         type: 'PPOB',
         sn: serialNumber,
         product_license: serialNumber,
         note: serialNumber
-      });
+      };
+
+      await db.addHistory(username, trxRecord);
 
       const updatedUser = await db.getUser(username);
       const userHistory = updatedUser ? (updatedUser.history || []) : [];
@@ -2915,12 +2937,9 @@ async function handleWithdrawEwallet(req, res) {
     const numSku = String(item.id);
     const rawSku = String(item.sku || '');
     const vis = visMap[itemSku] || visMap[numSku] || (rawSku ? visMap[rawSku] : undefined);
-    let markup = globalMarkup;
-    if (vis && vis.markup !== undefined && vis.markup !== null && Number(vis.markup) > 0) {
-      markup = Math.max(0, Math.ceil(Number(vis.markup)));
-    } else if (vis && vis.markup !== undefined && vis.markup !== null && globalMarkup === 0) {
-      markup = Math.max(0, Math.ceil(Number(vis.markup)));
-    }
+    let markup = (vis && vis.markup !== undefined && vis.markup !== null)
+      ? Math.max(0, Math.ceil(Number(vis.markup)))
+      : globalMarkup;
     const basePrice = Math.ceil(Number(item.price) || 0);
     const totalPrice = basePrice + markup;
     const currentBal = user.mainBalance !== undefined ? user.mainBalance : user.saldo || 0;
@@ -2953,15 +2972,19 @@ async function handleWithdrawEwallet(req, res) {
       const newBalance = Math.max(0, currentBal - totalPrice);
       await db.updateUser(username, { mainBalance: newBalance, saldo: newBalance });
 
+      const finalAdminFee = Math.max(0, totalPrice - nominal);
+
       await db.addHistory(username, {
         id: refId,
         merchant: productName,
         product_name: productName,
         target: String(destination),
         account_name: accName,
-        base_price: basePrice,
-        adminFee: markup,
-        markup: markup,
+        nominal: nominal,
+        denom: nominal,
+        base_price: nominal,
+        adminFee: finalAdminFee,
+        markup: finalAdminFee,
         amount: totalPrice,
         status: 'BERHASIL',
         type: 'TOPUP_EWALLET',
@@ -2988,7 +3011,7 @@ async function handleWithdrawEwallet(req, res) {
         msg: `Berhasil Top Up ${method} Rp ${nominal.toLocaleString('id-ID')} ke ${destination}`,
         mainBalance: newBalance,
         history: userHistory,
-        data: { id: refId, merchant: productName, target: destination, account_name: accName, base_price: basePrice, adminFee: markup, markup: markup, amount: totalPrice, sn }
+        data: { id: refId, merchant: productName, target: destination, account_name: accName, nominal: nominal, base_price: nominal, adminFee: finalAdminFee, markup: finalAdminFee, amount: totalPrice, sn }
       });
     } else {
       const rawErr = (orderResult && (orderResult.message || orderResult.error)) || 'Respon gagal dari provider.';
@@ -3127,13 +3150,15 @@ app.post('/transfer-saldo', requireAuth, pinLimiter, async (req, res) => {
     amount: numAmt
   });
 
+  const currentSenderBal = deductResult && deductResult.newBalance !== undefined ? deductResult.newBalance : (updatedSender ? (updatedSender.mainBalance !== undefined ? updatedSender.mainBalance : updatedSender.saldo) : 0);
+
   res.json({
     success: true,
     status: true,
     message: 'Transfer saldo berhasil',
     recipientName: recipient.fullname || recipient.username,
     recipientUsername: recipient.username,
-    mainBalance: newSenderBal,
+    mainBalance: currentSenderBal,
     history: updatedSender ? updatedSender.history : []
   });
 });
@@ -3771,7 +3796,7 @@ setInterval(async () => {
 // Start Combined Server (HTTP + WebSocket)
 server.listen(PORT, HOST, () => {
   console.log(`================================================================`);
-  console.log(`✅ NoxaPay & SekaliPay Top-Up Server ONLINE`);
+  console.log(`✅ NoxarianetApp & SekaliPay Top-Up Server ONLINE`);
   console.log(`   Internal  : http://localhost:${PORT}`);
   console.log(`   External  : http://203.175.125.151:${PORT}`);
   console.log(`================================================================`);
