@@ -6081,6 +6081,92 @@
       </div>
     </div>
 
+    <!-- ========================================== -->
+    <!-- REAL-TIME MULTI-DEVICE SECURITY ALERT MODAL -->
+    <!-- ========================================== -->
+    <div id="security-login-alert-modal" class="modal-overlay" style="display: none; z-index: 999999; background: rgba(15, 23, 42, 0.82); backdrop-filter: blur(10px); padding: 16px; align-items: center; justify-content: center;">
+      <div class="modal-card" style="max-width: 420px; width: 100%; border-radius: 28px; background: #ffffff; box-shadow: 0 30px 70px rgba(0, 0, 0, 0.35), 0 0 0 1.5px rgba(239, 68, 68, 0.3); padding: 24px 20px; position: relative; overflow: hidden; display: flex; flex-direction: column; animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+        
+        <!-- Animated Crimson Top Gradient Bar -->
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, #ef4444, #f59e0b, #ef4444); background-size: 200% 100%; animation: gradientMove 3s linear infinite;"></div>
+
+        <!-- Header with Glowing Shield Icon -->
+        <div style="display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 16px;">
+          <div style="width: 58px; height: 58px; border-radius: 50%; background: linear-gradient(135deg, rgba(239,68,68,0.15), rgba(245,158,11,0.2)); display: flex; align-items: center; justify-content: center; margin-bottom: 12px; box-shadow: 0 0 20px rgba(239,68,68,0.25);">
+            <span class="material-symbols-outlined" style="font-size: 34px; color: #dc2626; font-variation-settings: 'FILL' 1;">shield_with_heart</span>
+          </div>
+          <div style="display: inline-flex; align-items: center; gap: 5px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; color: #dc2626; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
+            <span style="width: 6px; height: 6px; border-radius: 50%; background: #dc2626; display: inline-block; animation: blink 1s infinite;"></span>
+            Peringatan Keamanan Akun
+          </div>
+          <h3 style="font-size: 18px; font-weight: 800; color: #0f172a; margin: 0 0 6px; line-height: 1.3;">
+            Login dari Perangkat Lain Terdeteksi
+          </h3>
+          <p style="font-size: 12.5px; color: #64748b; margin: 0; line-height: 1.45;">
+            Akun Anda baru saja masuk dari perangkat berbeda dengan rincian real-time berikut:
+          </p>
+        </div>
+
+        <!-- Real-Time Info Box (No Dummy Data) -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 18px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px;">
+          
+          <div style="display: flex; align-items: flex-start; gap: 10px;">
+            <div style="width: 32px; height: 32px; border-radius: 10px; background: #e0e7ff; color: #4338ca; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <span class="material-symbols-outlined" style="font-size: 18px;">smartphone</span>
+            </div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-size: 10.5px; font-weight: 700; color: #64748b; text-transform: uppercase;">Perangkat &amp; Browser</div>
+              <div id="sec-alert-device-model" style="font-size: 13.5px; font-weight: 800; color: #0f172a; word-break: break-word;">-</div>
+              <div id="sec-alert-browser-os" style="font-size: 11.5px; color: #64748b; margin-top: 1px;">-</div>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: flex-start; gap: 10px;">
+            <div style="width: 32px; height: 32px; border-radius: 10px; background: #fee2e2; color: #b91c1c; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <span class="material-symbols-outlined" style="font-size: 18px;">location_on</span>
+            </div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-size: 10.5px; font-weight: 700; color: #64748b; text-transform: uppercase;">Titik Lokasi Terdeteksi</div>
+              <div id="sec-alert-location" style="font-size: 13px; font-weight: 800; color: #dc2626; word-break: break-word;">-</div>
+              <div style="font-size: 11px; color: #64748b; margin-top: 1px;">IP: <span id="sec-alert-ip" style="font-family: monospace; font-weight: 600; color: #334155;">-</span></div>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 32px; height: 32px; border-radius: 10px; background: #f1f5f9; color: #475569; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <span class="material-symbols-outlined" style="font-size: 18px;">schedule</span>
+            </div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-size: 10.5px; font-weight: 700; color: #64748b; text-transform: uppercase;">Waktu Kejadian</div>
+              <div id="sec-alert-timestamp" style="font-size: 12.5px; font-weight: 700; color: #1e293b;">Baru saja</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Warning Callout -->
+        <div style="background: rgba(254, 242, 242, 0.9); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 14px; padding: 11px 13px; margin-bottom: 18px; display: flex; align-items: flex-start; gap: 9px;">
+          <span class="material-symbols-outlined" style="font-size: 20px; color: #dc2626; flex-shrink: 0; margin-top: 1px;">warning</span>
+          <p style="font-size: 11.5px; color: #991b1b; margin: 0; line-height: 1.45; font-weight: 600;">
+            Jika ini <strong>BUKAN</strong> Anda, segera amankan akun Anda! Perangkat tersebut akan <strong>langsung dikeluarkan</strong> dan Anda dapat segera <strong>mengganti password</strong> sekarang.
+          </p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <button id="btn-sec-alert-kick" onclick="handleSecurityKickAndChangePassword()" style="width: 100%; padding: 13px; background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; border: none; border-radius: 16px; font-weight: 800; font-size: 13.5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; box-shadow: 0 4px 16px rgba(220, 38, 38, 0.35); transition: transform 0.15s ease;">
+            <span class="material-symbols-outlined" style="font-size: 19px;">lock_reset</span>
+            <span>Bukan Saya! Keluarkan &amp; Ganti Password</span>
+          </button>
+
+          <button onclick="closeSecurityLoginAlertModal()" style="width: 100%; padding: 11px; background: transparent; color: #64748b; border: 1px solid #e2e8f0; border-radius: 16px; font-weight: 700; font-size: 12.5px; cursor: pointer; transition: background 0.15s ease;">
+            Saya Mengenali Aktivitas Ini
+          </button>
+        </div>
+
+      </div>
+    </div>
+
     <!-- Universal In-App Contact Picker & Recent Contacts Modal -->
     <div class="modal-overlay" id="contact-helper-modal" style="display: none;">
       <div class="modal-card" style="background: var(--white); padding: 24px 20px; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.18); max-width: 420px; width: 92%; max-height: 85vh; display: flex; flex-direction: column;">
@@ -7551,6 +7637,33 @@
         }
       }
 
+      // ==========================================
+      // CLIENT DEVICE IDENTIFIER & SECURITY HELPERS
+      // ==========================================
+      function getOrCreateDeviceId() {
+        try {
+          let devId = localStorage.getItem('noxa_device_uuid');
+          if (!devId) {
+            devId = 'dev_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 9);
+            localStorage.setItem('noxa_device_uuid', devId);
+          }
+          return devId;
+        } catch (e) {
+          return 'dev_' + Date.now().toString(36);
+        }
+      }
+
+      function getClientDeviceHint() {
+        try {
+          const uaData = navigator.userAgentData;
+          if (uaData && uaData.brands && uaData.brands.length > 0) {
+            const b = uaData.brands.map(x => x.brand).filter(x => !x.includes('Brand')).join(' ');
+            if (b) return `${b} (${window.screen.width}x${window.screen.height})`;
+          }
+        } catch (e) {}
+        return `${window.screen.width}x${window.screen.height}`;
+      }
+
       async function submitOtpVerification() {
         let otpCode = '';
         for (let i = 1; i <= 6; i++) {
@@ -7572,6 +7685,7 @@
           const email = document.getElementById('reg-email').value.trim();
           const password = document.getElementById('reg-password').value.trim();
 
+          const myDevId = getOrCreateDeviceId();
           const res = await originalFetch('/api/otp/verify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -7581,7 +7695,9 @@
               otp: otpCode,
               fullname,
               email,
-              password
+              password,
+              deviceId: myDevId,
+              deviceModelHint: getClientDeviceHint()
             })
           });
 
@@ -7595,6 +7711,9 @@
           // SUCCESS! Save session, login & cleanup
           if (data.token) {
             localStorage.setItem('noxaAuthToken', data.token);
+          }
+          if (data.deviceId) {
+            localStorage.setItem('noxa_device_uuid', data.deviceId);
           }
           if (data.user || data.data) {
             const u = data.user || data.data;
@@ -7634,8 +7753,6 @@
         }
       }
 
-
-
       async function doLogin() {
         const user = document.getElementById('login-username').value.trim();
         const password = document.getElementById('login-password').value.trim();
@@ -7672,10 +7789,16 @@
         }
 
         try {
+          const myDevId = getOrCreateDeviceId();
           const res = await originalFetch('/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: user, password })
+            body: JSON.stringify({
+              username: user,
+              password,
+              deviceId: myDevId,
+              deviceModelHint: getClientDeviceHint()
+            })
           });
           const data = await res.json().catch(() => ({}));
 
@@ -7687,6 +7810,9 @@
           if (data.success || data.status) {
             if (data.token) {
               localStorage.setItem('noxaAuthToken', data.token);
+            }
+            if (data.deviceId) {
+              localStorage.setItem('noxa_device_uuid', data.deviceId);
             }
             const uData = data.data || data.user || {};
             const uname = uData.username || data.username || user;
@@ -10730,9 +10856,31 @@
             const data = JSON.parse(e.data);
             const myUname = localStorage.getItem('noxaUsername');
             if (!data.targetUsername || data.targetUsername === myUname || data.targetUsername === 'all') {
+              if (data.controlAction === 'force_logout_others') {
+                const myDevId = getOrCreateDeviceId();
+                if (data.keepDeviceId && data.keepDeviceId !== myDevId) {
+                  handleForceLogoutDevice(data.reason || 'Sesi perangkat Anda telah dihentikan oleh pemilik akun.');
+                  return;
+                }
+              }
               handleRemoteControlEvent(data.controlType, data.controlAction);
             }
           } catch(err) {}
+        });
+
+        // Real-Time Multi-Device Security Alert Broadcast
+        evtSource.addEventListener('security_login_alert', (e) => {
+          try {
+            const data = JSON.parse(e.data);
+            const myUname = localStorage.getItem('noxaUsername');
+            const myDevId = getOrCreateDeviceId();
+            // Trigger alert on this active device if someone else logged in with a different deviceId
+            if ((!data.targetUsername || data.targetUsername === myUname) && data.newDeviceId !== myDevId) {
+              showSecurityLoginAlertModal(data);
+            }
+          } catch(err) {
+            console.error('[Security Alert Error]', err);
+          }
         });
 
         // Real-Time Account Suspension Broadcast
@@ -10768,6 +10916,105 @@
             setTimeout(initRealtimeStream, 1000);
           }
         }, 20000);
+      }
+
+      // ==========================================
+      // MULTI-DEVICE SECURITY ALERT CONTROLLER
+      // ==========================================
+      let _activeSecurityAlertData = null;
+
+      function showSecurityLoginAlertModal(data) {
+        _activeSecurityAlertData = data;
+        const modal = document.getElementById('security-login-alert-modal');
+        if (!modal) return;
+
+        const elDev = document.getElementById('sec-alert-device-model');
+        const elBrowser = document.getElementById('sec-alert-browser-os');
+        const elLoc = document.getElementById('sec-alert-location');
+        const elIp = document.getElementById('sec-alert-ip');
+        const elTime = document.getElementById('sec-alert-timestamp');
+
+        if (elDev) elDev.textContent = data.deviceModel || 'Perangkat Baru';
+        if (elBrowser) elBrowser.textContent = `${data.browser || 'Browser'} • ${data.os || 'OS'}`;
+        if (elLoc) elLoc.textContent = data.location || 'Lokasi Terdeteksi';
+        if (elIp) elIp.textContent = data.ip || '-';
+
+        let timeStr = '';
+        if (data.time && typeof data.time === 'object') {
+          timeStr = `${data.time.date || ''} ${data.time.time || ''}`.trim();
+        } else if (data.time) {
+          timeStr = String(data.time);
+        } else {
+          timeStr = new Date().toLocaleTimeString('id-ID');
+        }
+        if (elTime) elTime.textContent = timeStr;
+
+        modal.style.display = 'flex';
+
+        // Play subtle alert vibration if mobile device
+        try {
+          if ('vibrate' in navigator) navigator.vibrate([200, 100, 200, 100, 300]);
+        } catch(e) {}
+      }
+
+      function closeSecurityLoginAlertModal() {
+        const modal = document.getElementById('security-login-alert-modal');
+        if (modal) modal.style.display = 'none';
+        _activeSecurityAlertData = null;
+      }
+
+      async function handleSecurityKickAndChangePassword() {
+        const kickBtn = document.getElementById('btn-sec-alert-kick');
+        if (kickBtn) {
+          kickBtn.disabled = true;
+          kickBtn.innerHTML = '<span class="material-symbols-outlined" style="animation:spin 0.8s linear infinite; font-size: 18px;">sync</span><span>Mengeluarkan Perangkat...</span>';
+        }
+
+        const myDevId = getOrCreateDeviceId();
+        const token = localStorage.getItem('noxaAuthToken') || localStorage.getItem('token') || '';
+
+        try {
+          const res = await originalFetch('/api/security/terminate-other-sessions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({ keepDeviceId: myDevId })
+          });
+          const resData = await res.json().catch(() => ({}));
+
+          if (res.ok && resData.success) {
+            showNotification('🛡️ Berhasil mengeluarkan perangkat lain! Segera buat password baru.', 'success');
+          } else {
+            showNotification('⚠️ Perangkat lain dikeluarkan. Silakan ubah password Anda.', 'warning');
+          }
+        } catch (err) {
+          console.error('[Security Kick Error]', err);
+        } finally {
+          if (kickBtn) {
+            kickBtn.disabled = false;
+            kickBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 19px;">lock_reset</span><span>Bukan Saya! Keluarkan &amp; Ganti Password</span>';
+          }
+          // Close security modal
+          closeSecurityLoginAlertModal();
+
+          // Open Change Password Screen immediately
+          openChangePasswordScreen();
+        }
+      }
+
+      function handleForceLogoutDevice(reason) {
+        localStorage.removeItem('noxaAuthToken');
+        localStorage.removeItem('noxaUsername');
+        localStorage.removeItem('noxaFullname');
+        localStorage.removeItem('noxaBrandName');
+        localStorage.removeItem('noxaUserId');
+        localStorage.removeItem('noxaWaContact');
+        localStorage.removeItem('noxaUserRole');
+
+        alert(reason || 'Sesi login Anda telah dihentikan demi keamanan oleh pemilik akun.');
+        window.location.reload();
       }
 
       // Red Dot / Unread Badges Logic
@@ -14068,10 +14315,15 @@
         btn.disabled = true;
 
         try {
+          const myDevId = getOrCreateDeviceId();
+          const token = localStorage.getItem('noxaAuthToken') || '';
           const res = await fetch('/change-password', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ oldPassword, newPassword })
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({ oldPassword, newPassword, deviceId: myDevId })
           });
           const data = await res.json();
           if (data.success) {

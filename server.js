@@ -958,6 +958,250 @@ app.post('/api/otp/send', otpSendLimiter, async (req, res) => {
   }
 });
 
+// ============================================================================
+// REAL-TIME MULTI-DEVICE & GEOLOCATION DETECTION (STRICTLY NO DUMMY DATA)
+// ============================================================================
+const ipGeoCache = new Map();
+
+function parseDeviceFromUserAgent(ua = '', clientHint = {}) {
+  const userAgent = String(ua || '');
+  let deviceModel = 'Perangkat Tidak Dikenal';
+  let deviceType = 'desktop';
+  let os = 'Unknown OS';
+  let browser = 'Unknown Browser';
+
+  // 1. Operating System & Smartphone Model Detection
+  if (/windows/i.test(userAgent)) {
+    os = 'Windows';
+    deviceType = 'desktop';
+    if (/windows nt 10\.0/i.test(userAgent)) os = 'Windows 10/11';
+    else if (/windows nt 6\.3/i.test(userAgent)) os = 'Windows 8.1';
+    else if (/windows nt 6\.1/i.test(userAgent)) os = 'Windows 7';
+    deviceModel = `PC (${os})`;
+  } else if (/iphone/i.test(userAgent)) {
+    os = 'iOS';
+    deviceType = 'mobile';
+    const match = userAgent.match(/iPhone OS (\d+[_\.]\d+)/i);
+    const version = match ? match[1].replace(/_/g, '.') : '';
+    os = version ? `iOS ${version}` : 'iOS';
+    deviceModel = `Apple iPhone (${os})`;
+  } else if (/ipad/i.test(userAgent)) {
+    os = 'iPadOS';
+    deviceType = 'tablet';
+    deviceModel = 'Apple iPad';
+  } else if (/macintosh|mac os x/i.test(userAgent)) {
+    os = 'macOS';
+    deviceType = 'desktop';
+    deviceModel = 'Apple Mac';
+  } else if (/android/i.test(userAgent)) {
+    deviceType = 'mobile';
+    const androidMatch = userAgent.match(/Android\s+([0-9\.]+)/i);
+    os = androidMatch ? `Android ${androidMatch[1]}` : 'Android';
+
+    // Parse specific Android manufacturer / build model
+    const buildMatch = userAgent.match(/Android[^;]+;\s*([^;\)]+)/i);
+    let rawModel = buildMatch ? buildMatch[1].trim() : '';
+
+    if (/xiaomi|redmi|poco|22\d{6}|23\d{6}|21\d{6}|m2\d{5}|24\d{6}/i.test(rawModel) || /mi \w+|redmi|poco/i.test(userAgent)) {
+      if (/redmi/i.test(rawModel) || /redmi/i.test(userAgent)) {
+        deviceModel = `Xiaomi Redmi (${rawModel || 'Redmi'})`;
+      } else if (/poco/i.test(rawModel) || /poco/i.test(userAgent)) {
+        deviceModel = `POCO (${rawModel || 'POCO Phone'})`;
+      } else {
+        deviceModel = `Xiaomi (${rawModel || 'Mi Device'})`;
+      }
+    } else if (/samsung|sm-[a-z0-9]+/i.test(rawModel) || /samsung/i.test(userAgent)) {
+      deviceModel = `Samsung Galaxy (${rawModel || 'Galaxy'})`;
+    } else if (/oppo|cph[0-9]+/i.test(rawModel) || /oppo/i.test(userAgent)) {
+      deviceModel = `OPPO (${rawModel || 'OPPO Device'})`;
+    } else if (/vivo|v[0-9]{4}/i.test(rawModel) || /vivo/i.test(userAgent)) {
+      deviceModel = `Vivo (${rawModel || 'Vivo Device'})`;
+    } else if (/realme|rmx[0-9]+/i.test(rawModel) || /realme/i.test(userAgent)) {
+      deviceModel = `Realme (${rawModel || 'Realme Device'})`;
+    } else if (/infinix/i.test(rawModel) || /infinix/i.test(userAgent)) {
+      deviceModel = `Infinix (${rawModel || 'Infinix Device'})`;
+    } else if (/tecno/i.test(rawModel) || /tecno/i.test(userAgent)) {
+      deviceModel = `Tecno (${rawModel || 'Tecno Device'})`;
+    } else if (rawModel) {
+      deviceModel = `${rawModel} (${os})`;
+    } else {
+      deviceModel = `Android Smartphone (${os})`;
+    }
+  } else if (/linux/i.test(userAgent)) {
+    os = 'Linux';
+    deviceType = 'desktop';
+    deviceModel = 'Linux PC';
+  }
+
+  // 2. Browser Detection
+  if (/edg\//i.test(userAgent)) {
+    browser = 'Microsoft Edge';
+  } else if (/opr\/|opera/i.test(userAgent)) {
+    browser = 'Opera';
+  } else if (/samsungbrowser/i.test(userAgent)) {
+    browser = 'Samsung Internet';
+  } else if (/miuibrowser/i.test(userAgent)) {
+    browser = 'Miui Browser';
+  } else if (/chrome|crios/i.test(userAgent)) {
+    browser = 'Google Chrome';
+  } else if (/firefox|fxios/i.test(userAgent)) {
+    browser = 'Mozilla Firefox';
+  } else if (/safari/i.test(userAgent) && !/chrome/i.test(userAgent)) {
+    browser = 'Apple Safari';
+  }
+
+  // If client provided a brand or device model hint, integrate it
+  if (clientHint && clientHint.deviceModel && clientHint.deviceModel !== 'Unknown') {
+    deviceModel = clientHint.deviceModel;
+  }
+
+  return {
+    deviceModel,
+    deviceType,
+    os,
+    browser
+  };
+}
+
+async function getRealClientLocation(req) {
+  // 1. Extract Real Client IP
+  let ip = req.headers['cf-connecting-ip'] ||
+           (req.headers['x-forwarded-for'] ? req.headers['x-forwarded-for'].split(',')[0].trim() : null) ||
+           req.headers['x-real-ip'] ||
+           req.socket?.remoteAddress ||
+           '127.0.0.1';
+
+  ip = String(ip).replace(/^::ffff:/, '').trim();
+
+  // 2. Cloudflare Live Edge Geolocation (100% Real Edge Data)
+  const cfCity = req.headers['cf-ipcity'];
+  const cfRegion = req.headers['cf-region'];
+  const cfCountry = req.headers['cf-ipcountry'];
+  const cfLat = req.headers['cf-iplatitude'];
+  const cfLon = req.headers['cf-iplongitude'];
+
+  if (cfCity) {
+    const locParts = [cfCity];
+    if (cfRegion && cfRegion !== cfCity) locParts.push(cfRegion);
+    if (cfCountry) locParts.push(cfCountry);
+    return {
+      ip,
+      city: cfCity,
+      region: cfRegion || '',
+      country: cfCountry || 'ID',
+      coordinates: (cfLat && cfLon) ? { lat: parseFloat(cfLat), lon: parseFloat(cfLon) } : null,
+      location: locParts.join(', ')
+    };
+  }
+
+  // 3. Local / Private Network IP Check
+  const isLocal = ip === '127.0.0.1' || ip === '::1' || ip.startsWith('192.168.') || ip.startsWith('10.') || /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(ip) || ip === 'localhost';
+  if (isLocal) {
+    return {
+      ip,
+      city: 'Jaringan Lokal',
+      region: 'WiFi / Internal',
+      country: 'ID',
+      coordinates: null,
+      location: `Jaringan Lokal / WiFi Internal (${ip})`
+    };
+  }
+
+  // 4. Memory cache for GeoIP
+  if (ipGeoCache.has(ip)) {
+    return ipGeoCache.get(ip);
+  }
+
+  // 5. Query live GeoIP lookup (ip-api.com) with 2.5s timeout - strictly REAL data
+  try {
+    const geoRes = await axios.get(`http://ip-api.com/json/${ip}?fields=status,country,regionName,city,lat,lon,isp`, {
+      timeout: 2500
+    });
+    if (geoRes.data && geoRes.data.status === 'success') {
+      const g = geoRes.data;
+      const locParts = [];
+      if (g.city) locParts.push(g.city);
+      if (g.regionName && g.regionName !== g.city) locParts.push(g.regionName);
+      if (g.country) locParts.push(g.country);
+
+      const result = {
+        ip,
+        city: g.city || '',
+        region: g.regionName || '',
+        country: g.country || 'ID',
+        isp: g.isp || '',
+        coordinates: (g.lat && g.lon) ? { lat: g.lat, lon: g.lon } : null,
+        location: locParts.length > 0 ? locParts.join(', ') : `IP ${ip}`
+      };
+
+      ipGeoCache.set(ip, result);
+      if (ipGeoCache.size > 500) {
+        const firstKey = ipGeoCache.keys().next().value;
+        ipGeoCache.delete(firstKey);
+      }
+      return result;
+    }
+  } catch (err) {}
+
+  return {
+    ip,
+    city: '',
+    region: '',
+    country: 'ID',
+    coordinates: null,
+    location: `Alamat IP: ${ip}`
+  };
+}
+
+async function triggerDeviceLoginSecurityCheck(user, sessionData) {
+  try {
+    if (!user || !user.username) return;
+    const existingSessions = Array.isArray(user.activeSessions) ? user.activeSessions : [];
+
+    // Check if this is a login from another/different device
+    const isNewOrDifferentDevice = (existingSessions.length > 0 && !existingSessions.some(s => s.deviceId === sessionData.deviceId)) ||
+      (user.lastDeviceId && user.lastDeviceId !== sessionData.deviceId);
+
+    // Save session in database
+    await db.recordDeviceLogin(user.username, sessionData);
+
+    if (isNewOrDifferentDevice) {
+      console.log(`[Security Alert] Multi-device login detected for user ${user.username} from ${sessionData.deviceModel} at ${sessionData.location}`);
+      const alertTime = db.getWibDateTime(new Date());
+
+      const alertPayload = {
+        targetUsername: user.username,
+        newDeviceId: sessionData.deviceId,
+        deviceModel: sessionData.deviceModel,
+        deviceType: sessionData.deviceType,
+        browser: sessionData.browser,
+        os: sessionData.os,
+        ip: sessionData.ip,
+        location: sessionData.location,
+        city: sessionData.city,
+        region: sessionData.region,
+        coordinates: sessionData.coordinates,
+        time: alertTime,
+        alertTitle: '🚨 Peringatan Keamanan: Login dari Perangkat Lain',
+        alertMessage: `Akun Anda terdeteksi login dari perangkat baru: ${sessionData.deviceModel} di ${sessionData.location}. Jika bukan Anda, segera amankan akun dan ganti kata sandi!`
+      };
+
+      // 1. Broadcast via Realtime SSE Stream to other active sessions of this user
+      broadcastRealtimeEvent('security_login_alert', alertPayload);
+
+      // 2. Broadcast via Background Web Push Notification
+      sendBackgroundWebPush(user.username, {
+        title: '🚨 Peringatan Login: Perangkat Baru Terdeteksi!',
+        body: `Login dari ${sessionData.deviceModel} (${sessionData.location}). Jika bukan Anda, segera amankan akun Anda!`,
+        icon: '/loading screen noxa.png',
+        tag: `sec-alert-${Date.now()}`
+      });
+    }
+  } catch (err) {
+    console.error('[Trigger Device Login Security Check Error]:', err.message);
+  }
+}
+
 // POST /api/otp/verify — Verifikasi OTP Direct Auto-Pass
 app.post('/api/otp/verify', authLimiter, async (req, res) => {
   try {
@@ -989,11 +1233,37 @@ app.post('/api/otp/verify', authLimiter, async (req, res) => {
       { expiresIn: '30d' }
     );
 
+    // Multi-Device & Location Check
+    const parsedDevice = parseDeviceFromUserAgent(req.headers['user-agent'], {
+      deviceModel: req.body.deviceModelHint
+    });
+    const clientLocation = await getRealClientLocation(req);
+    const incomingDeviceId = String(req.body.deviceId || '').trim() || `dev_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+
+    const sessionData = {
+      deviceId: incomingDeviceId,
+      deviceModel: parsedDevice.deviceModel,
+      deviceType: parsedDevice.deviceType,
+      browser: parsedDevice.browser,
+      os: parsedDevice.os,
+      ip: clientLocation.ip,
+      location: clientLocation.location,
+      city: clientLocation.city,
+      region: clientLocation.region,
+      country: clientLocation.country,
+      coordinates: clientLocation.coordinates,
+      loginAt: new Date().toISOString()
+    };
+
+    await triggerDeviceLoginSecurityCheck(userObj, sessionData);
+
     return res.json({
       success: true,
       status: true,
       msg: 'Verifikasi berhasil! Akun Anda siap digunakan.',
       token: token,
+      deviceId: incomingDeviceId,
+      session: sessionData,
       data: userObj,
       user: userObj
     });
@@ -1105,6 +1375,30 @@ app.post('/login', authLimiter, async (req, res) => {
     { expiresIn: '30d' }
   );
 
+  // Multi-Device & Location Check
+  const parsedDevice = parseDeviceFromUserAgent(req.headers['user-agent'], {
+    deviceModel: req.body.deviceModelHint
+  });
+  const clientLocation = await getRealClientLocation(req);
+  const incomingDeviceId = String(req.body.deviceId || '').trim() || `dev_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+
+  const sessionData = {
+    deviceId: incomingDeviceId,
+    deviceModel: parsedDevice.deviceModel,
+    deviceType: parsedDevice.deviceType,
+    browser: parsedDevice.browser,
+    os: parsedDevice.os,
+    ip: clientLocation.ip,
+    location: clientLocation.location,
+    city: clientLocation.city,
+    region: clientLocation.region,
+    country: clientLocation.country,
+    coordinates: clientLocation.coordinates,
+    loginAt: new Date().toISOString()
+  };
+
+  await triggerDeviceLoginSecurityCheck(user, sessionData);
+
   // Broadcast: Login berhasil
   broadcastRealtimeEvent('activity', {
     targetUsername: user.username,
@@ -1119,9 +1413,62 @@ app.post('/login', authLimiter, async (req, res) => {
     msg: 'Login berhasil!',
     username: user.username,
     token: token,
+    deviceId: incomingDeviceId,
+    session: sessionData,
     data: userData,
     user: userData
   });
+});
+
+// ==========================================
+// MULTI-DEVICE SECURITY ACTIONS
+// ==========================================
+// Terminate all other sessions for this account (Emergency Security Response)
+app.post('/api/security/terminate-other-sessions', requireAuth, async (req, res) => {
+  try {
+    const keepDeviceId = String(req.body.keepDeviceId || req.body.deviceId || '').trim();
+    const username = req.user.username;
+
+    if (!keepDeviceId) {
+      return res.status(400).json({ success: false, error: 'Device ID wajib disertakan.' });
+    }
+
+    const terminated = await db.terminateOtherDevices(username, keepDeviceId);
+
+    // Broadcast force logout signal to the other devices
+    broadcastRealtimeEvent('remote_control', {
+      targetUsername: username,
+      controlAction: 'force_logout_others',
+      keepDeviceId: keepDeviceId,
+      reason: 'Sesi perangkat Anda telah dihentikan oleh pemilik akun demi keamanan.'
+    });
+
+    return res.json({
+      success: true,
+      status: true,
+      message: `Berhasil mengeluarkan ${terminated.length} sesi perangkat lain.`,
+      terminatedCount: terminated.length
+    });
+  } catch (err) {
+    console.error('[Terminate Other Sessions Error]', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// List all currently active devices for this account
+app.get('/api/security/active-devices', requireAuth, async (req, res) => {
+  try {
+    const username = req.user.username;
+    const devices = await db.getActiveDevices(username);
+    return res.json({
+      success: true,
+      status: true,
+      devices
+    });
+  } catch (err) {
+    console.error('[Get Active Devices Error]', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 // GET /balance
@@ -3257,6 +3604,17 @@ app.post('/change-password', requireAuth, async (req, res) => {
     }
 
     await db.updateUser(username, { password: newPassword });
+
+    const keepDeviceId = String(req.body.deviceId || '').trim();
+    if (keepDeviceId) {
+      await db.terminateOtherDevices(username, keepDeviceId);
+      broadcastRealtimeEvent('remote_control', {
+        targetUsername: username,
+        controlAction: 'force_logout_others',
+        keepDeviceId: keepDeviceId,
+        reason: 'Password akun Anda telah berhasil diganti oleh pemilik akun. Silakan login kembali.'
+      });
+    }
 
     // Broadcast: Password diubah
     broadcastRealtimeEvent('activity', {

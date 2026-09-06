@@ -159,6 +159,8 @@ async function initDb() {
   // Schema migrations
   try { await run('ALTER TABLE users ADD COLUMN isSuspended INTEGER DEFAULT 0'); } catch(e) {}
   try { await run('ALTER TABLE users ADD COLUMN suspendReason TEXT'); } catch(e) {}
+  try { await run('ALTER TABLE users ADD COLUMN lastDeviceId TEXT'); } catch(e) {}
+  try { await run('ALTER TABLE users ADD COLUMN activeSessions TEXT'); } catch(e) {}
 
   await run(`
     CREATE TABLE IF NOT EXISTS transactions (
@@ -536,12 +538,20 @@ async function getUser(username) {
     rawResponse: h.rawResponse ? (() => { try { return JSON.parse(h.rawResponse); } catch(e) { return h.rawResponse; } })() : null
   }));
 
+  let activeSessions = [];
+  if (Array.isArray(userRow.activeSessions)) {
+    activeSessions = userRow.activeSessions;
+  } else if (typeof userRow.activeSessions === 'string') {
+    try { activeSessions = JSON.parse(userRow.activeSessions) || []; } catch(e) { activeSessions = []; }
+  }
+
   return {
     ...userRow,
     saldo: userRow.mainBalance,
     pin: userRow.transactionPin,
     isSuspended: !!(userRow.isSuspended === 1 || userRow.isSuspended === true),
     suspendReason: userRow.suspendReason || '',
+    activeSessions: activeSessions,
     history: formattedHistory,
     usedTransactions: [],
     usedRRNs: []
@@ -763,7 +773,9 @@ async function updateUser(username, updateFields) {
     reason: 'suspendReason',
     lastIp: 'lastIp',
     lastDevice: 'lastDevice',
-    lastLocation: 'lastLocation'
+    lastLocation: 'lastLocation',
+    lastDeviceId: 'lastDeviceId',
+    activeSessions: 'activeSessions'
   };
 
   const updates = [];
@@ -786,6 +798,100 @@ async function updateUser(username, updateFields) {
     params.push(username);
     await run(`UPDATE users SET ${updates.join(', ')} WHERE username = ?`, params);
   }
+}
+
+// REAL-TIME DEVICE SESSION & SECURITY TRACKING
+async function recordDeviceLogin(username, sessionData = {}) {
+  if (!username) return { isNewDevice: false, otherDevicesCount: 0 };
+  const user = await getUser(username);
+  if (!user) return { isNewDevice: false, otherDevicesCount: 0 };
+
+  const currentDeviceId = String(sessionData.deviceId || '').trim();
+  const currentDeviceName = String(sessionData.deviceName || 'Perangkat Tidak Dikenal').trim();
+  const currentIp = String(sessionData.ip || '').trim();
+  const currentLocation = String(sessionData.location || 'Indonesia').trim();
+  const nowWib = getWibDateTime();
+  const timestamp = `${nowWib.time}, ${nowWib.date}`;
+
+  let sessions = [];
+  if (Array.isArray(user.activeSessions)) {
+    sessions = [...user.activeSessions];
+  } else if (typeof user.activeSessions === 'string') {
+    try { sessions = JSON.parse(user.activeSessions) || []; } catch (e) { sessions = []; }
+  }
+
+  const lastDeviceId = user.lastDeviceId || (sessions.length > 0 ? sessions[0].deviceId : null);
+  const isDifferentFromLast = lastDeviceId && currentDeviceId && lastDeviceId !== currentDeviceId;
+  const isNewDevice = isDifferentFromLast || (sessions.length > 0 && !sessions.some(s => s.deviceId === currentDeviceId));
+
+  const newSession = {
+    id: 'sess_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+    deviceId: currentDeviceId,
+    deviceName: currentDeviceName,
+    ip: currentIp,
+    location: currentLocation,
+    latitude: sessionData.latitude || null,
+    longitude: sessionData.longitude || null,
+    userAgent: sessionData.userAgent || '',
+    loginTime: timestamp,
+    lastSeen: timestamp
+  };
+
+  // Filter out duplicate for this device and insert new at top
+  sessions = sessions.filter(s => s.deviceId && s.deviceId !== currentDeviceId);
+  sessions.unshift(newSession);
+  if (sessions.length > 10) sessions = sessions.slice(0, 10);
+
+  await updateUser(username, {
+    lastDeviceId: currentDeviceId,
+    lastDevice: currentDeviceName,
+    lastIp: currentIp,
+    lastLocation: currentLocation,
+    activeSessions: JSON.stringify(sessions)
+  });
+
+  return {
+    isNewDevice: !!isNewDevice,
+    previousDevice: isDifferentFromLast ? { deviceId: lastDeviceId, deviceName: user.lastDevice || 'Perangkat Sebelumnya' } : null,
+    currentDevice: newSession,
+    otherDevicesCount: sessions.length - 1,
+    activeSessions: sessions
+  };
+}
+
+async function terminateOtherDevices(username, keepDeviceId) {
+  if (!username) return { success: false, terminatedCount: 0 };
+  const user = await getUser(username);
+  if (!user) return { success: false, terminatedCount: 0 };
+
+  let sessions = [];
+  if (Array.isArray(user.activeSessions)) {
+    sessions = [...user.activeSessions];
+  } else if (typeof user.activeSessions === 'string') {
+    try { sessions = JSON.parse(user.activeSessions) || []; } catch (e) { sessions = []; }
+  }
+
+  const keepId = String(keepDeviceId || '').trim();
+  const kept = sessions.filter(s => s.deviceId === keepId);
+  const terminatedCount = Math.max(0, sessions.length - kept.length);
+
+  await updateUser(username, {
+    activeSessions: JSON.stringify(kept),
+    lastDeviceId: keepId
+  });
+
+  return { success: true, terminatedCount };
+}
+
+async function getActiveDevices(username) {
+  if (!username) return [];
+  const user = await getUser(username);
+  if (!user) return [];
+  if (Array.isArray(user.activeSessions)) return user.activeSessions;
+  if (typeof user.activeSessions === 'string') {
+    try { return JSON.parse(user.activeSessions) || []; } catch (e) { return []; }
+  }
+  return [];
 }
 
 // ==========================================
@@ -1881,6 +1987,79 @@ async function setUserSuspension(username, isSuspended, reason = '') {
   return await getUser(target);
 }
 
+// ==========================================
+// MULTI-DEVICE & REAL-TIME SECURITY FUNCTIONS
+// ==========================================
+async function recordDeviceLogin(username, sessionData) {
+  if (!username) return null;
+  const target = String(username).trim();
+  const user = await getUser(target);
+  if (!user) return null;
+
+  let sessions = Array.isArray(user.activeSessions) ? [...user.activeSessions] : [];
+  const currentDeviceId = sessionData.deviceId || `dev_${Date.now()}`;
+
+  // Remove existing session for this deviceId if any to update with latest info
+  sessions = sessions.filter(s => s.deviceId !== currentDeviceId);
+
+  const newSession = {
+    deviceId: currentDeviceId,
+    deviceModel: sessionData.deviceModel || 'Unknown Device',
+    deviceType: sessionData.deviceType || 'mobile',
+    browser: sessionData.browser || 'Unknown Browser',
+    os: sessionData.os || 'Unknown OS',
+    ip: sessionData.ip || 'Unknown IP',
+    location: sessionData.location || 'Unknown Location',
+    city: sessionData.city || '',
+    region: sessionData.region || '',
+    country: sessionData.country || 'ID',
+    coordinates: sessionData.coordinates || null,
+    loginAt: sessionData.loginAt || new Date().toISOString(),
+    lastSeenAt: new Date().toISOString()
+  };
+
+  // Prepend latest session (max 10 active devices saved)
+  sessions.unshift(newSession);
+  if (sessions.length > 10) sessions = sessions.slice(0, 10);
+
+  const sessionsJson = JSON.stringify(sessions);
+  await updateUser(target, {
+    lastDeviceId: currentDeviceId,
+    lastIp: sessionData.ip || user.lastIp,
+    lastDevice: sessionData.deviceModel || user.lastDevice,
+    lastLocation: sessionData.location || user.lastLocation,
+    activeSessions: sessionsJson
+  });
+
+  return { newSession, sessions };
+}
+
+async function terminateOtherDevices(username, keepDeviceId) {
+  if (!username) return [];
+  const target = String(username).trim();
+  const user = await getUser(target);
+  if (!user) return [];
+
+  const sessions = Array.isArray(user.activeSessions) ? user.activeSessions : [];
+  const terminated = sessions.filter(s => s.deviceId !== keepDeviceId);
+  const kept = sessions.filter(s => s.deviceId === keepDeviceId);
+
+  await updateUser(target, {
+    activeSessions: JSON.stringify(kept),
+    lastDeviceId: keepDeviceId || (kept[0] ? kept[0].deviceId : null)
+  });
+
+  return terminated;
+}
+
+async function getActiveDevices(username) {
+  if (!username) return [];
+  const target = String(username).trim();
+  const user = await getUser(target);
+  if (!user) return [];
+  return Array.isArray(user.activeSessions) ? user.activeSessions : [];
+}
+
 module.exports = {
   initDb,
   getWibDateTime,
@@ -1939,5 +2118,8 @@ module.exports = {
   getAdmin,
   getDefaultAdmin,
   verifyAdminCredentials,
-  updateAdminCredentials
+  updateAdminCredentials,
+  recordDeviceLogin,
+  terminateOtherDevices,
+  getActiveDevices
 };
