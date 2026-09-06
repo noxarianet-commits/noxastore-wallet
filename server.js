@@ -2666,24 +2666,6 @@ async function handlePpobCheckout(req, res) {
       // Deduct balance upon successful submission
       const newBalance = Math.max(0, currentBal - totalPrice);
       await db.updateUser(username, { mainBalance: newBalance, saldo: newBalance });
-
-      const trxRecord = {
-        id: refId,
-        username: username,
-        product_name: item.name,
-        merchant: item.name,
-        target: target,
-        account_name: accountName,
-        price: totalPrice,
-        amount: totalPrice,
-        status: 'BERHASIL',
-        sn: serialNumber,
-        product_license: serialNumber,
-        note: serialNumber,
-        response: orderResult,
-        createdAt: new Date().toISOString()
-      };
-
       let denom = 0;
       const matchDotted = item.name.match(/(\d{1,3}(?:\.\d{3})+)/);
       if (matchDotted) {
@@ -2697,6 +2679,7 @@ async function handlePpobCheckout(req, res) {
 
       const trxRecord = {
         id: refId,
+        username: username,
         merchant: item.name,
         product_name: item.name,
         target: target,
@@ -2706,12 +2689,15 @@ async function handlePpobCheckout(req, res) {
         base_price: finalBasePrice,
         adminFee: finalAdminFee,
         markup: finalAdminFee,
+        price: totalPrice,
         amount: totalPrice,
         status: 'BERHASIL',
         type: 'PPOB',
         sn: serialNumber,
         product_license: serialNumber,
-        note: serialNumber
+        note: serialNumber,
+        response: orderResult,
+        createdAt: new Date().toISOString()
       };
 
       await db.addHistory(username, trxRecord);
