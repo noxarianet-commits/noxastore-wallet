@@ -1042,8 +1042,8 @@ async function addHistory(username, record) {
     const users = readJSONUsers();
     let idx = users.findIndex(u => u.username === username || u.name === username);
     if (idx === -1) {
-      await createUser({ username: username });
-      return await addHistory(username, record);
+      console.warn(`[addHistory Warning] User "${username}" tidak terdaftar di users.json. Riwayat tidak dicatat untuk mencegah penambahan user otomatis.`);
+      return;
     }
     const wib = getWibDateTime(record.createdAt || new Date());
     const txId = record.id || `H-${Date.now()}`;
@@ -1091,10 +1091,11 @@ async function addHistory(username, record) {
     return;
   }
 
-  // Auto-create user if missing
+  // Cek keberadaan user di SQLite (JANGAN buat user otomatis jika tidak ditemukan)
   let userExists = await get('SELECT username FROM users WHERE username = ?', [username]);
   if (!userExists) {
-    await createUser({ username: username });
+    console.warn(`[addHistory Warning] User "${username}" tidak terdaftar di SQLite DB. Riwayat tidak dicatat untuk mencegah penambahan user otomatis.`);
+    return;
   }
 
   const wib = getWibDateTime(record.createdAt || new Date());

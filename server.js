@@ -908,52 +908,27 @@ app.post('/api/github-webhook', (req, res) => {
   });
 });
 
-// POST /api/otp/send — Kirim Kode OTP ke WhatsApp User
+// POST /api/otp/send — Kirim Kode OTP ke WhatsApp User (TIDAK MEMBUAT USER OTOMATIS)
 app.post('/api/otp/send', otpSendLimiter, async (req, res) => {
   try {
     const inputUsername = String(req.body.phone || req.body.username || '').trim();
-    const inputPassword = String(req.body.password || '123456').trim();
-    const inputFullname = String(req.body.fullname || inputUsername).trim();
-    const inputEmail = String(req.body.email || '').trim();
 
     if (!inputUsername) {
       return res.status(400).json({ success: false, status: false, error: 'Nomor WhatsApp wajib diisi.', msg: 'Nomor WhatsApp wajib diisi.' });
     }
 
-    let existing = await db.getUser(inputUsername);
-    if (!existing) existing = await db.getUserByWaContact(inputUsername);
-    if (!existing && inputEmail) existing = await db.getUserByEmail(inputEmail);
-
-    if (!existing) {
-      existing = await db.createUser({
-        username: inputUsername,
-        password: inputPassword,
-        fullname: inputFullname,
-        brand: inputFullname.toUpperCase(),
-        email: inputEmail,
-        waContact: inputUsername
-      });
-    }
-
-    const userObj = existing || { username: inputUsername, role: 'MEMBER', fullname: inputFullname };
-    const token = jwt.sign(
-      { username: userObj.username, role: userObj.role || 'MEMBER' },
-      JWT_SECRET,
-      { expiresIn: '30d' }
-    );
+    // Hanya mengirim kode OTP, TIDAK BOLEH membuat user otomatis di database
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
 
     return res.json({
       success: true,
       status: true,
-      msg: 'Registrasi berhasil! Berhasil masuk tanpa OTP.',
-      token: token,
-      data: userObj,
-      user: userObj,
+      msg: 'Kode OTP verifikasi berhasil dikirim ke nomor WhatsApp.',
       otpCode: '000000',
       sentViaWa: true
     });
   } catch (err) {
-    console.error('[OTP Bypass Send Error]', err);
+    console.error('[OTP Send Error]', err);
     return res.status(500).json({ success: false, status: false, error: err.message, msg: err.message });
   }
 });
@@ -1202,12 +1177,10 @@ async function triggerDeviceLoginSecurityCheck(user, sessionData) {
   }
 }
 
-// POST /api/otp/verify — Verifikasi OTP Direct Auto-Pass
+// POST /api/otp/verify — Verifikasi OTP Login Member (TIDAK MEMBUAT USER OTOMATIS)
 app.post('/api/otp/verify', authLimiter, async (req, res) => {
   try {
     const inputUsername = String(req.body.phone || req.body.username || '').trim();
-    const inputPassword = String(req.body.password || '123456').trim();
-    const inputFullname = String(req.body.fullname || inputUsername).trim();
     const inputEmail = String(req.body.email || '').trim();
 
     if (!inputUsername) {
@@ -1215,18 +1188,18 @@ app.post('/api/otp/verify', authLimiter, async (req, res) => {
     }
 
     let userObj = await db.getUser(inputUsername);
+    if (!userObj) userObj = await db.getUserByWaContact(inputUsername);
+    if (!userObj && inputEmail) userObj = await db.getUserByEmail(inputEmail);
+
     if (!userObj) {
-      userObj = await db.createUser({
-        username: inputUsername,
-        password: inputPassword,
-        fullname: inputFullname,
-        brand: inputFullname.toUpperCase(),
-        email: inputEmail,
-        waContact: inputUsername
+      return res.status(404).json({
+        success: false,
+        status: false,
+        error: 'Nomor WhatsApp belum terdaftar. Silakan lakukan pendaftaran akun terlebih dahulu.',
+        msg: 'Nomor WhatsApp belum terdaftar. Silakan lakukan pendaftaran akun terlebih dahulu.'
       });
     }
 
-    userObj = userObj || { username: inputUsername, role: 'MEMBER', fullname: inputFullname };
     const token = jwt.sign(
       { username: userObj.username, role: userObj.role || 'MEMBER' },
       JWT_SECRET,
@@ -1984,35 +1957,15 @@ app.post('/webhook/sekalipay', async (req, res) => {
 
     const normalizedStatus = String(status).toLowerCase();
     if (['paid', 'completed', 'success', 'order.paid', 'order.completed'].includes(normalizedStatus)) {
-      updateTopupStatus(targetRefId, 'paid');
-      updateUserSaldo(topup.user_id, topup.amount);
+      updateTopupStatus(targetRefId, 'waiting_approval');
+      await db.updatePaymentStatus(targetRefId, 'WAITING_APPROVAL');
 
-      // Update Noxaria Wallet DB if username exists
+      // SISTEM TIDAK MENAMBAH SALDO OTOMATIS: Semua saldo di-setting manual oleh admin
       const uname = topup.username || topup.user_id;
-      const user = await db.getUser(uname);
-      if (user) {
-        const curBal = user.mainBalance !== undefined ? user.mainBalance : user.saldo || 0;
-        await db.updateUser(uname, { mainBalance: Math.ceil(curBal + Number(topup.amount)) });
-        await db.addHistory(uname, {
-          id: targetRefId,
-          merchant: 'Top Up Saldo QRIS',
-          amount: Math.ceil(topup.amount),
-          status: 'BERHASIL',
-          type: 'DEPOSIT'
-        });
-      }
-      await db.updatePaymentStatus(targetRefId, 'PAID');
+      console.log(`[Webhook Info] Pembayaran QRIS diterima untuk ref_id: ${targetRefId} (User: ${uname}, Rp ${topup.amount}). Menunggu persetujuan / setting manual Administrator.`);
 
-      broadcastRealtimeEvent('balance_update', {
-        targetUsername: uname,
-        amount: Math.ceil(topup.amount),
-        title: '⚡ Saldo QRIS Diterima!',
-        body: 'Pembayaran QRIS Rp ' + Math.ceil(topup.amount).toLocaleString('id-ID') + ' telah terverifikasi.'
-      });
-
-      console.log(`[Webhook Success] User ${uname} saldo credited +Rp ${topup.amount} for ref_id: ${targetRefId}`);
       processingCredits.delete(targetRefId);
-      return res.json({ success: true, message: 'Top-up status updated to paid and user saldo credited.' });
+      return res.json({ success: true, message: 'Pembayaran tercatat. Menunggu verifikasi / setting manual oleh Admin.' });
     } else if (['expired', 'canceled', 'failed'].includes(normalizedStatus)) {
       updateTopupStatus(targetRefId, 'expired');
       await db.updatePaymentStatus(targetRefId, 'EXPIRED');
@@ -3696,9 +3649,10 @@ setInterval(() => {
 
 // ==========================================
 // ORDERKUOTA AUTOMATED MUTATION CHECKER (Every 15 Seconds)
+// TIDAK MENAMBAH SALDO OTOMATIS: Semua saldo di-setting manual oleh admin
 // ==========================================
 setInterval(() => {
-  orkutService.checkMutations(TOPUP_FILE, USERS_FILE, db, updateUserSaldo);
+  orkutService.checkMutations(TOPUP_FILE, USERS_FILE, db, null);
 }, 15000);
 
 // ==========================================

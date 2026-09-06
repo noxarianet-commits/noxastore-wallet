@@ -153,27 +153,11 @@ class OrkutService {
 
             console.log(`🎉 [PAYMENT SUCCESS] Invoice ${matchedTx.invoice} / ${matchedTx.ref_id} Rp ${creditAmount} BERHASIL DIBAYAR! User: ${targetUser}`);
 
-            // Update user balance in users.json
-            if (updateUserSaldoFn && matchedTx.user_id) {
-              updateUserSaldoFn(matchedTx.user_id, creditAmount);
-            }
-
-            // Update user balance in SQLite db.js
+            // Catat status invoice pembayaran (TIDAK MENAMBAH SALDO OTOMATIS: Semua saldo diatur manual oleh admin)
             if (dbHelper) {
               try {
-                const dbUser = await dbHelper.getUser(targetUser);
-                if (dbUser) {
-                  const curBal = dbUser.mainBalance !== undefined ? dbUser.mainBalance : (dbUser.saldo || 0);
-                  await dbHelper.updateUser(targetUser, { mainBalance: Math.ceil(curBal + Number(creditAmount)) });
-                  await dbHelper.addHistory(targetUser, {
-                    id: matchedTx.ref_id,
-                    merchant: 'Top Up Saldo OrderKuota QRIS',
-                    amount: Math.ceil(creditAmount),
-                    status: 'BERHASIL',
-                    type: 'DEPOSIT'
-                  });
-                }
-                await dbHelper.updatePaymentStatus(matchedTx.ref_id, 'PAID');
+                await dbHelper.updatePaymentStatus(matchedTx.ref_id, 'WAITING_APPROVAL');
+                console.log(`[Orkut Mutation] Invoice ${matchedTx.ref_id} (${targetUser}) tercatat WAITING_APPROVAL. Menunggu persetujuan manual Admin.`);
               } catch (dbErr) {
                 console.error('[Orkut Mutation] DB Update Error:', dbErr.message);
               }
