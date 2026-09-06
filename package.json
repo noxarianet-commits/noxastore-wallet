@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "build": "npm install",
-    "start": "git pull origin main 2>/dev/null || true; node server.js",
+    "start": "git pull origin main 2>/dev/null || true; if [ ! -f ./cloudflared ] && [ \"$(uname)\" = \"Linux\" ]; then curl -sL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o ./cloudflared 2>/dev/null && chmod +x ./cloudflared 2>/dev/null || true; fi; node server.js",
     "dev": "nodemon server.js",
     "tunnel": "npx localtunnel --port 3006",
     "deploy": "git add . && git commit -m \"update app\" && git push origin main"

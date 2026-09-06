@@ -3790,20 +3790,56 @@ server.listen(PORT, HOST, () => {
   const tunnelToken = process.env.CLOUDFLARE_TUNNEL_TOKEN;
   if (tunnelToken) {
     console.log('[Cloudflare Tunnel] Launching automatic tunnel process...');
-    const binPath = fs.existsSync(path.join(__dirname, 'cloudflared')) ? './cloudflared' : 'cloudflared';
-    const tunnelProc = exec(`${binPath} tunnel run --token "${tunnelToken}"`);
-    if (tunnelProc.stdout) {
-      tunnelProc.stdout.on('data', data => console.log(`[Tunnel] ${data.toString().trim()}`));
+    let binPath = path.join(__dirname, 'cloudflared');
+    
+    // Auto-download standalone Linux binary if missing on Linux
+    if (!fs.existsSync(binPath) && process.platform === 'linux') {
+      try {
+        console.log('[Cloudflare Tunnel] Binary not found. Auto-downloading cloudflared for Linux x64...');
+        require('child_process').execSync('curl -sL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o ./cloudflared && chmod +x ./cloudflared', {
+          cwd: __dirname,
+          stdio: 'pipe',
+          timeout: 45000
+        });
+      } catch (e) {
+        try {
+          require('child_process').execSync('wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -O ./cloudflared && chmod +x ./cloudflared', {
+            cwd: __dirname,
+            stdio: 'pipe',
+            timeout: 45000
+          });
+        } catch (e2) {}
+      }
     }
-    if (tunnelProc.stderr) {
-      tunnelProc.stderr.on('data', data => {
-        const str = data.toString().trim();
-        if (str.includes('Registered tunnel connection')) {
-          console.log(`[Tunnel SUCCESS] Cloudflare Tunnel connected!`);
-        } else if (str.includes('ERR')) {
-          console.error(`[Tunnel Error] ${str}`);
-        }
+
+    if (fs.existsSync(binPath)) {
+      try { fs.chmodSync(binPath, 0o755); } catch (e) {}
+    } else {
+      binPath = 'cloudflared';
+    }
+
+    try {
+      const tunnelProc = exec(`${binPath} tunnel run --token "${tunnelToken}"`);
+      if (tunnelProc.stdout) {
+        tunnelProc.stdout.on('data', data => console.log(`[Tunnel] ${data.toString().trim()}`));
+      }
+      if (tunnelProc.stderr) {
+        tunnelProc.stderr.on('data', data => {
+          const str = data.toString().trim();
+          console.log(`[Tunnel] ${str}`);
+          if (str.includes('Registered tunnel connection')) {
+            console.log(`✅ [Tunnel SUCCESS] Cloudflare Tunnel connected to noxarianet.biz.id!`);
+          }
+        });
+      }
+      tunnelProc.on('error', err => {
+        console.error(`❌ [Tunnel Error] ${err.message}`);
       });
+      tunnelProc.on('close', code => {
+        console.log(`[Tunnel Exited] Code ${code}`);
+      });
+    } catch (err) {
+      console.error(`❌ [Tunnel Exception] ${err.message}`);
     }
   }
 });
