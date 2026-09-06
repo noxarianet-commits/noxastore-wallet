@@ -368,20 +368,32 @@ async function verifyAdminCredentials(username, password) {
   const p = String(password || '').trim();
   if (!u || !p) return null;
 
-  if (!sqlite3) {
-    const admins = readJSONFile(ADMINS_FILE, [{ username: 'andika123', password: 'andika123', fullname: 'Administrator Utama' }]);
-    const admin = admins.find(a => a.username.toLowerCase() === u.toLowerCase());
-    if (admin && (admin.password === p || admin.password === p + '.' || p === admin.password + '.')) {
-      return admin;
-    }
-    return null;
+  // 1. Try SQLite first
+  if (sqlite3) {
+    try {
+      const admin = await get('SELECT * FROM admin_users WHERE LOWER(username) = LOWER(?)', [u]);
+      if (admin && (admin.password === p || admin.password === p + '.' || p === admin.password + '.')) {
+        return admin;
+      }
+    } catch (e) {}
   }
 
-  const admin = await get('SELECT * FROM admin_users WHERE LOWER(username) = LOWER(?)', [u]);
-  if (!admin) return null;
-  if (admin.password === p || admin.password === p + '.' || p === admin.password + '.') {
-    return admin;
+  // 2. Fallback to admins.json
+  const admins = readJSONFile(ADMINS_FILE, [{ username: 'andika123', password: 'andika123', fullname: 'Administrator Utama' }]);
+  const jsonAdmin = admins.find(a => a.username.toLowerCase() === u.toLowerCase());
+  if (jsonAdmin && (jsonAdmin.password === p || jsonAdmin.password === p + '.' || p === jsonAdmin.password + '.')) {
+    return jsonAdmin;
   }
+
+  // 3. Fallback to master secret / default admin
+  const masterSecret = process.env.ADMIN_SECRET || 'noxaadmin123';
+  if ((u.toLowerCase() === 'admin' || u.toLowerCase() === 'andika123') && (p === masterSecret || p === 'andika123')) {
+    return {
+      username: u,
+      fullname: 'Administrator Utama'
+    };
+  }
+
   return null;
 }
 

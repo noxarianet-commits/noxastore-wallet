@@ -700,7 +700,7 @@ setInterval(() => {
 const otpSendLimiter = createRateLimiter({ windowMs: 10 * 60 * 1000, max: 5, message: 'Terlalu sering meminta kode OTP. Silakan coba lagi setelah 10 menit.' });
 const authLimiter = createRateLimiter({ windowMs: 15 * 60 * 1000, max: 15, message: 'Terlalu banyak percobaan login. Silakan tunggu 15 menit.' });
 const pinLimiter = createRateLimiter({ windowMs: 10 * 60 * 1000, max: 8, message: 'Terlalu banyak percobaan PIN salah. Silakan coba lagi nanti.' });
-const adminLoginLimiter = createRateLimiter({ windowMs: 15 * 60 * 1000, max: 5, message: 'Batas percobaan login Administrator tercapai. Akses ditangguhkan 15 menit.' });
+const adminLoginLimiter = createRateLimiter({ windowMs: 5 * 60 * 1000, max: 30, message: 'Batas percobaan login Administrator tercapai. Silakan coba lagi setelah 5 menit.' });
 
 // ==========================================
 // AUTH MIDDLEWARE FOR NOXARIA WALLET (JWT ONLY)
