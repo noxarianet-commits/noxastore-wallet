@@ -13,8 +13,11 @@ const SekaliPayService = require('./sekalipayService');
 const db = require('./database');
 const orkutService = require('./orkutService');
 const miraipediaService = require('./miraipediaService');
+const FinCloudQrisService = require('./fincloudQrisService');
+const fincloudQrisService = new FinCloudQrisService();
 
 const app = express();
+
 const server = http.createServer(app);
 
 const JWT_SECRET = process.env.JWT_SECRET || 'noxa_jwt_secret_key_8f93e1029c874b2a91e03c';
@@ -570,6 +573,88 @@ function updateTopupStatus(refId, newStatus) {
   }
   return null;
 }
+
+// Helper untuk memproses top-up yang berhasil secara atomik & aman
+async function processSuccessfulTopup({ refId, username, amount, totalBayar, provider = 'FinCloud QRIS' }) {
+  if (!refId) return { success: false, error: 'Missing refId' };
+  if (processingCredits.has(refId)) return { alreadyProcessing: true };
+  processingCredits.add(refId);
+
+  try {
+    const payment = (await db.getPayment(refId)) || findTopupByRefId(refId);
+    const curStatus = String(payment?.status || '').toUpperCase();
+    if (curStatus === 'PAID' || curStatus === 'SUCCESS' || curStatus === 'COMPLETED') {
+      return { alreadyPaid: true };
+    }
+
+    const targetUser = String(username || payment?.username || payment?.userId || payment?.user_id || '').trim();
+    if (!targetUser) {
+      console.warn(`[Topup Credit Warning] User tidak ditemukan untuk invoice ${refId}`);
+      return { success: false, error: 'User not found for this invoice' };
+    }
+
+    const creditAmount = Math.ceil(Number(amount || payment?.nominal_awal || payment?.amount || 0));
+    if (creditAmount <= 0) {
+      console.warn(`[Topup Credit Warning] Nominal kredit tidak valid untuk invoice ${refId}`);
+      return { success: false, error: 'Invalid credit amount' };
+    }
+
+    // 1. Update status transaksi menjadi PAID di SQLite dan JSON
+    await db.updatePaymentStatus(refId, 'PAID');
+    updateTopupStatus(refId, 'paid');
+
+    // 2. Tambahkan saldo secara atomik ke akun pengguna
+    await db.atomicAddBalance(targetUser, creditAmount, 'mainBalance');
+
+    // 3. Ambil saldo terbaru setelah update
+    const updatedUser = await db.getUser(targetUser);
+    const newBal = updatedUser ? (updatedUser.mainBalance !== undefined ? updatedUser.mainBalance : (updatedUser.saldo || 0)) : 0;
+
+    // 4. Catat ke riwayat mutasi transaksi pengguna
+    await db.addHistory(targetUser, {
+      id: refId,
+      orderId: refId,
+      merchant: `Top Up Saldo ${provider}`,
+      product_name: `Top Up Saldo ${provider}`,
+      amount: creditAmount,
+      nominal: creditAmount,
+      status: 'BERHASIL',
+      type: 'DEPOSIT',
+      category: 'Deposit',
+      createdAt: new Date().toISOString()
+    });
+
+    // 5. Kirimkan realtime broadcast ke aplikasi pengguna
+    try {
+      broadcastRealtimeEvent('balance_update', {
+        targetUsername: targetUser,
+        amount: creditAmount,
+        mainBalance: newBal,
+        title: '⚡ Saldo QRIS Diterima!',
+        body: `Pembayaran QRIS Rp ${creditAmount.toLocaleString('id-ID')} telah berhasil diverifikasi.`
+      });
+
+      broadcastRealtimeEvent('transaction', {
+        targetUsername: targetUser,
+        title: '✅ Top Up QRIS Berhasil',
+        body: `Saldo sebesar Rp ${creditAmount.toLocaleString('id-ID')} telah masuk ke akun Anda.`,
+        type: 'topup_success',
+        amount: creditAmount
+      });
+    } catch (bcErr) {
+      console.warn('[Broadcast Error]:', bcErr.message);
+    }
+
+    console.log(`🎉 [TOPUP SUCCESS] Invoice ${refId} (User: ${targetUser}, Rp ${creditAmount}) BERHASIL DITAMBAHKAN KE SALDO!`);
+    return { success: true, newBalance: newBal };
+  } catch (err) {
+    console.error(`[Topup Process Error] [${refId}]:`, err.message);
+    return { success: false, error: err.message };
+  } finally {
+    processingCredits.delete(refId);
+  }
+}
+
 
 // ==========================================
 // SEKALIPAY TOPUP API CALLER
@@ -1452,27 +1537,60 @@ app.get('/balance', requireAuth, async (req, res) => {
   res.json({ status: true, balance: Math.ceil(mainBal), qris_balance: Math.ceil(qrisBal), mainBalance: Math.ceil(mainBal), qrisBalance: Math.ceil(qrisBal) });
 });
 
-// Helper to generate dynamic QRIS via Miraipedia API (with fallback to orkutService)
+// Helper to generate dynamic QRIS via FinCloud API v1.0 (with local fallback)
 async function generateDynamicTopupQris({ amount, userId, username }) {
   const numericAmount = Math.ceil(parseInt(amount, 10));
   if (isNaN(numericAmount) || numericAmount < 1000) {
     throw new Error('Nominal top-up minimal Rp 1.000.');
   }
 
-  // Generate kode unik (100 - 999) to uniquely identify deposit
-  const uniqueCode = Math.floor(Math.random() * 899) + 100;
-  const totalAmount = numericAmount + uniqueCode;
-
   const timestamp = Date.now();
   const refId = `TOPUP_${username || userId}_${timestamp}`;
+
+  // 1. Coba buat tagihan Dynamic QRIS via FinCloud API v1.0
+  try {
+    const fincloudInvoice = await fincloudQrisService.createInvoice(numericAmount, refId);
+    if (fincloudInvoice && fincloudInvoice.success) {
+      console.log(`[Topup] FinCloud Dynamic QRIS created: ${refId}, Amount: Rp ${fincloudInvoice.total_amount}`);
+      return {
+        success: true,
+        provider: 'FINCLOUD',
+        ref_id: refId,
+        invoice: fincloudInvoice.invoice || refId,
+        user_id: userId || username,
+        username: username || userId,
+        nominal_awal: fincloudInvoice.nominal_awal || numericAmount,
+        kode_unik: fincloudInvoice.kode_unik || 0,
+        total_amount: fincloudInvoice.total_amount || numericAmount,
+        amount: fincloudInvoice.total_amount || numericAmount,
+        fees: 0,
+        payment_code: 'QRIS_FINCLOUD',
+        status: 'pending',
+        qr_link: fincloudInvoice.qr_base64 || fincloudInvoice.qr_url,
+        qr_url: fincloudInvoice.qr_url || fincloudInvoice.qr_base64,
+        qr_base64: fincloudInvoice.qr_base64 || fincloudInvoice.qr_url,
+        qris_payload: fincloudInvoice.qr_string || '',
+        qris_string: fincloudInvoice.qr_string || '',
+        payment_link: fincloudInvoice.qr_url || '',
+        expired_at: fincloudInvoice.expired_at || new Date(timestamp + (30 * 60 * 1000)).toISOString(),
+        created_at: new Date(timestamp).toISOString(),
+        updated_at: new Date(timestamp).toISOString()
+      };
+    }
+  } catch (fcErr) {
+    console.warn('[FinCloud QRIS Note]:', fcErr.message, '-> Menggunakan fallback generator lokal.');
+  }
+
+  // 2. Fallback ke generator QRIS Dinamis lokal jika FinCloud sedang gangguan/timeout
+  const uniqueCode = Math.floor(Math.random() * 899) + 100;
+  const totalAmount = numericAmount + uniqueCode;
   const invoiceId = `INV-QRIS-${timestamp}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
-  const expiredAt = new Date(timestamp + (30 * 60 * 1000)).toISOString(); // 30 menit expired
+  const expiredAt = new Date(timestamp + (30 * 60 * 1000)).toISOString();
 
   let qrisResult = null;
   try {
     qrisResult = await miraipediaService.convertStaticToDynamic(totalAmount);
   } catch (miraErr) {
-    console.warn('[Miraipedia Convert Note]:', miraErr.message, '-> Using local dynamic QRIS fallback');
     try {
       qrisResult = await miraipediaService.generateLocalDynamicQris(totalAmount);
     } catch (fbErr) {
@@ -1483,6 +1601,7 @@ async function generateDynamicTopupQris({ amount, userId, username }) {
 
   return {
     success: true,
+    provider: 'LOCAL',
     ref_id: refId,
     invoice: invoiceId,
     user_id: userId || username,
@@ -1585,14 +1704,43 @@ app.get('/deposit-status/:trxId', requireAuth, async (req, res) => {
 
   const user = await db.getUser(req.user.username);
   const currentBal = user ? (user.mainBalance !== undefined ? user.mainBalance : user.saldo || 0) : 0;
-  const statusStr = String(topup.status || '').toUpperCase();
-  const isPaid = statusStr === 'PAID' || statusStr === 'COMPLETED' || statusStr === 'SUCCESS';
+  let statusStr = String(topup.status || '').toUpperCase();
+  let isPaid = statusStr === 'PAID' || statusStr === 'COMPLETED' || statusStr === 'SUCCESS';
+
+  // Jika status lokal masih PENDING, cek secara real-time ke FinCloud API
+  if (!isPaid && statusStr !== 'EXPIRED') {
+    try {
+      const fcCheck = await fincloudQrisService.checkInvoiceStatus(trxId);
+      if (fcCheck && fcCheck.status === 'PAID') {
+        const topupUname = String(topup.username || topup.userId || req.user.username);
+        const creditAmt = Math.ceil(Number(topup.nominal_awal || topup.amount || fcCheck.amount || 0));
+        await processSuccessfulTopup({
+          refId: trxId,
+          username: topupUname,
+          amount: creditAmt,
+          totalBayar: topup.amount || fcCheck.amount || creditAmt,
+          provider: 'FinCloud QRIS'
+        });
+        isPaid = true;
+        statusStr = 'PAID';
+      } else if (fcCheck && fcCheck.status === 'EXPIRED') {
+        updateTopupStatus(trxId, 'expired');
+        await db.updatePaymentStatus(trxId, 'EXPIRED');
+        statusStr = 'EXPIRED';
+      }
+    } catch (checkErr) {
+      // Abaikan jika FinCloud sedang rate limited atau timeout, biarkan status lokal
+    }
+  }
+
+  const updatedUser = await db.getUser(req.user.username);
+  const latestBal = updatedUser ? (updatedUser.mainBalance !== undefined ? updatedUser.mainBalance : (updatedUser.saldo || 0)) : currentBal;
 
   return res.json({
     success: true,
     status: isPaid ? 'PAID' : (statusStr === 'EXPIRED' ? 'EXPIRED' : 'PENDING'),
     amount: topup.amount,
-    mainBalance: Math.ceil(currentBal)
+    mainBalance: Math.ceil(latestBal)
   });
 });
 
@@ -1982,8 +2130,64 @@ app.post('/webhook/sekalipay', async (req, res) => {
 });
 
 // ==========================================
+// 7. POST /webhook/fincloud — INBOUND DYNAMIC QRIS WEBHOOK
+// Menerima notifikasi otomatis HTTP POST saat pembayaran QRIS FinCloud berhasil
+// ==========================================
+app.post(['/webhook/fincloud', '/api/webhook/fincloud', '/api/fincloud/webhook'], async (req, res) => {
+  try {
+    console.log('[FinCloud Webhook Received]:', JSON.stringify(req.body));
+    const payload = req.body || {};
+    const event = String(payload.event || payload.status || '').toLowerCase();
+    const targetRefId = String(payload.reff_id || payload.ref_id || payload.order_id || '').trim();
+
+    if (!targetRefId) {
+      return res.status(400).json({ success: false, error: 'Missing reff_id' });
+    }
+
+    // Periksa apakah event menyatakan pembayaran sukses
+    if (event === 'payment.success' || event === 'success' || event === 'paid' || event === 'lunas') {
+      const topup = findTopupByRefId(targetRefId) || await db.getPayment(targetRefId);
+      if (!topup) {
+        console.warn(`[FinCloud Webhook Note] Invoice ${targetRefId} belum ada di DB lokal, acknowledged.`);
+        return res.status(200).json({ success: true, message: 'Invoice acknowledged' });
+      }
+
+      const targetUsername = String(topup.username || topup.userId || topup.user_id || '').trim();
+      const creditAmt = Math.ceil(Number(payload.nominal || topup.nominal_awal || topup.amount || 0));
+
+      const result = await processSuccessfulTopup({
+        refId: targetRefId,
+        username: targetUsername,
+        amount: creditAmt,
+        totalBayar: payload.total_bayar || topup.total_amount || creditAmt,
+        provider: 'FinCloud QRIS'
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: 'FinCloud payment confirmed and balance added',
+        result
+      });
+    }
+
+    // Event lainnya (misal expired / failed)
+    if (event === 'expired' || event === 'failed') {
+      updateTopupStatus(targetRefId, 'expired');
+      await db.updatePaymentStatus(targetRefId, 'EXPIRED');
+      return res.status(200).json({ success: true, message: 'Status updated to expired' });
+    }
+
+    return res.status(200).json({ success: true, message: 'Event acknowledged' });
+  } catch (err) {
+    console.error('[FinCloud Webhook Error]:', err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ==========================================
 // NOXARIA WALLET PPOB & ADMIN APIs
 // ==========================================
+
 
 // PPOB Products API (Public Read-Only Catalog)
 app.get('/api/ppob/products', async (req, res) => {

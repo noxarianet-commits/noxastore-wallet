@@ -1290,6 +1290,9 @@
         <button class="admin-nav-tab active" id="tab-users-btn" onclick="switchAdminView('users')">
           <span class="material-symbols-outlined">group</span> Kelola Anggota
         </button>
+        <button class="admin-nav-tab" id="tab-deposits-btn" onclick="switchAdminView('deposits')">
+          <span class="material-symbols-outlined">account_balance_wallet</span> Top Up QRIS
+        </button>
         <button class="admin-nav-tab" id="tab-withdrawals-btn" onclick="switchAdminView('withdrawals')">
           <span class="material-symbols-outlined">payments</span> Penarikan Dana
         </button>
@@ -1366,6 +1369,7 @@
             <div class="mobile-select-box">
               <select id="admin-mobile-select" class="admin-dropdown-select" onchange="switchAdminView(this.value)">
                 <option value="users">👥 Kelola Anggota (Users)</option>
+                <option value="deposits">💳 Top Up QRIS (Deposits)</option>
                 <option value="withdrawals">💵 Penarikan Dana (Withdrawals)</option>
                 <option value="banners">🖼️ Banner Promo</option>
                 <option value="info">📢 Kelola Informasi</option>
@@ -1649,6 +1653,38 @@
             </thead>
             <tbody id="info-table-body">
               <!-- Information list will be rendered dynamically here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW: TOP UP & DEPOSIT QRIS -->
+    <div id="view-deposits" class="admin-view">
+      <div style="background: var(--card-bg); border: 1px solid var(--border-color); padding: 24px; border-radius: 24px; box-shadow: 0 10px 30px rgba(123, 45, 142, 0.04);">
+        <div class="panel-header" style="margin-bottom: 20px;">
+          <h2>Riwayat Top Up &amp; Deposit QRIS</h2>
+          <button class="btn-primary" onclick="loadAdminPayments()">
+            <span class="material-symbols-outlined" style="font-size: 18px;">refresh</span>
+            Refresh
+          </button>
+        </div>
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse; min-width: 800px;">
+            <thead>
+              <tr style="border-bottom: 2px solid var(--border-color); color: var(--text-muted); text-align: left;">
+                <th style="padding: 12px 16px;">Waktu</th>
+                <th style="padding: 12px 16px;">ID Tagihan</th>
+                <th style="padding: 12px 16px;">Pengguna</th>
+                <th style="padding: 12px 16px;">Nominal (Rp)</th>
+                <th style="padding: 12px 16px;">Status</th>
+                <th style="padding: 12px 16px;">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="deposits-table-body">
+              <tr>
+                <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">Memuat data deposit...</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -2328,11 +2364,78 @@
         loadAdminCredentialsSettings();
       } else if (view === 'users') {
         loadAdminDashboard();
+      } else if (view === 'deposits') {
+        loadAdminPayments();
       } else if (view === 'withdrawals') {
         loadWithdrawals();
       } else if (view === 'ppob') {
         // Auto-load all SekaliPay products immediately when opening PPOB tab
         onPpobCategoryChange();
+      }
+    }
+
+    // ==========================================
+    // TOP UP & DEPOSIT QRIS MANAGEMENT
+    // ==========================================
+    async function loadAdminPayments() {
+      const tbody = document.getElementById('deposits-table-body');
+      if (!tbody) return;
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--text-muted);">Memuat riwayat deposit...</td></tr>';
+
+      const res = await adminFetch('/admin/payments');
+      if (res && res.success) {
+        const payments = res.payments || [];
+        if (payments.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--text-muted);">Belum ada data deposit masuk.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = payments.map(p => {
+          const status = String(p.status || 'PENDING').toUpperCase();
+          let statusBadge = '<span class="status-badge pending" style="background:rgba(234,179,8,0.15); color:#ca8a04; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:800;">PENDING</span>';
+          if (status === 'PAID' || status === 'COMPLETED' || status === 'SUCCESS') {
+            statusBadge = '<span class="status-badge success" style="background:rgba(34,197,94,0.15); color:#16a34a; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:800;">PAID</span>';
+          } else if (status === 'EXPIRED') {
+            statusBadge = '<span class="status-badge error" style="background:rgba(239,68,68,0.15); color:#dc2626; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:800;">EXPIRED</span>';
+          } else if (status === 'WAITING_APPROVAL') {
+            statusBadge = '<span class="status-badge warning" style="background:rgba(249,115,22,0.15); color:#ea580c; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:800;">WAITING</span>';
+          }
+
+          const canApprove = status !== 'PAID' && status !== 'SUCCESS' && status !== 'COMPLETED';
+          const approveBtn = canApprove
+            ? `<button class="action-btn" style="background:#16a34a; color:white; padding:6px 12px; border-radius:8px; border:none; cursor:pointer; font-weight:700; font-size:12px; display:inline-flex; align-items:center; gap:4px;" onclick="approveDeposit('${p.id}')"><span class="material-symbols-outlined" style="font-size:16px;">check_circle</span> Setujui</button>`
+            : '<span style="color:#16a34a; font-weight:700; font-size:12px;">✅ Selesai</span>';
+
+          const dateStr = p.createdAt ? new Date(p.createdAt).toLocaleString('id-ID') : '-';
+          const amt = Number(p.amount || 0).toLocaleString('id-ID');
+
+          return `
+            <tr style="border-bottom: 1px solid var(--border-color);">
+              <td style="padding: 12px 16px; font-size:13px;">${dateStr}</td>
+              <td style="padding: 12px 16px; font-family:monospace; font-weight:700; font-size:12px;">${p.id || '-'}</td>
+              <td style="padding: 12px 16px; font-weight:600;">${p.username || '-'}</td>
+              <td style="padding: 12px 16px; font-weight:800; color:#7B2D8E;">Rp ${amt}</td>
+              <td style="padding: 12px 16px;">${statusBadge}</td>
+              <td style="padding: 12px 16px;">${approveBtn}</td>
+            </tr>
+          `;
+        }).join('');
+      } else {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:#ef4444;">Gagal memuat deposit: ${res?.error || 'Kesalahan server'}</td></tr>`;
+      }
+    }
+
+    async function approveDeposit(paymentId) {
+      if (!confirm(`Setujui deposit ${paymentId} dan tambahkan saldo ke pengguna?`)) return;
+      const res = await adminFetch(`/admin/payments/${encodeURIComponent(paymentId)}/approve`, {
+        method: 'POST'
+      });
+      if (res && res.success) {
+        showNotification('✅ ' + (res.message || 'Deposit berhasil disetujui!'), 'verified');
+        await loadAdminPayments();
+        await loadAdminDashboard();
+      } else {
+        showNotification('❌ Gagal: ' + (res?.error || 'Terjadi kesalahan'), 'error');
       }
     }
 

@@ -10317,13 +10317,17 @@
       }
 
       function downloadQR() {
-        const src = 'qr-noxa-member-simple.png.jpeg';
+        const topupImg = document.getElementById('topup-qr-image');
+        const merchantImg = document.getElementById('qr-image');
+        const activeImg = (topupImg && topupImg.src && topupImg.style.display !== 'none') ? topupImg : merchantImg;
+        const src = activeImg && activeImg.src ? activeImg.src : 'qr-noxa-member-simple.png.jpeg';
         const link = document.createElement('a');
         link.href = src;
-        link.download = 'QRIS_NOXA_STORE.png';
+        link.download = `QRIS_NoxaPay_${Date.now()}.png`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        showNotification('✅ Gambar QRIS berhasil disimpan.');
       }
 
       // ==========================================
