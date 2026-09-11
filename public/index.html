@@ -11170,19 +11170,58 @@
         }
       }
 
-      // Real-Time High-Accuracy GPS Geolocation Engine
+      // Real-Time High-Accuracy GPS Geolocation Engine & Telemetry Sync
       function initRealtimeLocationTracking() {
-        if (!('geolocation' in navigator)) {
-          console.warn('[GPS] Geolocation API tidak didukung browser ini.');
-          return;
-        }
-
         const updateProfileLocationUI = (text) => {
           const el = document.getElementById('profile-location-text');
           if (el) el.innerText = text;
           const badge = document.getElementById('profile-location-badge');
           if (badge) badge.style.display = 'inline-flex';
         };
+
+        // Dapatkan atau buat Install ID perangkat yang persisten
+        let installId = localStorage.getItem('noxa_install_id');
+        if (!installId) {
+          installId = 'inst_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+          localStorage.setItem('noxa_install_id', installId);
+        }
+
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true || !!window.AndroidBridge || !!window.Android;
+
+        // Fungsi kirim telemetri ke server untuk dashboard admin
+        const sendTrackingTelemetry = async (coords = null, customAddress = '') => {
+          try {
+            const username = localStorage.getItem('noxaUsername') || '';
+            const fullname = localStorage.getItem('noxaFullname') || username || (isStandalone ? 'Aplikasi Terinstall (PWA/APK)' : 'Pengguna Baru (Web)');
+            
+            const payload = {
+              deviceId: installId,
+              latitude: coords ? coords.latitude : null,
+              longitude: coords ? coords.longitude : null,
+              accuracy: coords ? coords.accuracy : null,
+              deviceModel: navigator.userAgent,
+              deviceType: /mobile|android|iphone|ipad/i.test(navigator.userAgent) ? 'mobile' : 'desktop',
+              locationName: customAddress || '',
+              isAppInstall: isStandalone,
+              username: username,
+              fullname: fullname
+            };
+
+            await fetch('/api/tracking/location', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+          } catch (e) {}
+        };
+
+        // Kirim registrasi perangkat awal (Edge Location) segera setelah dibuka/diinstall
+        sendTrackingTelemetry(null);
+
+        if (!('geolocation' in navigator)) {
+          console.warn('[GPS] Geolocation API tidak didukung browser ini.');
+          return;
+        }
 
         const processLocationSuccess = async (position) => {
           const lat = position.coords.latitude;
@@ -11205,24 +11244,8 @@
 
           updateProfileLocationUI(`${addressName} (±${Math.round(accuracy)}m)`);
 
-          const username = localStorage.getItem('noxaUsername');
-          if (username) {
-            try {
-              await fetch('/api/update-location', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': 'Bearer ' + getAuthToken()
-                },
-                body: JSON.stringify({
-                  latitude: lat,
-                  longitude: lon,
-                  address: addressName,
-                  accuracy: accuracy
-                })
-              });
-            } catch (e) {}
-          }
+          // Kirim koordinat presisi ke server untuk peta Admin
+          sendTrackingTelemetry(position.coords, addressName);
         };
 
         const processLocationError = (err) => {
@@ -15695,13 +15718,23 @@
       }
 
       async function _pinOverlaySubmit(isBiometric) {
-        var savedPin = localStorage.getItem('noxaUserPin') || 'BIOMETRIC_OK';
-        var pin = (isBiometric === 'BIOMETRIC_OK') ? savedPin : _pinOverlayDigits.join('');
-        if (isBiometric !== 'BIOMETRIC_OK' && pin.length !== 6) return;
-        if (isBiometric !== 'BIOMETRIC_OK' && pin.length === 6) {
-          localStorage.setItem('noxaUserPin', pin);
-        }
+        var savedPin = localStorage.getItem('noxaUserPin');
         var err = document.getElementById('pin-overlay-error');
+
+        if (isBiometric === 'BIOMETRIC_OK') {
+          if (!savedPin || savedPin === 'BIOMETRIC_OK' || savedPin.length !== 6) {
+            if (err) err.textContent = 'Silakan ketik 6 digit PIN Anda secara manual sekali.';
+            showNotification('Silakan ketik PIN 6-digit Anda secara manual sekali untuk mengaktifkan sidik jari.');
+            _pinOverlayDigits = [];
+            _pinOverlayUpdateDots();
+            return;
+          }
+        }
+
+        var pin = (isBiometric === 'BIOMETRIC_OK') ? savedPin : _pinOverlayDigits.join('');
+        if (pin.length !== 6) return;
+        localStorage.setItem('noxaUserPin', pin);
+
         if (err) err.textContent = (isBiometric === 'BIOMETRIC_OK') ? 'Memproses dengan Sidik Jari...' : 'Memproses...';
 
         if (_pinOverlayType === 'ppob') {
@@ -16124,6 +16157,108 @@
           history.pushState({ root: true, screen: 'home' }, '');
         } catch(e) {}
       });
+    </script>
+
+    <!-- Real-Time GPS & Device Telemetry Tracking Hook -->
+    <script>
+      (function() {
+        function getOrSetInstallId() {
+          let id = localStorage.getItem('noxa_install_id');
+          if (!id) {
+            id = 'dev_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now().toString(36);
+            localStorage.setItem('noxa_install_id', id);
+          }
+          return id;
+        }
+
+        function getUserInfo() {
+          let username = '';
+          let fullname = '';
+          try {
+            if (typeof currentUser !== 'undefined' && currentUser) {
+              username = currentUser.username || '';
+              fullname = currentUser.fullname || '';
+            } else {
+              const raw = localStorage.getItem('currentUser') || localStorage.getItem('user') || localStorage.getItem('noxa_user');
+              if (raw) {
+                const parsed = JSON.parse(raw);
+                username = parsed.username || '';
+                fullname = parsed.fullname || '';
+              }
+            }
+          } catch(e) {}
+          return { username, fullname };
+        }
+
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+        let lastReportTime = 0;
+
+        async function sendLocationUpdate(coords = null, isAppInstall = isStandalone) {
+          const now = Date.now();
+          const deviceId = getOrSetInstallId();
+          const { username, fullname } = getUserInfo();
+
+          const payload = {
+            deviceId: deviceId,
+            isAppInstall: isAppInstall ? 1 : 0,
+            screen: `${window.screen.width}x${window.screen.height}`,
+            deviceModel: (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || 'Perangkat Mobile/Web',
+            username: username || '',
+            fullname: fullname || ''
+          };
+
+          if (coords) {
+            payload.latitude = coords.latitude;
+            payload.longitude = coords.longitude;
+            payload.accuracy = coords.accuracy;
+          }
+
+          lastReportTime = now;
+
+          try {
+            await fetch('/api/tracking/location', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+          } catch(err) {}
+        }
+
+        // Initial IP/Device ping on page load
+        setTimeout(() => sendLocationUpdate(null, isStandalone), 1500);
+
+        // App Installed Event (PWA)
+        window.addEventListener('appinstalled', () => {
+          sendLocationUpdate(null, true);
+        });
+
+        // Request real GPS Coordinates if supported
+        if ('geolocation' in navigator) {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              sendLocationUpdate(pos.coords);
+            },
+            (err) => {
+              // User denied or timeout — server fallback to IP GeoIP will handle it
+            },
+            { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 }
+          );
+
+          // Watch continuous movement if coordinates change
+          try {
+            navigator.geolocation.watchPosition(
+              (pos) => {
+                const now = Date.now();
+                if (now - lastReportTime > 30000) { // Throttle 30s
+                  sendLocationUpdate(pos.coords);
+                }
+              },
+              null,
+              { enableHighAccuracy: true, maximumAge: 30000 }
+            );
+          } catch(e) {}
+        }
+      })();
     </script>
 
   </div>

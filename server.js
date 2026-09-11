@@ -12,7 +12,6 @@ const { exec } = require('child_process');
 const SekaliPayService = require('./sekalipayService');
 const db = require('./database');
 const orkutService = require('./orkutService');
-const miraipediaService = require('./miraipediaService');
 const FinCloudQrisService = require('./fincloudQrisService');
 const fincloudQrisService = new FinCloudQrisService();
 
@@ -167,9 +166,20 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ==========================================
+// ==========================================
 // GITHUB AUTO-DEPLOY WEBHOOK (FINCLOUD AUTO-RESTART)
 // ==========================================
 app.post('/api/github-deploy', (req, res) => {
+  const deployToken = req.headers['x-deploy-token'] || req.query.token;
+  const secret = process.env.DEPLOY_TOKEN || process.env.GITHUB_WEBHOOK_SECRET || 'noxa_deploy_secret_2026';
+
+  if (!deployToken || deployToken !== secret) {
+    return res.status(403).json({
+      success: false,
+      error: 'Akses ditolak: Token deployment tidak valid.'
+    });
+  }
+
   const event = req.headers['x-github-event'] || 'push';
   console.log(`[AutoDeploy] Webhook diterima dari GitHub (Event: ${event}).`);
   
@@ -194,6 +204,20 @@ app.get('/api/github-deploy', (req, res) => {
 
 // Anti-race condition credit lock
 const processingCredits = new Set();
+
+// ==========================================
+// OTP IN-MEMORY SECURE STORE
+// ==========================================
+const otpStore = new Map(); // phone/username -> { code, expiresAt, attempts }
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, v] of otpStore.entries()) {
+    if (now > v.expiresAt) {
+      otpStore.delete(k);
+    }
+  }
+}, 60 * 1000);
 
 // ==========================================
 // REAL-TIME SSE (SERVER-SENT EVENTS) ENGINE
@@ -808,27 +832,7 @@ const requireAuth = async (req, res, next) => {
     const decoded = jwt.verify(token, JWT_SECRET);
     username = decoded.username;
   } catch (err) {
-    // Session fallback / legacy compatibility:
-    // 1. If token is a JWT, safely decode payload directly to extract username even if expired/restart
-    try {
-      const unverified = jwt.decode(token);
-      if (unverified && unverified.username) {
-        const dbUser = (await db.getUser(unverified.username)) || (await db.getUserByWaContact(unverified.username)) || (await db.getUserByUserId(unverified.username));
-        if (dbUser) {
-          username = dbUser.username;
-        }
-      }
-    } catch (e) {}
-
-    // 2. Check if token directly identifies a valid user by username, waContact, or userId
-    if (!username) {
-      const legacyUser = (await db.getUser(token)) || (await db.getUserByUserId(token)) || (await db.getUserByWaContact(token));
-      if (legacyUser) {
-        username = legacyUser.username;
-      } else {
-        return res.status(401).json({ status: false, msg: 'Sesi tidak valid atau telah kedaluwarsa. Silakan masuk kembali.' });
-      }
-    }
+    return res.status(401).json({ status: false, msg: 'Sesi tidak valid atau telah kedaluwarsa. Silakan masuk kembali.' });
   }
 
   if (!username) {
@@ -1002,15 +1006,24 @@ app.post('/api/otp/send', otpSendLimiter, async (req, res) => {
       return res.status(400).json({ success: false, status: false, error: 'Nomor WhatsApp wajib diisi.', msg: 'Nomor WhatsApp wajib diisi.' });
     }
 
-    // Hanya mengirim kode OTP, TIDAK BOLEH membuat user otomatis di database
+    // Generate real 6-digit random OTP with 5 minutes validity
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + (5 * 60 * 1000);
+
+    otpStore.set(inputUsername, {
+      code: otpCode,
+      expiresAt: expiresAt,
+      attempts: 0
+    });
+
+    console.log(`[OTP] Generated verification OTP for ${inputUsername}`);
 
     return res.json({
       success: true,
       status: true,
-      msg: 'Kode OTP verifikasi berhasil dikirim ke nomor WhatsApp.',
-      otpCode: '000000',
-      sentViaWa: true
+      msg: 'Kode OTP verifikasi berhasil dibuat.',
+      otpCode: otpCode,
+      sentViaWa: false
     });
   } catch (err) {
     console.error('[OTP Send Error]', err);
@@ -1267,10 +1280,40 @@ app.post('/api/otp/verify', authLimiter, async (req, res) => {
   try {
     const inputUsername = String(req.body.phone || req.body.username || '').trim();
     const inputEmail = String(req.body.email || '').trim();
+    const inputOtp = String(req.body.otp || '').trim();
 
     if (!inputUsername) {
       return res.status(400).json({ success: false, status: false, error: 'Nomor WhatsApp wajib diisi.', msg: 'Nomor WhatsApp wajib diisi.' });
     }
+
+    if (!inputOtp) {
+      return res.status(400).json({ success: false, status: false, error: 'Kode OTP verifikasi wajib diisi.', msg: 'Kode OTP wajib diisi.' });
+    }
+
+    // Verify OTP against server-side OTP store
+    const storedOtpData = otpStore.get(inputUsername);
+    if (!storedOtpData) {
+      return res.status(400).json({ success: false, status: false, error: 'Kode OTP belum diminta atau sudah kedaluwarsa. Silakan kirim ulang OTP.', msg: 'Kode OTP sudah kedaluwarsa.' });
+    }
+
+    if (Date.now() > storedOtpData.expiresAt) {
+      otpStore.delete(inputUsername);
+      return res.status(400).json({ success: false, status: false, error: 'Kode OTP telah kedaluwarsa. Silakan kirim ulang OTP.', msg: 'Kode OTP telah kedaluwarsa.' });
+    }
+
+    if (storedOtpData.attempts >= 5) {
+      otpStore.delete(inputUsername);
+      return res.status(429).json({ success: false, status: false, error: 'Batas percobaan OTP terlampaui. Silakan minta kode baru.', msg: 'Batas percobaan terlampaui.' });
+    }
+
+    if (storedOtpData.code !== inputOtp) {
+      storedOtpData.attempts += 1;
+      const remaining = Math.max(0, 5 - storedOtpData.attempts);
+      return res.status(400).json({ success: false, status: false, error: `Kode OTP salah! Sisa percobaan: ${remaining}`, msg: 'Kode OTP salah.' });
+    }
+
+    // OTP Valid! Delete OTP to prevent replay
+    otpStore.delete(inputUsername);
 
     let userObj = await db.getUser(inputUsername);
     if (!userObj) userObj = await db.getUserByWaContact(inputUsername);
@@ -1412,8 +1455,14 @@ app.post('/login', authLimiter, async (req, res) => {
   }
 
   const savedPassword = String(user.password || '').trim();
-  if (savedPassword && savedPassword !== inputPassword) {
+  if (!db.verifyPassword(inputPassword, savedPassword)) {
     return res.status(400).json({ success: false, status: false, error: 'Nomor WhatsApp atau password salah.', msg: 'Nomor WhatsApp atau password salah.' });
+  }
+
+  // Auto-upgrade legacy plaintext password to secure hash in DB
+  if (!db.isHashedPassword(savedPassword)) {
+    const upgradedHash = db.hashPassword(inputPassword);
+    db.updateUser(user.username, { password: upgradedHash }).catch(() => {});
   }
 
   const userData = {
@@ -1537,7 +1586,7 @@ app.get('/balance', requireAuth, async (req, res) => {
   res.json({ status: true, balance: Math.ceil(mainBal), qris_balance: Math.ceil(qrisBal), mainBalance: Math.ceil(mainBal), qrisBalance: Math.ceil(qrisBal) });
 });
 
-// Helper to generate dynamic QRIS via FinCloud API v1.0 (with local fallback)
+// Helper to generate dynamic QRIS via FinCloud Gateway API
 async function generateDynamicTopupQris({ amount, userId, username }) {
   const numericAmount = Math.ceil(parseInt(amount, 10));
   if (isNaN(numericAmount) || numericAmount < 1000) {
@@ -1547,7 +1596,7 @@ async function generateDynamicTopupQris({ amount, userId, username }) {
   const timestamp = Date.now();
   const refId = `TOPUP_${username || userId}_${timestamp}`;
 
-  // 1. Coba buat tagihan Dynamic QRIS via FinCloud API v1.0
+  // 1. Buat tagihan Dynamic QRIS via FinCloud API
   try {
     const fincloudInvoice = await fincloudQrisService.createInvoice(numericAmount, refId);
     if (fincloudInvoice && fincloudInvoice.success) {
@@ -1571,58 +1620,20 @@ async function generateDynamicTopupQris({ amount, userId, username }) {
         qr_base64: fincloudInvoice.qr_base64 || fincloudInvoice.qr_url,
         qris_payload: fincloudInvoice.qr_string || '',
         qris_string: fincloudInvoice.qr_string || '',
-        payment_link: fincloudInvoice.qr_url || '',
+        payment_link: fincloudInvoice.payment_link || fincloudInvoice.qr_url || '',
         expired_at: fincloudInvoice.expired_at || new Date(timestamp + (30 * 60 * 1000)).toISOString(),
         created_at: new Date(timestamp).toISOString(),
         updated_at: new Date(timestamp).toISOString()
       };
+    } else {
+      throw new Error(fincloudInvoice?.message || 'FinCloud tidak mengembalikan data invoice QRIS');
     }
   } catch (fcErr) {
-    console.warn('[FinCloud QRIS Note]:', fcErr.message, '-> Menggunakan fallback generator lokal.');
+    console.error('\n======================================================');
+    console.error(`❌ [FINCLOUD QRIS GAGAL]:`, fcErr.message);
+    console.error('======================================================\n');
+    throw new Error(`FinCloud QRIS: ${fcErr.message}`);
   }
-
-  // 2. Fallback ke generator QRIS Dinamis lokal jika FinCloud sedang gangguan/timeout
-  const uniqueCode = Math.floor(Math.random() * 899) + 100;
-  const totalAmount = numericAmount + uniqueCode;
-  const invoiceId = `INV-QRIS-${timestamp}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
-  const expiredAt = new Date(timestamp + (30 * 60 * 1000)).toISOString();
-
-  let qrisResult = null;
-  try {
-    qrisResult = await miraipediaService.convertStaticToDynamic(totalAmount);
-  } catch (miraErr) {
-    try {
-      qrisResult = await miraipediaService.generateLocalDynamicQris(totalAmount);
-    } catch (fbErr) {
-      console.error('[QRIS Local Fallback Error]:', fbErr.message);
-      throw new Error(`Gagal membuat QRIS Dinamis: ${fbErr.message}`);
-    }
-  }
-
-  return {
-    success: true,
-    provider: 'LOCAL',
-    ref_id: refId,
-    invoice: invoiceId,
-    user_id: userId || username,
-    username: username || userId,
-    nominal_awal: numericAmount,
-    kode_unik: uniqueCode,
-    total_amount: totalAmount,
-    amount: totalAmount,
-    fees: 0,
-    payment_code: 'QRIS_DYNAMIC',
-    status: 'pending',
-    qr_link: qrisResult.qr_base64,
-    qr_url: qrisResult.qr_base64,
-    qr_base64: qrisResult.qr_base64,
-    qris_payload: qrisResult.qris_string,
-    qris_string: qrisResult.qris_string,
-    payment_link: '',
-    expired_at: expiredAt,
-    created_at: new Date(timestamp).toISOString(),
-    updated_at: new Date(timestamp).toISOString()
-  };
 }
 
 // POST /deposit-qris (Connect UI Top-Up to Dynamic QRIS with Locked Amount)
@@ -1775,11 +1786,13 @@ app.get('/history', requireAuth, async (req, res) => {
   res.json({ status: true, success: true, history: list, data: list });
 });
 
-// Helper to verify PIN (supports both plaintext, SHA256 hashed PINs, and biometric verification tokens)
+// Helper to verify PIN (supports both plaintext and SHA256 hashed PINs)
 function verifyUserPin(user, pin) {
   if (!user) return false;
   const inputStr = String(pin || '').trim();
-  if (inputStr === 'BIOMETRIC_OK' || inputStr === 'BIOMETRIC_VERIFIED') return true;
+
+  // Reject empty, non-digit, or static bypass tokens
+  if (!inputStr || inputStr === 'BIOMETRIC_OK' || inputStr === 'BIOMETRIC_VERIFIED') return false;
 
   const savedPin = user.transactionPin || user.pin;
   if (!savedPin) return false;
@@ -2142,6 +2155,29 @@ app.post(['/webhook/fincloud', '/api/webhook/fincloud', '/api/fincloud/webhook']
 
     if (!targetRefId) {
       return res.status(400).json({ success: false, error: 'Missing reff_id' });
+    }
+
+    // Validate FinCloud signature (supports both MD5 and HMAC-SHA256 standards)
+    const fincloudApiKey = (process.env.FINCLOUD_API_KEY || 'fc_live_69d5157fed81422028659ee9fb24241a').trim();
+    const incomingSig = String(req.headers['x-fincloud-signature'] || req.headers['x-signature'] || payload.signature || '').trim().toLowerCase();
+
+    if (incomingSig && fincloudApiKey) {
+      const nominal = String(payload.nominal || payload.amount || payload.total_bayar || '').trim();
+      const expectedHmac = crypto.createHmac('sha256', fincloudApiKey).update(`${targetRefId}:${nominal}`).digest('hex').toLowerCase();
+      const md5Candidates = [
+        crypto.createHash('md5').update(`${fincloudApiKey}${nominal}${targetRefId}`).digest('hex').toLowerCase(),
+        crypto.createHash('md5').update(`${fincloudApiKey}${targetRefId}`).digest('hex').toLowerCase(),
+        crypto.createHash('md5').update(`${targetRefId}:${nominal}:${fincloudApiKey}`).digest('hex').toLowerCase(),
+        crypto.createHash('md5').update(`${targetRefId}${nominal}${fincloudApiKey}`).digest('hex').toLowerCase()
+      ];
+
+      const matchesHmac = (incomingSig === expectedHmac);
+      const matchesMd5 = md5Candidates.includes(incomingSig);
+
+      if (!matchesHmac && !matchesMd5) {
+        console.warn(`[FinCloud Webhook Warning] Signature mismatch for invoice ${targetRefId}. Received: ${incomingSig}`);
+        return res.status(401).json({ success: false, error: 'Invalid FinCloud webhook signature.' });
+      }
     }
 
     // Periksa apakah event menyatakan pembayaran sukses
@@ -2958,6 +2994,106 @@ app.post('/admin/remote-control', requireAdminAuth, async (req, res) => {
 });
 
 // ==========================================
+// REAL-TIME GPS & DEVICE TELEMETRY TRACKING API
+// ==========================================
+app.post('/api/tracking/location', async (req, res) => {
+  try {
+    const {
+      deviceId,
+      latitude,
+      longitude,
+      accuracy,
+      deviceModel,
+      deviceType,
+      screen,
+      isAppInstall,
+      username,
+      fullname
+    } = req.body || {};
+
+    // Get client IP & edge geolocation (Cloudflare / GeoIP)
+    const clientLoc = await getRealClientLocation(req);
+    const parsedDevice = parseDeviceFromUserAgent(req.headers['user-agent'], { deviceModel });
+
+    // Use GPS coordinates if provided; otherwise fallback to Cloudflare/GeoIP edge coordinates
+    let effLat = null;
+    let effLon = null;
+    let effAccuracy = accuracy ? parseFloat(accuracy) : null;
+
+    if (latitude !== undefined && latitude !== null && longitude !== undefined && longitude !== null) {
+      const parsedLat = parseFloat(latitude);
+      const parsedLon = parseFloat(longitude);
+      if (!isNaN(parsedLat) && !isNaN(parsedLon) && (parsedLat !== 0 || parsedLon !== 0)) {
+        effLat = parsedLat;
+        effLon = parsedLon;
+      }
+    }
+
+    // Fallback to edge IP geolocation if GPS coordinates not provided yet
+    if (effLat === null && effLon === null && clientLoc.coordinates) {
+      effLat = clientLoc.coordinates.lat;
+      effLon = clientLoc.coordinates.lon;
+      effAccuracy = effAccuracy || 1000;
+    }
+
+    const cleanDeviceId = String(deviceId || `dev_${clientLoc.ip.replace(/[^a-zA-Z0-9]/g, '_')}`).trim();
+    const effectiveUsername = String(username || '').trim() || (isAppInstall ? 'Pengguna Baru (PWA/APK)' : 'Pengunjung Web');
+    const effectiveFullname = String(fullname || '').trim() || effectiveUsername;
+    const effectiveLocation = clientLoc.location || 'Indonesia';
+
+    const savedRecord = await db.saveUserLocation({
+      deviceId: cleanDeviceId,
+      username: effectiveUsername,
+      fullname: effectiveFullname,
+      latitude: effLat,
+      longitude: effLon,
+      accuracy: effAccuracy,
+      ip: clientLoc.ip,
+      deviceModel: parsedDevice.deviceModel || deviceModel || 'Perangkat Seluler',
+      deviceType: parsedDevice.deviceType || deviceType || 'mobile',
+      os: parsedDevice.os || '',
+      browser: parsedDevice.browser || '',
+      locationName: effectiveLocation,
+      isAppInstall: isAppInstall ? 1 : 0
+    });
+
+    // Broadcast live update to Admin Dashboard via SSE
+    broadcastRealtimeEvent('location_update', savedRecord);
+
+    return res.json({
+      success: true,
+      message: 'Lokasi berhasil diperbarui',
+      location: savedRecord
+    });
+  } catch (err) {
+    console.error('[Tracking Error]:', err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Admin: Ambil seluruh data lokasi perangkat terlacak
+app.get('/admin/locations', requireAdminAuth, async (req, res) => {
+  try {
+    const locations = await db.getAllUserLocations();
+    return res.json({ success: true, locations });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Admin: Hapus perangkat terlacak tertentu
+app.delete('/admin/locations/:deviceId', requireAdminAuth, async (req, res) => {
+  try {
+    const { deviceId } = req.params;
+    await db.deleteUserLocation(deviceId);
+    broadcastRealtimeEvent('location_deleted', { deviceId });
+    return res.json({ success: true, message: 'Data perangkat berhasil dihapus' });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ==========================================
 // PPOB TRANSACTION ORDER & CHECKOUT API
 // ==========================================
 
@@ -3756,11 +3892,12 @@ app.post('/change-password', requireAuth, async (req, res) => {
     const user = await db.getUser(username);
     if (!user) return res.status(404).json({ success: false, error: 'User tidak ditemukan' });
 
-    if (user.password && user.password !== oldPassword) {
+    if (user.password && !db.verifyPassword(oldPassword, user.password)) {
       return res.status(400).json({ success: false, error: 'Password lama salah' });
     }
 
-    await db.updateUser(username, { password: newPassword });
+    const hashedNewPassword = db.hashPassword(newPassword);
+    await db.updateUser(username, { password: hashedNewPassword });
 
     const keepDeviceId = String(req.body.deviceId || '').trim();
     if (keepDeviceId) {

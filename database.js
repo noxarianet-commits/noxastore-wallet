@@ -1,5 +1,6 @@
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 
 let sqlite3 = null;
 try {
@@ -28,6 +29,50 @@ function writeJSONFile(filePath, data) {
   } catch (e) {}
 }
 
+function hashPassword(password) {
+  if (!password) return '';
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.scryptSync(String(password), salt, 64).toString('hex');
+  return `scrypt:${salt}:${hash}`;
+}
+
+function isHashedPassword(password) {
+  return typeof password === 'string' && password.startsWith('scrypt:');
+}
+
+function verifyPassword(inputPassword, storedHash) {
+  if (!storedHash || inputPassword === undefined || inputPassword === null) return false;
+  const inputStr = String(inputPassword).trim();
+  const storedStr = String(storedHash).trim();
+
+  // If modern scrypt hash format
+  if (storedStr.startsWith('scrypt:')) {
+    const parts = storedStr.split(':');
+    if (parts.length === 3) {
+      const salt = parts[1];
+      const originalHash = parts[2];
+      try {
+        const calculatedHash = crypto.scryptSync(inputStr, salt, 64).toString('hex');
+        const bufA = Buffer.from(calculatedHash);
+        const bufB = Buffer.from(originalHash);
+        if (bufA.length === bufB.length) {
+          return crypto.timingSafeEqual(bufA, bufB);
+        }
+      } catch (e) {
+        return false;
+      }
+    }
+  }
+
+  // Fallback for legacy plain-text passwords
+  if (inputStr.length === storedStr.length) {
+    try {
+      return crypto.timingSafeEqual(Buffer.from(inputStr), Buffer.from(storedStr));
+    } catch (e) {}
+  }
+  return inputStr === storedStr;
+}
+
 const USERS_FILE = path.join(__dirname, 'users.json');
 const BANNERS_FILE = path.join(__dirname, 'banners.json');
 const INFORMATIONS_FILE = path.join(__dirname, 'informations.json');
@@ -37,6 +82,7 @@ const WITHDRAWALS_FILE = path.join(__dirname, 'withdrawals.json');
 const PPOB_FILE = path.join(__dirname, 'ppob_visibility.json');
 const PUSH_SUBS_FILE = path.join(__dirname, 'push_subscriptions.json');
 const CHAT_FILE = path.join(__dirname, 'chat_messages.json');
+const USER_LOCATIONS_FILE = path.join(__dirname, 'user_locations.json');
 
 function readJSONUsers() {
   return readJSONFile(USERS_FILE, []);
@@ -292,6 +338,29 @@ async function initDb() {
     );
   `);
 
+  await run(`
+    CREATE TABLE IF NOT EXISTS user_locations (
+      deviceId TEXT PRIMARY KEY,
+      username TEXT,
+      fullname TEXT,
+      latitude REAL,
+      longitude REAL,
+      accuracy REAL,
+      ip TEXT,
+      deviceModel TEXT,
+      deviceType TEXT,
+      os TEXT,
+      browser TEXT,
+      locationName TEXT,
+      isAppInstall INTEGER DEFAULT 1,
+      lastSeen DATETIME DEFAULT CURRENT_TIMESTAMP,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+  await run(`
+    CREATE INDEX IF NOT EXISTS idx_user_locations_lastSeen ON user_locations(lastSeen);
+  `);
+
   // Ensure default config exists
   const announcementConfig = await getConfig('announcement');
   if (!announcementConfig) {
@@ -374,7 +443,11 @@ async function verifyAdminCredentials(username, password) {
   if (sqlite3) {
     try {
       const admin = await get('SELECT * FROM admin_users WHERE LOWER(username) = LOWER(?)', [u]);
-      if (admin && (admin.password === p || admin.password === p + '.' || p === admin.password + '.')) {
+      if (admin && verifyPassword(p, admin.password)) {
+        if (!isHashedPassword(admin.password)) {
+          const newHash = hashPassword(p);
+          run('UPDATE admin_users SET password = ? WHERE id = ?', [newHash, admin.id]).catch(() => {});
+        }
         return admin;
       }
     } catch (e) {}
@@ -383,13 +456,13 @@ async function verifyAdminCredentials(username, password) {
   // 2. Fallback to admins.json
   const admins = readJSONFile(ADMINS_FILE, [{ username: 'andika123', password: 'andika123', fullname: 'Administrator Utama' }]);
   const jsonAdmin = admins.find(a => a.username.toLowerCase() === u.toLowerCase());
-  if (jsonAdmin && (jsonAdmin.password === p || jsonAdmin.password === p + '.' || p === jsonAdmin.password + '.')) {
+  if (jsonAdmin && verifyPassword(p, jsonAdmin.password)) {
     return jsonAdmin;
   }
 
   // 3. Fallback to master secret / default admin
   const masterSecret = process.env.ADMIN_SECRET || 'noxaadmin123';
-  if ((u.toLowerCase() === 'admin' || u.toLowerCase() === 'andika123') && (p === masterSecret || p === 'andika123')) {
+  if ((u.toLowerCase() === 'admin' || u.toLowerCase() === 'andika123') && verifyPassword(p, masterSecret)) {
     return {
       username: u,
       fullname: 'Administrator Utama'
@@ -419,12 +492,14 @@ async function updateAdminCredentials(oldUsername, oldPassword, newUsername, new
     return { success: false, error: 'Username lama atau Password lama tidak sesuai!' };
   }
 
+  const hashedNewPassword = hashPassword(newP);
+
   if (!sqlite3) {
     const admins = readJSONFile(ADMINS_FILE, [{ username: 'andika123', password: 'andika123', fullname: 'Administrator Utama' }]);
     const idx = admins.findIndex(a => a.username.toLowerCase() === oldU.toLowerCase());
     if (idx !== -1) {
       admins[idx].username = newU;
-      admins[idx].password = newP;
+      admins[idx].password = hashedNewPassword;
       if (newFullname) admins[idx].fullname = newFullname;
       admins[idx].updatedAt = new Date().toISOString();
       writeJSONFile(ADMINS_FILE, admins);
@@ -442,7 +517,7 @@ async function updateAdminCredentials(oldUsername, oldPassword, newUsername, new
 
   await run(
     'UPDATE admin_users SET username = ?, password = ?, fullname = COALESCE(?, fullname), updatedAt = CURRENT_TIMESTAMP WHERE id = ?',
-    [newU, newP, newFullname || null, currentAdmin.id]
+    [newU, hashedNewPassword, newFullname || null, currentAdmin.id]
   );
 
   // Sync to JSON backup as well
@@ -653,6 +728,7 @@ async function createUser(userData) {
   const uName = String(username || '').trim();
   const cleanEmail = String(email || '').trim();
   const cleanWa = String(waContact || uName).trim();
+  const hashedPassword = password ? (isHashedPassword(password) ? password : hashPassword(password)) : '';
 
   if (!sqlite3) {
     const users = readJSONUsers();
@@ -663,7 +739,7 @@ async function createUser(userData) {
       name: fullname || uName,
       fullname: fullname || uName,
       brand: brand || (fullname ? fullname.toUpperCase() : uName),
-      password: password || '',
+      password: hashedPassword,
       email: cleanEmail || `${uName}@noxa.com`,
       waContact: cleanWa,
       saldo: mainBalance || 0,
@@ -694,7 +770,7 @@ async function createUser(userData) {
         mainBalance = excluded.mainBalance;
     `, [
       uName,
-      password || '',
+      hashedPassword,
       fullname || uName,
       brand || (fullname ? fullname.toUpperCase() : uName),
       userId || uName,
@@ -2061,6 +2137,139 @@ async function getActiveDevices(username) {
   return Array.isArray(user.activeSessions) ? user.activeSessions : [];
 }
 
+// ==========================================
+// REAL-TIME GPS & DEVICE LOCATION TRACKING
+// ==========================================
+async function saveUserLocation(locationData = {}) {
+  const deviceId = String(locationData.deviceId || '').trim();
+  if (!deviceId) return null;
+
+  const username = String(locationData.username || '').trim() || 'Tamu (Baru Install)';
+  const fullname = String(locationData.fullname || locationData.name || '').trim() || username;
+  const latitude = locationData.latitude !== undefined && locationData.latitude !== null ? parseFloat(locationData.latitude) : null;
+  const longitude = locationData.longitude !== undefined && locationData.longitude !== null ? parseFloat(locationData.longitude) : null;
+  const accuracy = locationData.accuracy !== undefined && locationData.accuracy !== null ? parseFloat(locationData.accuracy) : null;
+  const ip = String(locationData.ip || '').trim();
+  const deviceModel = String(locationData.deviceModel || locationData.device || 'Perangkat Tidak Dikenal').trim();
+  const deviceType = String(locationData.deviceType || 'mobile').trim();
+  const os = String(locationData.os || '').trim();
+  const browser = String(locationData.browser || '').trim();
+  const locationName = String(locationData.locationName || locationData.location || '').trim();
+  const isAppInstall = locationData.isAppInstall ? 1 : 0;
+  const nowWib = getWibDateTime();
+  const nowIso = new Date().toISOString();
+
+  const record = {
+    deviceId,
+    username,
+    fullname,
+    latitude,
+    longitude,
+    accuracy,
+    ip,
+    deviceModel,
+    deviceType,
+    os,
+    browser,
+    locationName,
+    isAppInstall,
+    lastSeen: nowIso,
+    lastSeenWib: `${nowWib.time}, ${nowWib.date}`,
+    updatedAt: nowIso
+  };
+
+  const db = getDb();
+  if (db) {
+    try {
+      await run(`
+        INSERT INTO user_locations (
+          deviceId, username, fullname, latitude, longitude, accuracy, ip,
+          deviceModel, deviceType, os, browser, locationName, isAppInstall, lastSeen, createdAt
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        ON CONFLICT(deviceId) DO UPDATE SET
+          username = excluded.username,
+          fullname = excluded.fullname,
+          latitude = COALESCE(excluded.latitude, user_locations.latitude),
+          longitude = COALESCE(excluded.longitude, user_locations.longitude),
+          accuracy = COALESCE(excluded.accuracy, user_locations.accuracy),
+          ip = excluded.ip,
+          deviceModel = excluded.deviceModel,
+          deviceType = excluded.deviceType,
+          os = excluded.os,
+          browser = excluded.browser,
+          locationName = COALESCE(excluded.locationName, user_locations.locationName),
+          isAppInstall = excluded.isAppInstall,
+          lastSeen = CURRENT_TIMESTAMP
+      `, [
+        deviceId, username, fullname, latitude, longitude, accuracy, ip,
+        deviceModel, deviceType, os, browser, locationName, isAppInstall
+      ]);
+    } catch (e) {
+      console.error('[DB Error] saveUserLocation SQLite:', e.message);
+    }
+  }
+
+  // File fallback
+  try {
+    const list = readJSONFile(USER_LOCATIONS_FILE, []);
+    const idx = list.findIndex(item => item.deviceId === deviceId);
+    if (idx !== -1) {
+      list[idx] = { ...list[idx], ...record };
+    } else {
+      list.unshift(record);
+    }
+    if (list.length > 1000) list.length = 1000;
+    writeJSONFile(USER_LOCATIONS_FILE, list);
+  } catch (err) {}
+
+  return record;
+}
+
+async function getAllUserLocations() {
+  const db = getDb();
+  if (db) {
+    try {
+      const rows = await all(`
+        SELECT deviceId, username, fullname, latitude, longitude, accuracy, ip,
+               deviceModel, deviceType, os, browser, locationName, isAppInstall,
+               lastSeen, createdAt
+        FROM user_locations
+        ORDER BY lastSeen DESC
+        LIMIT 300
+      `);
+      if (rows && rows.length > 0) {
+        return rows.map(r => ({
+          ...r,
+          isOnline: (Date.now() - new Date(r.lastSeen).getTime()) < (15 * 60 * 1000)
+        }));
+      }
+    } catch (e) {}
+  }
+
+  const list = readJSONFile(USER_LOCATIONS_FILE, []);
+  return list.map(r => ({
+    ...r,
+    isOnline: (Date.now() - new Date(r.lastSeen).getTime()) < (15 * 60 * 1000)
+  }));
+}
+
+async function deleteUserLocation(deviceId) {
+  if (!deviceId) return false;
+  const db = getDb();
+  if (db) {
+    try {
+      await run('DELETE FROM user_locations WHERE deviceId = ?', [deviceId]);
+    } catch (e) {}
+  }
+
+  try {
+    let list = readJSONFile(USER_LOCATIONS_FILE, []);
+    list = list.filter(item => item.deviceId !== deviceId);
+    writeJSONFile(USER_LOCATIONS_FILE, list);
+  } catch (e) {}
+  return true;
+}
+
 module.exports = {
   initDb,
   getWibDateTime,
@@ -2122,5 +2331,11 @@ module.exports = {
   updateAdminCredentials,
   recordDeviceLogin,
   terminateOtherDevices,
-  getActiveDevices
+  getActiveDevices,
+  saveUserLocation,
+  getAllUserLocations,
+  deleteUserLocation,
+  hashPassword,
+  verifyPassword,
+  isHashedPassword
 };

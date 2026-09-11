@@ -14,6 +14,9 @@
   <!-- Google Material Symbols -->
   <link rel="stylesheet"
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <!-- Leaflet.js for Interactive GPS Map Tracking -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <style>
     :root {
@@ -1252,6 +1255,176 @@
       from { transform: rotate(0deg); }
       to   { transform: rotate(360deg); }
     }
+
+    /* ==========================================
+       REAL-TIME GPS RADAR & MAP STYLES
+       ========================================== */
+    #admin-gps-map {
+      height: 540px;
+      width: 100%;
+      border-radius: 20px;
+      border: 1.5px solid #e2e8f0;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+      position: relative;
+      z-index: 1;
+      background: #e2e8f0;
+    }
+
+    .gps-marker-wrapper {
+      position: relative;
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .gps-marker-pin {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #7B2D8E, #a855f7);
+      border: 2.5px solid #ffffff;
+      box-shadow: 0 4px 14px rgba(123, 45, 142, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      position: relative;
+      z-index: 2;
+      cursor: pointer;
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .gps-marker-wrapper:hover .gps-marker-pin {
+      transform: scale(1.18);
+    }
+
+    .gps-marker-pin.online {
+      background: linear-gradient(135deg, #059669, #10b981);
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.5);
+    }
+
+    .gps-marker-pin.pwa {
+      background: linear-gradient(135deg, #2563eb, #3b82f6);
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.5);
+    }
+
+    .gps-pulse-ring {
+      position: absolute;
+      top: -6px;
+      left: -6px;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: rgba(16, 185, 129, 0.35);
+      animation: gpsRadarPulse 2.2s ease-out infinite;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .gps-pulse-ring.pwa {
+      background: rgba(37, 99, 235, 0.35);
+    }
+
+    @keyframes gpsRadarPulse {
+      0% {
+        transform: scale(0.6);
+        opacity: 0.9;
+      }
+      70% {
+        opacity: 0.3;
+      }
+      100% {
+        transform: scale(2.2);
+        opacity: 0;
+      }
+    }
+
+    /* Custom Leaflet Popup Styling */
+    .leaflet-popup-content-wrapper {
+      border-radius: 18px !important;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.2) !important;
+      padding: 0 !important;
+      overflow: hidden;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+    }
+
+    .leaflet-popup-content {
+      margin: 0 !important;
+      line-height: 1.4 !important;
+      min-width: 250px;
+    }
+
+    .leaflet-container a.leaflet-popup-close-button {
+      top: 10px !important;
+      right: 10px !important;
+      color: #ffffff !important;
+      background: rgba(0, 0, 0, 0.3) !important;
+      width: 24px !important;
+      height: 24px !important;
+      border-radius: 50% !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      text-decoration: none !important;
+      font-size: 14px !important;
+      line-height: 24px !important;
+      padding: 0 !important;
+      transition: background 0.2s;
+    }
+
+    .leaflet-container a.leaflet-popup-close-button:hover {
+      background: rgba(0, 0, 0, 0.6) !important;
+    }
+
+    .map-popup-card {
+      padding: 0;
+      font-family: var(--font-inter);
+    }
+
+    .map-popup-header {
+      background: linear-gradient(135deg, #1e1b4b, #312e81);
+      color: white;
+      padding: 14px 16px;
+    }
+
+    .map-popup-body {
+      padding: 14px 16px;
+      background: #ffffff;
+      font-size: 12px;
+      color: #334155;
+    }
+
+    .map-popup-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 7px;
+    }
+
+    .map-popup-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid #f1f5f9;
+    }
+
+    .btn-popup-action {
+      flex: 1;
+      padding: 7px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
   </style>
 </head>
 
@@ -1307,6 +1480,10 @@
         </button>
         <button class="admin-nav-tab" id="tab-ppob-btn" onclick="switchAdminView('ppob')">
           <span class="material-symbols-outlined">settings_input_component</span> Layanan PPOB
+        </button>
+        <button class="admin-nav-tab" id="tab-map-btn" onclick="switchAdminView('map')">
+          <span class="material-symbols-outlined">explore</span> Peta Live GPS
+          <span style="font-size: 9px; background: #059669; color: white; padding: 2px 6px; border-radius: 20px; font-weight: 800; margin-left: auto;">RADAR</span>
         </button>
 
         <div class="sidebar-heading" style="margin-top: 14px;">LAYANAN LIVE CHAT</div>
@@ -1375,6 +1552,7 @@
                 <option value="info">📢 Kelola Informasi</option>
                 <option value="settings">⚙️ Pemberitahuan & Update</option>
                 <option value="ppob">📱 Layanan PPOB SekaliPay</option>
+                <option value="map">🗺️ Peta Live GPS (Lacak Pengguna)</option>
                 <option value="livechat">💬 Buka CS Live Chat (Console)</option>
               </select>
               <span class="material-symbols-outlined dropdown-arrow">expand_more</span>
@@ -1871,6 +2049,136 @@
       </div>
     </div>
 
+    <!-- VIEW 8: REAL-TIME GPS MAP & DEVICE TRACKER -->
+    <div id="view-map" class="admin-view">
+      <!-- Stats Cards Grid -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-info">
+            <h3>Total Perangkat Terlacak</h3>
+            <p id="stat-gps-total">0</p>
+          </div>
+          <div class="stat-icon" style="background: rgba(123, 45, 142, 0.08); color: #7B2D8E;">
+            <span class="material-symbols-outlined" style="font-size: 28px;">radar</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <h3>Online / Aktif Sekarang</h3>
+            <p id="stat-gps-online" style="color: #059669;">0</p>
+          </div>
+          <div class="stat-icon" style="background: rgba(5, 150, 105, 0.08); color: #059669;">
+            <span class="material-symbols-outlined" style="font-size: 28px;">sensors</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <h3>Aplikasi Terpasang (PWA)</h3>
+            <p id="stat-gps-install" style="color: #2563eb;">0</p>
+          </div>
+          <div class="stat-icon" style="background: rgba(37, 99, 235, 0.08); color: #2563eb;">
+            <span class="material-symbols-outlined" style="font-size: 28px;">install_mobile</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <h3>Perangkat Mobile / HP</h3>
+            <p id="stat-gps-mobile" style="color: #9333ea;">0</p>
+          </div>
+          <div class="stat-icon" style="background: rgba(147, 51, 234, 0.08); color: #9333ea;">
+            <span class="material-symbols-outlined" style="font-size: 28px;">phone_iphone</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Map Card with Interactive Leaflet Map -->
+      <div class="content-card" style="padding: 20px; margin-bottom: 24px; position: relative;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h3 style="font-size: 17px; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+              <span class="material-symbols-outlined" style="color: #7B2D8E;">share_location</span>
+              Peta Radar GPS Seluruh Pengguna
+            </h3>
+            <p style="font-size: 12.5px; color: var(--text-muted); margin-top: 3px;">
+              Titik lokasi real-time koordinat GPS pengguna yang membuka atau menginstall aplikasi NoxarianetApp.
+            </p>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <button onclick="centerMapIndonesia()" class="btn-action" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1;">
+              <span class="material-symbols-outlined" style="font-size: 17px;">filter_center_focus</span>
+              Pusatkan Indonesia
+            </button>
+            <button onclick="loadTrackedLocations()" class="btn-action" style="background: var(--primary); color: white;">
+              <span class="material-symbols-outlined" style="font-size: 17px;">sync</span>
+              Segarkan Radar
+            </button>
+          </div>
+        </div>
+
+        <!-- Leaflet Map Container -->
+        <div style="position: relative; width: 100%;">
+          <div id="admin-gps-map"></div>
+          <!-- Live Radar Overlay Pill -->
+          <div style="position: absolute; top: 14px; right: 14px; z-index: 1000; background: rgba(15, 23, 42, 0.82); backdrop-filter: blur(8px); color: white; padding: 6px 14px; border-radius: 30px; font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 8px; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 4px 15px rgba(0,0,0,0.2); pointer-events: none;">
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981; display: inline-block; box-shadow: 0 0 8px #10b981;"></span>
+            <span id="map-radar-status">RADAR GPS LIVE AKTIF</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tracked Devices Table Card -->
+      <div class="content-card" style="padding: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h3 style="font-size: 16px; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+              <span class="material-symbols-outlined" style="color: #7B2D8E;">devices</span>
+              Daftar Rincian Perangkat &amp; Lokasi Terlacak
+            </h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+              Klik salah satu perangkat untuk melihat detail lengkap (IP, Device, Koordinat) atau zoom langsung di peta.
+            </p>
+          </div>
+          <!-- Search & Filter Controls -->
+          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <div style="position: relative; width: 240px;">
+              <input type="text" id="gps-search-input" oninput="filterGpsDevicesTable()" placeholder="Cari nama, IP, atau HP..."
+                style="width: 100%; padding: 8px 12px 8px 34px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 12px; font-weight: 600; outline: none; background: #f8fafc;" />
+              <span class="material-symbols-outlined" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 18px; color: #94a3b8;">search</span>
+            </div>
+            <select id="gps-filter-select" onchange="filterGpsDevicesTable()" style="padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 12px; font-weight: 600; background: white; outline: none;">
+              <option value="all">Semua Perangkat</option>
+              <option value="online">Online Saja</option>
+              <option value="pwa">Aplikasi Terinstall (PWA)</option>
+              <option value="gps">GPS Koordinat Saja</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="overflow-x: auto;">
+          <table class="trx-table" style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="background: #f8fafc; border-bottom: 2px solid var(--border-color); text-align: left;">
+                <th style="padding: 12px 14px; font-size: 12px; color: var(--text-muted);">Pengguna / Akun</th>
+                <th style="padding: 12px 14px; font-size: 12px; color: var(--text-muted);">Perangkat &amp; Browser</th>
+                <th style="padding: 12px 14px; font-size: 12px; color: var(--text-muted);">Alamat IP &amp; Lokasi</th>
+                <th style="padding: 12px 14px; font-size: 12px; color: var(--text-muted);">Koordinat GPS</th>
+                <th style="padding: 12px 14px; font-size: 12px; color: var(--text-muted);">Terakhir Aktif</th>
+                <th style="padding: 12px 14px; font-size: 12px; color: var(--text-muted); text-align: center;">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="tracked-devices-tbody">
+              <tr>
+                <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                  <span class="material-symbols-outlined" style="animation: spin 1s linear infinite; font-size: 24px; vertical-align: middle;">sync</span>
+                  Memuat data lacakan perangkat...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <!-- Modal: Tambah User Baru -->
@@ -2111,6 +2419,88 @@
 
       <div style="text-align: center; margin-top: 16px;">
         <a href="/index.html" style="font-size: 12px; color: #64748b; text-decoration: none; font-weight: 600;">← Kembali ke Aplikasi Utama</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Detail Lokasi, IP & Perangkat Pengguna -->
+  <div class="modal-overlay" id="location-detail-modal" onclick="closeLocationDetailModal()">
+    <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 580px; width: 92%;">
+      <div class="modal-header" style="background: linear-gradient(135deg, #1e1b4b, #4338ca); color: white;">
+        <h3 style="display: flex; align-items: center; gap: 8px; font-size: 15px; color: white;">
+          <span class="material-symbols-outlined" style="color: #a5b4fc;">my_location</span>
+          Detail Lokasi &amp; Telemetri Pengguna
+        </h3>
+        <button class="modal-close" onclick="closeLocationDetailModal()" style="color: rgba(255,255,255,0.8);">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="modal-body" style="padding: 22px;">
+        <!-- User Profile Header Card -->
+        <div style="display: flex; align-items: center; gap: 14px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 14px 18px; margin-bottom: 20px;">
+          <div id="modal-loc-avatar-icon" style="width: 48px; height: 48px; border-radius: 14px; background: linear-gradient(135deg, #7B2D8E, #9333ea); display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; flex-shrink: 0; box-shadow: 0 4px 12px rgba(123,45,142,0.25);">
+            <span class="material-symbols-outlined" id="modal-loc-device-icon" style="font-size: 26px;">smartphone</span>
+          </div>
+          <div style="flex: 1; min-width: 0;">
+            <h4 id="modal-loc-fullname" style="font-size: 16px; font-weight: 800; color: #0f172a; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Nama Pengguna</h4>
+            <p id="modal-loc-username" style="font-size: 12.5px; color: #64748b; margin: 2px 0 0; font-family: monospace;">@username</p>
+          </div>
+          <div id="modal-loc-status-badge" style="text-align: right;">
+            <span style="background: rgba(16,185,129,0.12); color: #059669; border: 1px solid rgba(16,185,129,0.3); padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800;">ONLINE</span>
+          </div>
+        </div>
+
+        <!-- Info Grid -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 14px;">
+            <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">📍 Area / Alamat</span>
+            <strong id="modal-loc-location" style="font-size: 13px; color: #0f172a; display: block; word-break: break-word;">Indonesia</strong>
+          </div>
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 14px;">
+            <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">🌐 Alamat IP</span>
+            <strong id="modal-loc-ip" style="font-size: 13px; color: #2563eb; font-family: monospace; display: block;">127.0.0.1</strong>
+          </div>
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 14px;">
+            <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">🛰️ Koordinat GPS</span>
+            <strong id="modal-loc-coords" style="font-size: 12px; color: #0f172a; font-family: monospace; display: block;">-6.2088, 106.8456</strong>
+          </div>
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 14px;">
+            <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">🎯 Akurasi GPS</span>
+            <strong id="modal-loc-accuracy" style="font-size: 13px; color: #059669; display: block;">± 10 meter</strong>
+          </div>
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 14px;">
+            <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">📱 Perangkat &amp; Model</span>
+            <strong id="modal-loc-device" style="font-size: 12px; color: #0f172a; display: block;">Android Device</strong>
+          </div>
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 14px;">
+            <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">💻 OS &amp; Browser</span>
+            <strong id="modal-loc-system" style="font-size: 12px; color: #0f172a; display: block;">Android • Chrome</strong>
+          </div>
+        </div>
+
+        <!-- Terakhir Terlihat Banner -->
+        <div style="display: flex; align-items: center; justify-content: space-between; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 10px; padding: 10px 14px; margin-bottom: 20px;">
+          <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #4338ca; font-weight: 600;">
+            <span class="material-symbols-outlined" style="font-size: 18px;">schedule</span>
+            <span>Terakhir Terdeteksi:</span>
+          </div>
+          <span id="modal-loc-lastseen" style="font-size: 12px; font-weight: 800; color: #312e81;">Baru saja</span>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <a id="modal-btn-gmaps" href="#" target="_blank" class="btn-primary" style="flex: 1; text-decoration: none; justify-content: center; background: linear-gradient(135deg, #2563eb, #3b82f6); box-shadow: 0 4px 14px rgba(37,99,235,0.3);">
+            <span class="material-symbols-outlined">map</span>
+            Buka di Google Maps
+          </a>
+          <button id="modal-btn-focus" onclick="focusSelectedModalMarker()" class="btn-primary" style="flex: 1; justify-content: center; background: var(--primary);">
+            <span class="material-symbols-outlined">location_searching</span>
+            Fokus di Peta
+          </button>
+          <button id="modal-btn-delete" onclick="deleteSelectedLocationDevice()" class="btn-action danger" style="padding: 0 16px;" title="Hapus data perangkat ini">
+            <span class="material-symbols-outlined">delete</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -2371,6 +2761,9 @@
       } else if (view === 'ppob') {
         // Auto-load all SekaliPay products immediately when opening PPOB tab
         onPpobCategoryChange();
+      } else if (view === 'map') {
+        initAdminMap();
+        loadTrackedLocations();
       }
     }
 
@@ -4059,6 +4452,495 @@
     function closeJsonViewerModal() {
       const modal = document.getElementById('json-viewer-modal');
       if (modal) modal.classList.remove('active');
+    }
+
+    // ==========================================
+    // REAL-TIME GPS TRACKING & LEAFLET MAP LOGIC
+    // ==========================================
+    let adminGpsMap = null;
+    let trackedMarkerGroup = null;
+    let trackedDevicesData = [];
+    let trackedDeviceMarkers = new Map(); // deviceId -> marker
+    let selectedGpsDevice = null;
+    let adminRealtimeGpsSSE = null;
+
+    function initAdminMap() {
+      const mapContainer = document.getElementById('admin-gps-map');
+      if (!mapContainer) return;
+
+      if (adminGpsMap) {
+        setTimeout(() => {
+          adminGpsMap.invalidateSize();
+        }, 200);
+        return;
+      }
+
+      try {
+        // Centered over Indonesia [-2.548926, 118.0148634] at zoom 5
+        adminGpsMap = L.map('admin-gps-map', {
+          zoomControl: true,
+          attributionControl: true
+        }).setView([-2.548926, 118.0148634], 5);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(adminGpsMap);
+
+        trackedMarkerGroup = L.layerGroup().addTo(adminGpsMap);
+
+        setTimeout(() => {
+          if (adminGpsMap) adminGpsMap.invalidateSize();
+        }, 300);
+
+        // Start SSE stream for instant location updates
+        connectAdminLocationSSE();
+      } catch (err) {
+        console.error('[Leaflet Map Init Error]:', err);
+      }
+    }
+
+    function centerMapIndonesia() {
+      if (adminGpsMap) {
+        adminGpsMap.setView([-2.548926, 118.0148634], 5);
+      }
+    }
+
+    async function loadTrackedLocations() {
+      const tbody = document.getElementById('tracked-devices-tbody');
+      const radarStatus = document.getElementById('map-radar-status');
+      if (radarStatus) radarStatus.innerText = 'MEMPERBARUI RADAR...';
+
+      const res = await adminFetch('/admin/locations');
+      if (res && res.success) {
+        trackedDevicesData = res.locations || [];
+        updateGpsStats(trackedDevicesData);
+        renderMapMarkers(trackedDevicesData);
+        renderTrackedDevicesTable(trackedDevicesData);
+        if (radarStatus) radarStatus.innerText = `RADAR AKTIF (${trackedDevicesData.length} PERANGKAT)`;
+      } else {
+        if (tbody) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--danger); padding: 24px;">Gagal memuat lokasi: ${res?.error || 'Koneksi terputus'}</td></tr>`;
+        }
+        if (radarStatus) radarStatus.innerText = 'RADAR STANDBY';
+      }
+    }
+
+    function updateGpsStats(locations = []) {
+      const total = locations.length;
+      const online = locations.filter(l => l.isOnline).length;
+      const install = locations.filter(l => l.isAppInstall).length;
+      const mobile = locations.filter(l => (l.deviceType === 'mobile' || /Android|iPhone|iPad|Mobile/i.test(l.deviceModel || l.os || ''))).length;
+
+      const setEl = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = val;
+      };
+
+      setEl('stat-gps-total', total);
+      setEl('stat-gps-online', online);
+      setEl('stat-gps-install', install);
+      setEl('stat-gps-mobile', mobile);
+    }
+
+    function createGpsPinIcon(device) {
+      const isOnline = !!device.isOnline;
+      const isPwa = !!device.isAppInstall;
+      const isMobile = device.deviceType === 'mobile' || /Android|iPhone|iPad/i.test(device.deviceModel || device.os || '');
+      const iconSymbol = isMobile ? 'smartphone' : 'laptop_mac';
+
+      const pinClass = isPwa ? 'gps-marker-pin pwa' : (isOnline ? 'gps-marker-pin online' : 'gps-marker-pin');
+      const pulseRing = isOnline ? `<div class="gps-pulse-ring ${isPwa ? 'pwa' : ''}"></div>` : '';
+
+      return L.divIcon({
+        className: 'gps-custom-leaflet-icon',
+        html: `
+          <div class="gps-marker-wrapper" title="${escapeHtml(device.fullname || device.username)} (${escapeHtml(device.ip || '')})">
+            ${pulseRing}
+            <div class="${pinClass}">
+              <span class="material-symbols-outlined" style="font-size: 19px; line-height: 1;">${iconSymbol}</span>
+            </div>
+          </div>
+        `,
+        iconSize: [38, 38],
+        iconAnchor: [19, 19],
+        popupAnchor: [0, -20]
+      });
+    }
+
+    function buildDevicePopupHtml(d) {
+      const isOnline = !!d.isOnline;
+      const isPwa = !!d.isAppInstall;
+      const statusBadge = isOnline
+        ? `<span style="background:#10b981; color:white; padding:2px 8px; border-radius:12px; font-size:9.5px; font-weight:800;">ONLINE</span>`
+        : `<span style="background:rgba(255,255,255,0.25); color:white; padding:2px 8px; border-radius:12px; font-size:9.5px; font-weight:700;">TERAKHIR AKTIF</span>`;
+
+      const pwaBadge = isPwa
+        ? `<span style="background:#3b82f6; color:white; padding:2px 7px; border-radius:12px; font-size:9.5px; font-weight:800; margin-left:4px;">PWA</span>`
+        : '';
+
+      const lat = d.latitude ? parseFloat(d.latitude).toFixed(5) : '0';
+      const lon = d.longitude ? parseFloat(d.longitude).toFixed(5) : '0';
+      const accuracyText = d.accuracy ? `±${Math.round(d.accuracy)}m` : 'IP Est.';
+      const gmapsUrl = `https://www.google.com/maps?q=${lat},${lon}`;
+      const safeId = escapeHtml(d.deviceId);
+
+      return `
+        <div class="map-popup-card">
+          <div class="map-popup-header">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
+              <strong style="font-size:14px; font-weight:800; color:white;">${escapeHtml(d.fullname || d.username)}</strong>
+              <div>${statusBadge}${pwaBadge}</div>
+            </div>
+            <div style="font-size:11px; opacity:0.8; font-family:monospace;">@${escapeHtml(d.username)}</div>
+          </div>
+          <div class="map-popup-body">
+            <div class="map-popup-row">
+              <span class="material-symbols-outlined" style="font-size:16px; color:#7B2D8E;">location_on</span>
+              <span><strong>Lokasi:</strong> ${escapeHtml(d.locationName || 'Indonesia')}</span>
+            </div>
+            <div class="map-popup-row">
+              <span class="material-symbols-outlined" style="font-size:16px; color:#2563eb;">router</span>
+              <span><strong>IP:</strong> <code style="color:#2563eb; font-weight:700;">${escapeHtml(d.ip || '-')}</code></span>
+            </div>
+            <div class="map-popup-row">
+              <span class="material-symbols-outlined" style="font-size:16px; color:#059669;">devices</span>
+              <span><strong>Perangkat:</strong> ${escapeHtml(d.deviceModel || 'Perangkat Seluler')}</span>
+            </div>
+            <div class="map-popup-row">
+              <span class="material-symbols-outlined" style="font-size:16px; color:#ea580c;">explore</span>
+              <span><strong>GPS:</strong> ${lat}, ${lon} (${accuracyText})</span>
+            </div>
+            <div class="map-popup-actions">
+              <button onclick="openLocationDetailById('${safeId}')" class="btn-popup-action" style="background:#f3e8ff; color:#7B2D8E; border:1px solid #e9d5ff;">
+                <span class="material-symbols-outlined" style="font-size:15px;">info</span> Rincian
+              </button>
+              <a href="${gmapsUrl}" target="_blank" class="btn-popup-action" style="background:#2563eb; color:white; border:none;">
+                <span class="material-symbols-outlined" style="font-size:15px;">open_in_new</span> Google Maps
+              </a>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderMapMarkers(locations = []) {
+      if (!adminGpsMap || !trackedMarkerGroup) return;
+
+      trackedMarkerGroup.clearLayers();
+      trackedDeviceMarkers.clear();
+
+      const validLocations = locations.filter(l => l.latitude && l.longitude && !isNaN(parseFloat(l.latitude)) && !isNaN(parseFloat(l.longitude)));
+
+      validLocations.forEach(d => {
+        try {
+          const lat = parseFloat(d.latitude);
+          const lon = parseFloat(d.longitude);
+          const icon = createGpsPinIcon(d);
+          const marker = L.marker([lat, lon], { icon }).addTo(trackedMarkerGroup);
+
+          marker.bindPopup(buildDevicePopupHtml(d), { maxWidth: 320 });
+          marker.on('click', () => {
+            selectedGpsDevice = d;
+          });
+
+          trackedDeviceMarkers.set(d.deviceId, marker);
+        } catch (e) {
+          console.error('[Marker Render Error]:', e);
+        }
+      });
+    }
+
+    function renderTrackedDevicesTable(locations = []) {
+      const tbody = document.getElementById('tracked-devices-tbody');
+      if (!tbody) return;
+
+      if (!locations || locations.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" style="text-align:center; color:var(--text-muted); padding:35px;">
+              <span class="material-symbols-outlined" style="font-size:36px; opacity:0.3; display:block; margin-bottom:8px;">wrong_location</span>
+              Belum ada perangkat pengguna yang terdeteksi atau membuka aplikasi.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = locations.map((d) => {
+        const isOnline = !!d.isOnline;
+        const isPwa = !!d.isAppInstall;
+        const statusBadge = isOnline
+          ? `<span style="background:rgba(16,185,129,0.12); color:#059669; border:1px solid rgba(16,185,129,0.3); padding:3px 8px; border-radius:12px; font-size:10px; font-weight:800; display:inline-flex; align-items:center; gap:4px;"><span style="width:6px; height:6px; border-radius:50%; background:#10b981;"></span>ONLINE</span>`
+          : `<span style="background:#f1f5f9; color:#64748b; border:1px solid #cbd5e1; padding:3px 8px; border-radius:12px; font-size:10px; font-weight:700;">OFFLINE</span>`;
+
+        const pwaBadge = isPwa
+          ? `<span style="background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.25); padding:2px 6px; border-radius:6px; font-size:9.5px; font-weight:800; margin-left:4px;">PWA</span>`
+          : '';
+
+        const hasGps = d.latitude && d.longitude && !isNaN(parseFloat(d.latitude));
+        const gpsLabel = hasGps
+          ? `<div style="font-family:monospace; font-weight:700; font-size:11.5px; color:#0f172a;">${parseFloat(d.latitude).toFixed(4)}, ${parseFloat(d.longitude).toFixed(4)}</div><div style="font-size:10.5px; color:#059669;">${d.accuracy ? `±${Math.round(d.accuracy)}m` : 'IP Est.'}</div>`
+          : `<span style="color:#94a3b8; font-size:11px;">IP Estimasi</span>`;
+
+        const lastSeenText = d.lastSeen ? formatLastSeenTime(d.lastSeen) : '-';
+        const safeDeviceId = escapeHtml(d.deviceId);
+
+        return `
+          <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+            <td style="padding: 12px 14px;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div style="width:34px; height:34px; border-radius:10px; background:${isPwa ? 'linear-gradient(135deg, #2563eb, #3b82f6)' : 'linear-gradient(135deg, #7B2D8E, #9333ea)'}; display:flex; align-items:center; justify-content:center; color:white; flex-shrink:0;">
+                  <span class="material-symbols-outlined" style="font-size:18px;">${d.deviceType === 'mobile' ? 'smartphone' : 'laptop_mac'}</span>
+                </div>
+                <div>
+                  <div style="font-weight:700; font-size:13px; color:var(--text-main);">${escapeHtml(d.fullname || d.username)} ${pwaBadge}</div>
+                  <div style="font-size:11px; color:var(--text-muted); font-family:monospace;">@${escapeHtml(d.username || 'guest')}</div>
+                </div>
+              </div>
+            </td>
+            <td style="padding: 12px 14px;">
+              <div style="font-weight:600; font-size:12.5px; color:#1e293b;">${escapeHtml(d.deviceModel || 'Perangkat Seluler')}</div>
+              <div style="font-size:11px; color:var(--text-muted);">${escapeHtml(d.os || '')} • ${escapeHtml(d.browser || '')}</div>
+            </td>
+            <td style="padding: 12px 14px;">
+              <div style="font-weight:700; font-size:12px; color:#2563eb; font-family:monospace;">${escapeHtml(d.ip || '-')}</div>
+              <div style="font-size:11px; color:var(--text-muted);">${escapeHtml(d.locationName || 'Indonesia')}</div>
+            </td>
+            <td style="padding: 12px 14px;">
+              ${gpsLabel}
+            </td>
+            <td style="padding: 12px 14px;">
+              <div style="margin-bottom:3px;">${statusBadge}</div>
+              <div style="font-size:11px; color:var(--text-muted);">${lastSeenText}</div>
+            </td>
+            <td style="padding: 12px 14px; text-align: center;">
+              <div style="display:flex; justify-content:center; gap:6px;">
+                ${hasGps ? `
+                  <button onclick="focusLocationOnMap(${parseFloat(d.latitude)}, ${parseFloat(d.longitude)}, '${safeDeviceId}')" title="Fokuskan titik di Peta" style="background:#eef2ff; border:1px solid #c7d2fe; color:#4338ca; padding:5px 8px; border-radius:7px; cursor:pointer; display:flex; align-items:center; gap:4px; font-size:11px; font-weight:700;">
+                    <span class="material-symbols-outlined" style="font-size:15px;">my_location</span>
+                  </button>
+                ` : ''}
+                <button onclick="openLocationDetailById('${safeDeviceId}')" title="Lihat detail lengkap" style="background:rgba(123,45,142,0.08); border:1px solid rgba(123,45,142,0.25); color:#7B2D8E; padding:5px 8px; border-radius:7px; cursor:pointer; display:flex; align-items:center; gap:4px; font-size:11px; font-weight:700;">
+                  <span class="material-symbols-outlined" style="font-size:15px;">info</span>
+                </button>
+                <button onclick="deleteLocationRecord('${safeDeviceId}')" title="Hapus data" style="background:#fee2e2; border:1px solid #fecaca; color:#dc2626; padding:5px 8px; border-radius:7px; cursor:pointer; display:flex; align-items:center; font-size:11px;">
+                  <span class="material-symbols-outlined" style="font-size:15px;">delete</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterGpsDevicesTable() {
+      const searchVal = (document.getElementById('gps-search-input')?.value || '').toLowerCase().trim();
+      const filterVal = document.getElementById('gps-filter-select')?.value || 'all';
+
+      const filtered = trackedDevicesData.filter(d => {
+        if (filterVal === 'online' && !d.isOnline) return false;
+        if (filterVal === 'pwa' && !d.isAppInstall) return false;
+        if (filterVal === 'gps' && (!d.latitude || !d.longitude)) return false;
+
+        if (searchVal) {
+          const matchName = (d.fullname || '').toLowerCase().includes(searchVal);
+          const matchUser = (d.username || '').toLowerCase().includes(searchVal);
+          const matchIp = (d.ip || '').toLowerCase().includes(searchVal);
+          const matchDev = (d.deviceModel || '').toLowerCase().includes(searchVal);
+          const matchLoc = (d.locationName || '').toLowerCase().includes(searchVal);
+          return matchName || matchUser || matchIp || matchDev || matchLoc;
+        }
+
+        return true;
+      });
+
+      renderTrackedDevicesTable(filtered);
+    }
+
+    function focusLocationOnMap(lat, lon, deviceId) {
+      if (!adminGpsMap) initAdminMap();
+      if (!lat || !lon) return;
+
+      if (currentAdminView !== 'map') {
+        switchAdminView('map');
+      }
+
+      setTimeout(() => {
+        if (adminGpsMap) {
+          adminGpsMap.flyTo([lat, lon], 14, { duration: 1.2 });
+          const marker = trackedDeviceMarkers.get(deviceId);
+          if (marker) {
+            setTimeout(() => marker.openPopup(), 1200);
+          }
+        }
+      }, 100);
+    }
+
+    function openLocationDetailById(deviceId) {
+      const device = trackedDevicesData.find(d => d.deviceId === deviceId);
+      if (device) {
+        openLocationDetailModal(device);
+      }
+    }
+
+    function openLocationDetailModal(device) {
+      selectedGpsDevice = device;
+      const modal = document.getElementById('location-detail-modal');
+      if (!modal) return;
+
+      const setTxt = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = val || '-';
+      };
+
+      setTxt('modal-loc-fullname', device.fullname || device.username || 'Pengguna Noxarianet');
+      setTxt('modal-loc-username', `@${device.username || 'guest'}`);
+      setTxt('modal-loc-location', device.locationName || 'Indonesia');
+      setTxt('modal-loc-ip', device.ip || '-');
+
+      const hasGps = device.latitude && device.longitude && !isNaN(parseFloat(device.latitude));
+      const lat = hasGps ? parseFloat(device.latitude).toFixed(5) : '-';
+      const lon = hasGps ? parseFloat(device.longitude).toFixed(5) : '-';
+      setTxt('modal-loc-coords', hasGps ? `${lat}, ${lon}` : 'Belum mengizinkan GPS');
+      setTxt('modal-loc-accuracy', device.accuracy ? `± ${Math.round(device.accuracy)} meter` : (hasGps ? 'Akurasi Standar' : 'IP Geolocation'));
+      setTxt('modal-loc-device', device.deviceModel || 'Perangkat Seluler');
+      setTxt('modal-loc-system', `${device.os || 'OS'} • ${device.browser || 'Browser'}`);
+      setTxt('modal-loc-lastseen', device.lastSeen ? formatLastSeenTime(device.lastSeen) : 'Baru saja');
+
+      const statusBadge = document.getElementById('modal-loc-status-badge');
+      if (statusBadge) {
+        statusBadge.innerHTML = device.isOnline
+          ? `<span style="background:rgba(16,185,129,0.12); color:#059669; border:1px solid rgba(16,185,129,0.3); padding:4px 10px; border-radius:20px; font-size:11px; font-weight:800;">ONLINE</span>`
+          : `<span style="background:#f1f5f9; color:#64748b; border:1px solid #cbd5e1; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:700;">OFFLINE</span>`;
+      }
+
+      const devIcon = document.getElementById('modal-loc-device-icon');
+      if (devIcon) {
+        devIcon.innerText = device.deviceType === 'mobile' ? 'smartphone' : 'laptop_mac';
+      }
+
+      const gmapsBtn = document.getElementById('modal-btn-gmaps');
+      if (gmapsBtn) {
+        if (hasGps) {
+          gmapsBtn.href = `https://www.google.com/maps?q=${lat},${lon}`;
+          gmapsBtn.style.display = 'inline-flex';
+        } else {
+          gmapsBtn.style.display = 'none';
+        }
+      }
+
+      modal.style.display = 'flex';
+    }
+
+    function closeLocationDetailModal() {
+      const modal = document.getElementById('location-detail-modal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function focusSelectedModalMarker() {
+      closeLocationDetailModal();
+      if (selectedGpsDevice && selectedGpsDevice.latitude && selectedGpsDevice.longitude) {
+        focusLocationOnMap(parseFloat(selectedGpsDevice.latitude), parseFloat(selectedGpsDevice.longitude), selectedGpsDevice.deviceId);
+      } else {
+        showNotification('Perangkat ini belum mengirimkan koordinat GPS presisi.', 'warning');
+      }
+    }
+
+    async function deleteSelectedLocationDevice() {
+      if (!selectedGpsDevice) return;
+      const id = selectedGpsDevice.deviceId;
+      closeLocationDetailModal();
+      await deleteLocationRecord(id);
+    }
+
+    async function deleteLocationRecord(deviceId) {
+      if (!confirm('Apakah Anda yakin ingin menghapus catatan lokasi perangkat ini?')) return;
+
+      const res = await adminFetch(`/admin/locations/${encodeURIComponent(deviceId)}`, {
+        method: 'DELETE'
+      });
+
+      if (res && res.success) {
+        showNotification('Data lokasi perangkat berhasil dihapus.', 'delete');
+        trackedDevicesData = trackedDevicesData.filter(d => d.deviceId !== deviceId);
+        updateGpsStats(trackedDevicesData);
+        renderMapMarkers(trackedDevicesData);
+        renderTrackedDevicesTable(trackedDevicesData);
+      } else {
+        showNotification('Gagal menghapus: ' + (res?.error || 'Terjadi kesalahan'), 'error');
+      }
+    }
+
+    function connectAdminLocationSSE() {
+      if (adminRealtimeGpsSSE) return;
+      try {
+        adminRealtimeGpsSSE = new EventSource('/api/realtime/stream?username=admin');
+        adminRealtimeGpsSSE.addEventListener('location_update', (e) => {
+          try {
+            const updated = JSON.parse(e.data);
+            if (!updated || !updated.deviceId) return;
+
+            const existingIdx = trackedDevicesData.findIndex(d => d.deviceId === updated.deviceId);
+            if (existingIdx !== -1) {
+              trackedDevicesData[existingIdx] = { ...trackedDevicesData[existingIdx], ...updated, isOnline: true };
+            } else {
+              trackedDevicesData.unshift({ ...updated, isOnline: true });
+            }
+
+            updateGpsStats(trackedDevicesData);
+            if (currentAdminView === 'map') {
+              renderMapMarkers(trackedDevicesData);
+              renderTrackedDevicesTable(trackedDevicesData);
+              showNotification(`📍 Lokasi baru terdeteksi: ${updated.fullname || updated.username}`, 'radar');
+            }
+          } catch(err) {}
+        });
+
+        adminRealtimeGpsSSE.addEventListener('location_deleted', (e) => {
+          try {
+            const data = JSON.parse(e.data);
+            if (data && data.deviceId) {
+              trackedDevicesData = trackedDevicesData.filter(d => d.deviceId !== data.deviceId);
+              updateGpsStats(trackedDevicesData);
+              if (currentAdminView === 'map') {
+                renderMapMarkers(trackedDevicesData);
+                renderTrackedDevicesTable(trackedDevicesData);
+              }
+            }
+          } catch(err) {}
+        });
+      } catch(e) {}
+    }
+
+    // Background auto-refresh for GPS locations every 15 seconds when on map tab
+    setInterval(() => {
+      if (currentAdminView === 'map') {
+        loadTrackedLocations();
+      }
+    }, 15000);
+
+    function formatLastSeenTime(isoStr) {
+      try {
+        const d = new Date(isoStr);
+        const diffSec = Math.floor((Date.now() - d.getTime()) / 1000);
+        if (diffSec < 60) return 'Baru saja';
+        if (diffSec < 3600) return `${Math.floor(diffSec / 60)} menit lalu`;
+        if (diffSec < 86400) return `${Math.floor(diffSec / 3600)} jam lalu`;
+        return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+      } catch (e) {
+        return isoStr;
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
     }
   </script>
 

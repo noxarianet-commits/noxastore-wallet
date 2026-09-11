@@ -1,120 +1,248 @@
 const crypto = require('crypto');
 const https = require('https');
-const axios = require('axios');
+const http = require('http');
 const QRCode = require('qrcode');
 
-// Paksa IPv4 agar selalu cocok dengan IP Whitelist FinCloud
-const httpsAgent = new https.Agent({ family: 4, keepAlive: true });
-
 /**
- * FinCloud Dynamic QRIS Service (API v1.0)
- * Khusus menangani:
- * - Pembuatan Tagihan QRIS Dinamis (POST /create_invoice)
- * - Pengecekan Status Pembayaran (POST /cek_status)
- * - Pembatalan Invoice (POST /cancel_invoice)
- * - Signature HMAC-SHA256: hash_hmac('sha256', reff_id + ':' + nominal, apikey)
+ * FinCloud Dynamic QRIS Service
+ * Dokumentasi Resmi: https://fincloud.my.id/docs
+ * 
+ * Standar Komunikasi:
+ * - Host: fincloud.my.id (Port 443)
+ * - Jaringan: Wajib IPv4 (family: 4) agar terverifikasi oleh IP Whitelist FinCloud
+ * - Content-Type: application/x-www-form-urlencoded
+ * - Signature create_invoice: MD5(apikey + nominal + reff_id)
+ * - Signature cek_status: MD5(apikey + reff_id)
+ * - Signature cancel_invoice: MD5(apikey + reff_id)
  */
 class FinCloudQrisService {
   constructor(config = {}) {
-    this.baseUrl = (config.baseUrl || process.env.FINCLOUD_BASE_URL || 'https://api.fincloud.my.id/v1').replace(/\/+$/, '');
-    this.apiKey = config.apiKey || process.env.FINCLOUD_API_KEY || 'fc_live_69d5157fed81422028659ee9fb24241a';
+    let rawBaseUrl = (config.baseUrl || process.env.FINCLOUD_BASE_URL || 'https://fincloud.my.id').trim();
+    
+    // Normalisasi: jika base URL mengandung api.fincloud.my.id, ganti ke fincloud.my.id
+    if (rawBaseUrl.includes('api.fincloud.my.id')) {
+      rawBaseUrl = 'https://fincloud.my.id';
+    }
+    this.baseUrl = rawBaseUrl.replace(/\/+$/, '');
+    this.apiKey = (config.apiKey || process.env.FINCLOUD_API_KEY || 'fc_live_69d5157fed81422028659ee9fb24241a').trim();
 
-    console.log(`[FinCloud QRIS] Service initialized. Base URL: ${this.baseUrl}, API Key: ${this.apiKey ? (this.apiKey.substring(0, 10) + '...') : 'NOT SET'}`);
+    // Daftar kandidat path untuk endpoint invoice
+    this.invoiceEndpoints = [
+      '/api/create_invoice',
+      '/create_invoice'
+    ];
+
+    // Daftar kandidat path untuk cek status
+    this.statusEndpoints = [
+      '/api/cek_status',
+      '/cek_status'
+    ];
+
+    // Daftar kandidat path untuk cancel invoice
+    this.cancelEndpoints = [
+      '/api/cancel_invoice',
+      '/cancel_invoice'
+    ];
+
+    console.log(`[FinCloud QRIS] Service diinisialisasi. Base URL: ${this.baseUrl}, API Key: ${this.apiKey ? (this.apiKey.substring(0, 10) + '...') : 'NOT SET'}`);
   }
 
   /**
-   * Menghasilkan signature HMAC-SHA256 sesuai standar FinCloud:
-   * hash_hmac('sha256', reff_id + ':' + nominal, apikey)
-   * @param {string} reffId - ID referensi unik tagihan
-   * @param {number|string} nominal - Nominal pokok tagihan
-   * @returns {string} Hexadecimal signature hash
+   * Helper kalkulasi hash MD5 sesuai spesifikasi FinCloud
+   * @param {string} str
+   * @returns {string} Hexadecimal lowercase
+   */
+  md5(str) {
+    return crypto.createHash('md5').update(String(str)).digest('hex');
+  }
+
+  /**
+   * Helper backward compatibility: Signature HMAC jika sewaktu-waktu dibutuhkan
+   * @param {string} reffId
+   * @param {number|string} nominal
+   * @returns {string} Hexadecimal signature
    */
   generateSignature(reffId, nominal) {
-    const payload = `${reffId}:${nominal}`;
-    return crypto.createHmac('sha256', this.apiKey).update(payload).digest('hex');
+    return this.md5(`${this.apiKey}${nominal}${reffId}`);
   }
 
   /**
-   * Helper internal untuk HTTP request JSON ke FinCloud API v1.0
-   * Memaksa IPv4 via httpsAgent agar cocok dengan IP Whitelist FinCloud
-   * @private
+   * Helper request HTTP POST dengan form-urlencoded dan IPv4 forcing
+   * @param {string} endpointPath - path misal '/api/create_invoice'
+   * @param {object} params - parameter key-value
+   * @param {number} timeoutMs - batas waktu request dalam ms
+   * @returns {Promise<{statusCode: number, data: object, raw: string}>}
    */
-  async _request(endpoint, payload = {}) {
-    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : '/' + endpoint;
-    const url = `${this.baseUrl}${cleanEndpoint}`;
+  sendFormRequest(endpointPath, params, timeoutMs = 20000) {
+    return new Promise((resolve, reject) => {
+      const fullUrl = `${this.baseUrl}${endpointPath.startsWith('/') ? endpointPath : '/' + endpointPath}`;
+      const urlObj = new URL(fullUrl);
+      const postData = new URLSearchParams(params).toString();
+      const isHttps = urlObj.protocol === 'https:';
+      const transport = isHttps ? https : http;
 
-    const headers = {
-      'Authorization': `Bearer ${this.apiKey}`,
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    };
+      const options = {
+        hostname: urlObj.hostname,
+        port: urlObj.port || (isHttps ? 443 : 80),
+        path: urlObj.pathname + urlObj.search,
+        method: 'POST',
+        family: 4, // Wajib IPv4 agar sesuai dengan Whitelist FinCloud
+        timeout: timeoutMs,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Length': Buffer.byteLength(postData),
+          'Accept': 'application/json, text/plain, */*',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) NoxaWallet/1.0'
+        }
+      };
 
-    const bodyData = {
-      apikey: this.apiKey,
-      ...payload
-    };
-
-    try {
-      const res = await axios.post(url, bodyData, {
-        headers,
-        timeout: 20000,
-        httpsAgent
+      const req = transport.request(options, (res) => {
+        let responseBody = '';
+        res.on('data', (chunk) => { responseBody += chunk; });
+        res.on('end', () => {
+          try {
+            const parsed = JSON.parse(responseBody);
+            resolve({ statusCode: res.statusCode, data: parsed, raw: responseBody });
+          } catch (jsonErr) {
+            resolve({ statusCode: res.statusCode, error: 'NON_JSON', raw: responseBody });
+          }
+        });
       });
 
-      const parsed = res.data;
-      return {
-        httpCode: res.status,
-        ...(typeof parsed === 'object' && parsed !== null ? parsed : { raw: parsed })
-      };
-    } catch (err) {
-      if (err.response && err.response.data) {
-        const errData = err.response.data;
-        return {
-          httpCode: err.response.status,
-          ...(typeof errData === 'object' && errData !== null ? errData : { raw: errData })
-        };
-      }
-      console.error(`[FinCloud QRIS Error] [${cleanEndpoint}]:`, err.message);
-      throw err;
-    }
+      req.on('timeout', () => {
+        req.destroy();
+        reject(new Error(`Timeout menghubungi FinCloud (${fullUrl}) setelah ${timeoutMs / 1000} detik`));
+      });
+
+      req.on('error', (err) => {
+        reject(err);
+      });
+
+      req.write(postData);
+      req.end();
+    });
   }
 
   /**
-   * 1. Buat Tagihan Dynamic QRIS baru
-   * Endpoint: POST /create_invoice
-   * @param {number|string} nominal - Nominal pokok tagihan (Min Rp 1.000)
-   * @param {string} reffId - ID referensi invoice unik dari sistem kita
-   * @returns {Promise<object>} Detail invoice lengkap dari FinCloud
+   * Mengunduh gambar QR dari URL FinCloud dan mengonversi menjadi data:image/png;base64,...
+   * Menghindari masalah CORS canvas saat user menekan 'Unduh QRIS' di frontend.
+   * @param {string} imageUrl
+   * @returns {Promise<string|null>} Base64 data URL
+   */
+  async fetchImageAsBase64(imageUrl) {
+    if (!imageUrl || typeof imageUrl !== 'string' || !imageUrl.startsWith('http')) {
+      return null;
+    }
+
+    return new Promise((resolve) => {
+      try {
+        const urlObj = new URL(imageUrl);
+        const isHttps = urlObj.protocol === 'https:';
+        const transport = isHttps ? https : http;
+
+        const req = transport.get(imageUrl, { family: 4, timeout: 8000 }, (res) => {
+          if (res.statusCode < 200 || res.statusCode >= 300) {
+            return resolve(null);
+          }
+          const chunks = [];
+          res.on('data', (c) => chunks.push(c));
+          res.on('end', () => {
+            const buffer = Buffer.concat(chunks);
+            const contentType = res.headers['content-type'] || 'image/png';
+            resolve(`data:${contentType};base64,${buffer.toString('base64')}`);
+          });
+        });
+
+        req.on('error', () => resolve(null));
+        req.on('timeout', () => {
+          req.destroy();
+          resolve(null);
+        });
+      } catch (e) {
+        resolve(null);
+      }
+    });
+  }
+
+  /**
+   * 1. Buat Tagihan Dynamic QRIS FinCloud
+   * Endpoint: POST /api/create_invoice
+   * Payload: apikey, nominal, reff_id, signature (MD5)
+   * 
+   * @param {number|string} nominal - Nominal deposit (minimal 1000)
+   * @param {string} reffId - ID referensi unik internal
+   * @returns {Promise<object>} Detail tagihan invoice QRIS
    */
   async createInvoice(nominal, reffId) {
     const numNominal = Math.ceil(parseInt(nominal, 10));
     if (isNaN(numNominal) || numNominal < 1000) {
-      throw new Error('Nominal tagihan minimal Rp 1.000.');
+      throw new Error('Nominal tagihan top up minimal Rp 1.000.');
     }
 
     const cleanReffId = String(reffId || `TOPUP_${Date.now()}`).trim();
-    const signature = this.generateSignature(cleanReffId, numNominal);
+    // Signature resmi FinCloud: MD5(apikey + nominal + reff_id)
+    const signature = this.md5(`${this.apiKey}${numNominal}${cleanReffId}`);
 
-    console.log(`[FinCloud QRIS] Creating invoice: reff_id=${cleanReffId}, nominal=${numNominal}`);
+    console.log(`[FinCloud QRIS] Membuat invoice: reff_id=${cleanReffId}, nominal=Rp ${numNominal.toLocaleString('id-ID')}, signature=${signature.substring(0, 10)}...`);
 
-    const res = await this._request('/create_invoice', {
-      nominal: numNominal,
+    const payload = {
+      apikey: this.apiKey,
+      nominal: String(numNominal),
       reff_id: cleanReffId,
       signature: signature
-    });
+    };
 
-    if (!res) {
-      throw new Error('Gagal mendapatkan respon dari server FinCloud QRIS.');
+    let lastError = null;
+    let apiResult = null;
+
+    // Coba endpoint resmi terlebih dahulu (/api/create_invoice lalu /create_invoice)
+    for (const endpoint of this.invoiceEndpoints) {
+      try {
+        console.log(`[FinCloud QRIS] Mencoba endpoint: ${this.baseUrl}${endpoint}`);
+        const result = await this.sendFormRequest(endpoint, payload, 20000);
+
+        if (result.data) {
+          apiResult = result.data;
+          console.log(`[FinCloud QRIS] Respon dari ${endpoint}:`, JSON.stringify(apiResult));
+          break;
+        } else if (result.statusCode === 404) {
+          console.warn(`[FinCloud QRIS] Endpoint ${endpoint} mengembalikan 404, mencoba endpoint alternatif...`);
+          continue;
+        } else if (result.raw) {
+          console.warn(`[FinCloud QRIS] Respon non-JSON dari ${endpoint}:`, result.raw.substring(0, 120));
+        }
+      } catch (err) {
+        lastError = err;
+        console.error(`[FinCloud QRIS] Gagal pada ${endpoint}:`, err.message);
+      }
     }
 
-    // Ambil data payload dari berbagai kemungkinan struktur respon FinCloud
-    const resData = res.data || res;
-    const rawQrString = resData.qr_string || resData.qris_string || resData.qr_content || resData.payload || '';
-    let qrUrl = resData.qr_url || resData.qr_image || resData.invoice_url || '';
-    let qrBase64 = resData.qr_base64 || '';
+    if (!apiResult) {
+      throw lastError || new Error('Gagal menghubungi server FinCloud QRIS (tidak ada respon valid).');
+    }
 
-    // Jika FinCloud mengembalikan string QRIS mentah tanpa gambar base64, generate QR lokal
-    if (rawQrString && !qrBase64) {
+    // Periksa status respon FinCloud
+    const isSuccess = apiResult.status === true || apiResult.success === true || apiResult.status === 'success';
+    if (!isSuccess) {
+      const errorMsg = apiResult.msg || apiResult.message || apiResult.error || 'Ditolak oleh FinCloud';
+      console.error(`❌ [FinCloud QRIS Ditolak]: ${errorMsg}`);
+      throw new Error(errorMsg);
+    }
+
+    // Ekstraksi data invoice FinCloud
+    const resData = (apiResult.data && typeof apiResult.data === 'object') ? apiResult.data : apiResult;
+
+    const totalAmount = Math.ceil(
+      Number(resData.nominal_total || resData.total_bayar || resData.total_amount || resData.amount || numNominal)
+    );
+    const uniqueCode = totalAmount > numNominal ? (totalAmount - numNominal) : (resData.kode_unik || 0);
+
+    const rawQrString = String(resData.qr_string || resData.qris_string || resData.payload || resData.qr_content || '').trim();
+    let qrUrl = String(resData.qr_url || resData.qr_image || resData.invoice_url || '').trim();
+    let qrBase64 = String(resData.qr_base64 || '').trim();
+
+    // 1. Jika string QRIS (EMVCo payload) dikembalikan, generate Base64 langsung
+    if (rawQrString) {
       try {
         qrBase64 = await QRCode.toDataURL(rawQrString, {
           errorCorrectionLevel: 'M',
@@ -127,15 +255,29 @@ class FinCloudQrisService {
       }
     }
 
-    const totalAmount = Math.ceil(
-      Number(resData.nominal_total || resData.total_bayar || resData.total_amount || resData.amount || numNominal)
-    );
-    const uniqueCode = totalAmount > numNominal ? (totalAmount - numNominal) : (resData.kode_unik || 0);
+    // 2. Jika qr_url berupa link gambar online dan qr_base64 belum ada, unduh server-side via IPv4
+    if (!qrBase64 && qrUrl && qrUrl.startsWith('http')) {
+      try {
+        const fetchedBase64 = await this.fetchImageAsBase64(qrUrl);
+        if (fetchedBase64) {
+          qrBase64 = fetchedBase64;
+          console.log('[FinCloud QRIS] Berhasil mengunduh gambar QR ke Base64 (CORS-safe).');
+        }
+      } catch (fetchErr) {
+        console.warn('[FinCloud QRIS] Gagal mengunduh gambar QR ke Base64, menggunakan direct URL:', fetchErr.message);
+      }
+    }
+
+    // Pastikan salah satu format gambar tersedia
+    const finalQrImage = qrBase64 || qrUrl;
+    if (!finalQrImage && !rawQrString) {
+      throw new Error(`FinCloud tidak mengembalikan data QRIS yang valid: ${JSON.stringify(apiResult)}`);
+    }
 
     return {
-      success: res.status === true || res.success === true || res.httpCode === 200,
-      status: res.status === true || res.success === true ? 'PENDING' : 'FAILED',
-      message: res.msg || res.message || 'Invoice berhasil dibuat',
+      success: true,
+      status: 'PENDING',
+      message: apiResult.msg || apiResult.message || 'Invoice FinCloud Dynamic QRIS berhasil dibuat',
       reff_id: cleanReffId,
       invoice: resData.id_depo || resData.invoice_id || resData.invoice || cleanReffId,
       nominal_awal: numNominal,
@@ -143,18 +285,21 @@ class FinCloudQrisService {
       total_amount: totalAmount,
       amount: totalAmount,
       qr_string: rawQrString,
-      qr_url: qrUrl || qrBase64,
-      qr_base64: qrBase64 || qrUrl,
+      qr_url: qrUrl || finalQrImage,
+      qr_base64: finalQrImage,
+      payment_link: resData.invoice_url || qrUrl || '',
       expired_at: resData.expired_at || resData.kadaluarsa || new Date(Date.now() + 30 * 60 * 1000).toISOString(),
-      raw: res
+      raw: apiResult
     };
   }
 
   /**
-   * 2. Pengecekan Status Pembayaran Tagihan QRIS
-   * Endpoint: POST /cek_status
-   * @param {string} reffId - ID referensi invoice kita
-   * @returns {Promise<object>} Status terkini dari FinCloud
+   * 2. Pengecekan Status Pembayaran Tagihan QRIS Real-Time
+   * Endpoint: POST /api/cek_status
+   * Payload: apikey, reff_id, signature (MD5)
+   * 
+   * @param {string} reffId - ID referensi order kita
+   * @returns {Promise<{success: boolean, status: string, rawStatus: string, reff_id: string, amount: number, data: object, raw: object}>}
    */
   async checkInvoiceStatus(reffId) {
     const cleanReffId = String(reffId || '').trim();
@@ -162,12 +307,38 @@ class FinCloudQrisService {
       throw new Error('reff_id wajib diisi untuk cek status.');
     }
 
-    const res = await this._request('/cek_status', {
-      reff_id: cleanReffId
-    });
+    // Signature cek_status FinCloud: MD5(apikey + reff_id)
+    const signature = this.md5(`${this.apiKey}${cleanReffId}`);
 
-    const resData = res.data || res;
-    const rawStatus = String(resData.status || res.status_transaksi || res.status || '').toLowerCase();
+    const payload = {
+      apikey: this.apiKey,
+      reff_id: cleanReffId,
+      signature: signature
+    };
+
+    let apiResult = null;
+    let lastError = null;
+
+    for (const endpoint of this.statusEndpoints) {
+      try {
+        const result = await this.sendFormRequest(endpoint, payload, 15000);
+        if (result.data) {
+          apiResult = result.data;
+          break;
+        } else if (result.statusCode === 404) {
+          continue;
+        }
+      } catch (err) {
+        lastError = err;
+      }
+    }
+
+    if (!apiResult) {
+      throw lastError || new Error('Gagal mengecek status ke FinCloud.');
+    }
+
+    const resData = (apiResult.data && typeof apiResult.data === 'object') ? apiResult.data : apiResult;
+    const rawStatus = String(resData.status || apiResult.status_transaksi || apiResult.status || '').toLowerCase();
 
     let normalizedStatus = 'PENDING';
     if (['success', 'paid', 'berhasil', 'lunas', 'completed'].includes(rawStatus)) {
@@ -183,17 +354,16 @@ class FinCloudQrisService {
       status: normalizedStatus,
       rawStatus: rawStatus,
       reff_id: cleanReffId,
-      amount: resData.nominal_total || resData.total_bayar || resData.nominal || resData.amount || 0,
+      amount: Number(resData.nominal_total || resData.total_bayar || resData.nominal || resData.amount || 0),
       data: resData,
-      raw: res
+      raw: apiResult
     };
   }
 
   /**
-   * 3. Batalkan Tagihan QRIS yang belum terbayar
-   * Endpoint: POST /cancel_invoice (alias: /qris/cancel)
-   * @param {string} reffId - ID referensi invoice yang ingin dibatalkan
-   * @returns {Promise<object>}
+   * 3. Batalkan Tagihan QRIS
+   * Endpoint: POST /api/cancel_invoice
+   * @param {string} reffId
    */
   async cancelInvoice(reffId) {
     const cleanReffId = String(reffId || '').trim();
@@ -201,9 +371,40 @@ class FinCloudQrisService {
       throw new Error('reff_id wajib diisi untuk cancel invoice.');
     }
 
-    return await this._request('/cancel_invoice', {
-      reff_id: cleanReffId
-    });
+    const signature = this.md5(`${this.apiKey}${cleanReffId}`);
+    const payload = {
+      apikey: this.apiKey,
+      reff_id: cleanReffId,
+      signature: signature
+    };
+
+    for (const endpoint of this.cancelEndpoints) {
+      try {
+        const result = await this.sendFormRequest(endpoint, payload, 15000);
+        if (result.data) {
+          return result.data;
+        }
+      } catch (err) {
+        // Continue to fallback
+      }
+    }
+
+    return { status: false, msg: 'Endpoint cancel_invoice tidak merespon' };
+  }
+
+  /**
+   * 4. Cek Saldo FinCloud
+   * Endpoint: POST /api/cek_saldo
+   */
+  async checkBalance() {
+    try {
+      const result = await this.sendFormRequest('/api/cek_saldo', {
+        apikey: this.apiKey
+      }, 15000);
+      return result.data || result;
+    } catch (err) {
+      return { status: false, msg: err.message };
+    }
   }
 }
 

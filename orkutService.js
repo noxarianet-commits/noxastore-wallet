@@ -139,8 +139,8 @@ class OrkutService {
           const selisih = currentQrisBalance - this.lastQrisBalance;
           console.log(`💰 [Orkut Mutation] Penambahan saldo QRIS terdeteksi: Rp ${selisih.toLocaleString('id-ID')}`);
 
-          // Find pending topup matching total_amount
-          const matchedTx = topups.find(t => (t.status === 'pending' || t.status === 'PENDING') && (t.total_amount === selisih || t.amount === selisih));
+          // Find pending topup matching total_amount (khusus non-FinCloud)
+          const matchedTx = topups.find(t => t.provider !== 'FINCLOUD' && t.payment_code !== 'QRIS_FINCLOUD' && (t.status === 'pending' || t.status === 'PENDING') && (t.total_amount === selisih || t.amount === selisih));
 
           if (matchedTx) {
             matchedTx.status = 'paid';
