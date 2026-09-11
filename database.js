@@ -313,6 +313,9 @@ async function initDb() {
       updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
+  try { await run('ALTER TABLE ppob_visibility ADD COLUMN markup INTEGER DEFAULT 0'); } catch(e) {}
+  try { await run('ALTER TABLE ppob_visibility ADD COLUMN category TEXT'); } catch(e) {}
+  try { await run('ALTER TABLE ppob_visibility ADD COLUMN brand TEXT'); } catch(e) {}
 
   await run(`
     CREATE TABLE IF NOT EXISTS chat_messages (
@@ -1750,13 +1753,74 @@ async function getGlobalPpobMarkup() {
   return 1000;
 }
 
-async function bulkSetPpobMarkup(skus, markup, isAll = false) {
-  const numMarkup = Math.max(0, Math.ceil(Number(markup) || 0));
-  const isGlobalApply = isAll || !skus || skus === 'ALL' || (Array.isArray(skus) && skus.length === 0);
+async function getPpobCategoryMarkups() {
+  const val = await getConfig('ppob_category_markups');
+  if (val && typeof val === 'object') return val;
+  if (typeof val === 'string') {
+    try { return JSON.parse(val); } catch (e) {}
+  }
+  const configMap = readJSONFile(CONFIG_FILE, {});
+  if (configMap.ppob_category_markups && typeof configMap.ppob_category_markups === 'object') {
+    return configMap.ppob_category_markups;
+  }
+  return {};
+}
 
-  // 1. Always store global markup in database config table & config.json
+async function setPpobCategoryMarkup(category, markup) {
+  if (!category) return {};
+  const map = await getPpobCategoryMarkups();
+  map[category] = Math.max(0, Math.ceil(Number(markup) || 0));
+  await setConfig('ppob_category_markups', map);
+  return map;
+}
+
+async function getPpobBrandMarkups() {
+  const val = await getConfig('ppob_brand_markups');
+  if (val && typeof val === 'object') return val;
+  if (typeof val === 'string') {
+    try { return JSON.parse(val); } catch (e) {}
+  }
+  const configMap = readJSONFile(CONFIG_FILE, {});
+  if (configMap.ppob_brand_markups && typeof configMap.ppob_brand_markups === 'object') {
+    return configMap.ppob_brand_markups;
+  }
+  return {};
+}
+
+async function setPpobBrandMarkup(brand, markup) {
+  if (!brand) return {};
+  const map = await getPpobBrandMarkups();
+  const bKey = String(brand).toUpperCase().trim();
+  map[bKey] = Math.max(0, Math.ceil(Number(markup) || 0));
+  await setConfig('ppob_brand_markups', map);
+  return map;
+}
+
+async function bulkSetPpobMarkup(optionsOrSkus, markupParam, isAllParam = false) {
+  let skus = optionsOrSkus;
+  let markup = markupParam;
+  let isAll = isAllParam;
+  let category = '';
+  let brand = '';
+
+  if (typeof optionsOrSkus === 'object' && !Array.isArray(optionsOrSkus) && optionsOrSkus !== null) {
+    skus = optionsOrSkus.skus;
+    markup = optionsOrSkus.markup;
+    isAll = optionsOrSkus.isAll || optionsOrSkus.applyAll;
+    category = optionsOrSkus.category || '';
+    brand = optionsOrSkus.brand || '';
+  }
+
+  const numMarkup = Math.max(0, Math.ceil(Number(markup) || 0));
+  const isGlobalApply = isAll === true || skus === 'ALL';
+
+  // 1. Store configuration based on target scope
   if (isGlobalApply) {
     await setConfig('global_ppob_markup', numMarkup);
+  } else if (brand) {
+    await setPpobBrandMarkup(brand, numMarkup);
+  } else if (category && category !== 'SEMUA') {
+    await setPpobCategoryMarkup(category, numMarkup);
   }
 
   const visMap = await getPpobVisibilityMap();
@@ -1780,8 +1844,8 @@ async function bulkSetPpobMarkup(skus, markup, isAll = false) {
     const numSku = strSku.replace(/^SKL-/, '');
     const existing = visMap[sklSku] || visMap[numSku] || visMap[strSku] || {};
     const newActive = existing.active !== false;
-    const newCat = existing.category || '';
-    const newBrand = existing.brand || '';
+    const newCat = category || existing.category || '';
+    const newBrand = brand || existing.brand || '';
 
     const entry = {
       sku: sklSku,
@@ -1800,15 +1864,18 @@ async function bulkSetPpobMarkup(skus, markup, isAll = false) {
   // 2. Persist to ppob_visibility.json
   writeJSONFile(PPOB_FILE, jsonMap);
 
-  // 3. Persist to SQLite in an atomic, high-performance transaction
+  // 3. Persist to SQLite
   if (sqlite3) {
     try {
       if (isGlobalApply) {
         await run('UPDATE ppob_visibility SET markup = ?, updatedAt = CURRENT_TIMESTAMP', [numMarkup]);
+      } else if (brand) {
+        await run('UPDATE ppob_visibility SET markup = ?, updatedAt = CURRENT_TIMESTAMP WHERE UPPER(brand) = ?', [numMarkup, String(brand).toUpperCase().trim()]);
+      } else if (category && category !== 'SEMUA') {
+        await run('UPDATE ppob_visibility SET markup = ?, updatedAt = CURRENT_TIMESTAMP WHERE category = ?', [numMarkup, category]);
       }
 
       if (itemsToSave.length > 0) {
-        await run('BEGIN TRANSACTION;');
         for (const item of itemsToSave) {
           await run(`
             INSERT INTO ppob_visibility (sku, active, category, brand, markup, updatedAt)
@@ -1821,17 +1888,18 @@ async function bulkSetPpobMarkup(skus, markup, isAll = false) {
               updatedAt = CURRENT_TIMESTAMP;
           `, [item.sku, item.active ? 1 : 0, item.category, item.brand, item.markup]);
         }
-        await run('COMMIT;');
       }
     } catch (e) {
-      await run('ROLLBACK;').catch(() => {});
       console.error('[DB Error] bulkSetPpobMarkup SQLite error:', e.message);
     }
   }
 
   return {
-    updatedCount: itemsToSave.length > 0 ? itemsToSave.length : (isGlobalApply ? 'ALL' : 0),
-    markup: numMarkup
+    updatedCount: itemsToSave.length > 0 ? itemsToSave.length : (isGlobalApply ? 'ALL' : targetList.length),
+    markup: numMarkup,
+    scope: brand ? 'brand' : (category && category !== 'SEMUA' ? 'category' : 'all'),
+    category,
+    brand
   };
 }
 
@@ -2325,6 +2393,10 @@ module.exports = {
   setPpobVisibility,
   bulkSetPpobMarkup,
   getGlobalPpobMarkup,
+  getPpobCategoryMarkups,
+  setPpobCategoryMarkup,
+  getPpobBrandMarkups,
+  setPpobBrandMarkup,
   savePushSubscription,
   getPushSubscriptions,
   removePushSubscription,

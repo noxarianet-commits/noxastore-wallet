@@ -7765,7 +7765,7 @@
         // Secure Admin Login via Backend
         const cleanUser = user.trim();
         const cleanPass = password.trim();
-        if (cleanUser === 'andika123' || cleanUser === 'admin') {
+        if (!cleanUser.match(/^[0-9+]{8,}$/)) {
           try {
             const adminRes = await originalFetch('/admin/login', {
               method: 'POST',

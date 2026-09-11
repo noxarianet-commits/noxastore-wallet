@@ -24,7 +24,7 @@ class FinCloudQrisService {
       rawBaseUrl = 'https://fincloud.my.id';
     }
     this.baseUrl = rawBaseUrl.replace(/\/+$/, '');
-    this.apiKey = (config.apiKey || process.env.FINCLOUD_API_KEY || 'fc_live_69d5157fed81422028659ee9fb24241a').trim();
+    this.apiKey = (config.apiKey || process.env.FINCLOUD_API_KEY || 'fc_live_038b7a0ff8fcb9362adfd931abe2dc94').trim();
 
     // Daftar kandidat path untuk endpoint invoice
     this.invoiceEndpoints = [

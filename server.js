@@ -943,7 +943,10 @@ app.get('/admin/credentials', requireAdminAuth, async (req, res) => {
 // POST /admin/change-credentials — CRUD Ganti Username & Password Admin di SQLite
 app.post('/admin/change-credentials', requireAdminAuth, async (req, res) => {
   try {
-    const { oldUsername, oldPassword, newUsername, newPassword, fullname } = req.body;
+    let { oldUsername, oldPassword, newUsername, newPassword, fullname } = req.body;
+    if (!oldUsername && req.adminUser?.username) {
+      oldUsername = req.adminUser.username;
+    }
     const result = await db.updateAdminCredentials(oldUsername, oldPassword, newUsername, newPassword, fullname);
 
     if (!result.success) {
@@ -2170,7 +2173,7 @@ app.post(['/webhook/fincloud', '/api/webhook/fincloud', '/api/fincloud/webhook']
     }
 
     // Validate FinCloud signature (supports both MD5 and HMAC-SHA256 standards)
-    const fincloudApiKey = (process.env.FINCLOUD_API_KEY || 'fc_live_69d5157fed81422028659ee9fb24241a').trim();
+    const fincloudApiKey = (process.env.FINCLOUD_API_KEY || 'fc_live_038b7a0ff8fcb9362adfd931abe2dc94').trim();
     const incomingSig = String(req.headers['x-fincloud-signature'] || req.headers['x-signature'] || payload.signature || '').trim().toLowerCase();
 
     if (incomingSig && fincloudApiKey) {
@@ -2577,6 +2580,8 @@ app.get('/api/ppob/products', async (req, res) => {
     const result = await sekalipayService.getItems();
     const visMap = await db.getPpobVisibilityMap();
     const globalMarkup = await db.getGlobalPpobMarkup();
+    const catMarkups = await db.getPpobCategoryMarkups();
+    const brandMarkups = await db.getPpobBrandMarkups();
 
     if (result && (result.success || Array.isArray(result.data))) {
       const rawItems = Array.isArray(result.data) ? result.data : [];
@@ -2605,9 +2610,21 @@ app.get('/api/ppob/products', async (req, res) => {
         const active = vis ? vis.active !== false : true;
         if (!active) continue;
 
-        const markup = (vis && vis.markup !== undefined && vis.markup !== null)
-          ? Math.max(0, Math.ceil(Number(vis.markup)))
-          : globalMarkup;
+        // 4-Tier Hierarchy: Specific SKU > Brand > Category > Global
+        let markup = globalMarkup;
+        const catKey = cls.mainCategory || item.category || '';
+        const brandKey = (cls.brand || item.brand || '').toUpperCase().trim();
+
+        if (catMarkups && catMarkups[catKey] !== undefined) {
+          markup = Math.max(0, Math.ceil(Number(catMarkups[catKey]) || 0));
+        }
+        if (brandKey && brandMarkups && brandMarkups[brandKey] !== undefined) {
+          markup = Math.max(0, Math.ceil(Number(brandMarkups[brandKey]) || 0));
+        }
+        if (vis && vis.markup !== undefined && vis.markup !== null) {
+          markup = Math.max(0, Math.ceil(Number(vis.markup)));
+        }
+
         const basePrice = Math.ceil(Number(item.price) || 0);
 
         formatted.push({
@@ -2646,6 +2663,8 @@ app.get('/admin/ppob/products', requireAdminAuth, async (req, res) => {
     }
     const visMap = await db.getPpobVisibilityMap();
     const globalMarkup = await db.getGlobalPpobMarkup();
+    const catMarkups = await db.getPpobCategoryMarkups();
+    const brandMarkups = await db.getPpobBrandMarkups();
 
     const catTarget = (category || '').trim();
     const brandTarget = (brand || '').trim();
@@ -2669,9 +2688,22 @@ app.get('/admin/ppob/products', requireAdminAuth, async (req, res) => {
       const numSku = String(item.id);
       const rawSku = String(item.sku || '');
       const vis = visMap[itemSku] || visMap[numSku] || (rawSku ? visMap[rawSku] : undefined);
-      const markup = (vis && vis.markup !== undefined && vis.markup !== null)
-        ? Math.max(0, Math.ceil(Number(vis.markup)))
-        : globalMarkup;
+
+      // 4-Tier Hierarchy: Specific SKU > Brand > Category > Global
+      let markup = globalMarkup;
+      const catKey = cls.mainCategory || item.category || '';
+      const brandKey = (cls.brand || item.brand || '').toUpperCase().trim();
+
+      if (catMarkups && catMarkups[catKey] !== undefined) {
+        markup = Math.max(0, Math.ceil(Number(catMarkups[catKey]) || 0));
+      }
+      if (brandKey && brandMarkups && brandMarkups[brandKey] !== undefined) {
+        markup = Math.max(0, Math.ceil(Number(brandMarkups[brandKey]) || 0));
+      }
+      if (vis && vis.markup !== undefined && vis.markup !== null) {
+        markup = Math.max(0, Math.ceil(Number(vis.markup)));
+      }
+
       const basePrice = Math.ceil(Number(item.price) || 0);
 
       products.push({
@@ -2690,7 +2722,13 @@ app.get('/admin/ppob/products', requireAdminAuth, async (req, res) => {
     }
 
     products.sort((a, b) => a.selling_price - b.selling_price);
-    res.json({ success: true, products, globalMarkup });
+    res.json({
+      success: true,
+      products,
+      globalMarkup,
+      categoryMarkups: catMarkups,
+      brandMarkups
+    });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -2728,17 +2766,16 @@ app.post('/admin/ppob/visibility', requireAdminAuth, handleUpdatePpobProduct);
 
 // Admin Bulk Markup Update (POST /admin/ppob/products/bulk-markup & /admin/ppob/markup/bulk)
 const handleBulkPpobMarkup = async (req, res) => {
-  const { skus, markup, applyAll, category, brand } = req.body;
+  const { skus, markup, applyAll, scope, category, brand } = req.body;
   const numMarkup = Math.max(0, Math.ceil(Number(markup) || 0));
 
   try {
-    const isApplyAll = applyAll === true || applyAll === 'true' || skus === 'ALL' || (!Array.isArray(skus) && !category && !brand);
+    const isApplyAll = scope === 'all' || applyAll === true || applyAll === 'true' || skus === 'ALL' || (!Array.isArray(skus) && !category && !brand);
 
     if (isApplyAll) {
-      // 1. Store global markup in database config table & config.json
+      // 1. Store global markup
       await db.setConfig('global_ppob_markup', numMarkup);
 
-      // 2. Populate all SekaliPay products so every catalog SKU is explicitly written to both SQLite and ppob_visibility.json
       let allSkus = [];
       try {
         const result = await sekalipayService.getItems();
@@ -2747,24 +2784,27 @@ const handleBulkPpobMarkup = async (req, res) => {
         }
       } catch (e) {}
 
-      const updated = await db.bulkSetPpobMarkup(allSkus.length > 0 ? allSkus : 'ALL', numMarkup, true);
+      const updated = await db.bulkSetPpobMarkup({ skus: allSkus.length > 0 ? allSkus : 'ALL', markup: numMarkup, isAll: true });
 
       return res.json({
         success: true,
-        message: `Markup/Fee Rp ${numMarkup.toLocaleString('id-ID')} berhasil diterapkan dan disimpan untuk SEMUA produk.`,
+        message: `Markup/Fee Rp ${numMarkup.toLocaleString('id-ID')} berhasil diterapkan ke SEMUA produk.`,
         markup: numMarkup,
         globalMarkup: numMarkup,
+        scope: 'all',
         updatedCount: allSkus.length || updated.updatedCount || 'SEMUA'
       });
     }
 
-    // Specific filtered products (e.g. category or brand)
+    // Specific filtered products (Category or Brand or SKU list)
     let targetSkus = Array.isArray(skus) ? skus : [];
-    if (targetSkus.length === 0 && (category || brand)) {
+    const catTarget = (category || '').trim();
+    const brandTarget = (brand || '').trim();
+
+    // If skus list was empty or partial, fetch all matching products from catalog
+    if (targetSkus.length === 0 && (catTarget || brandTarget)) {
       const result = await sekalipayService.getItems();
       if (result && Array.isArray(result.data)) {
-        const catTarget = (category || '').trim();
-        const brandTarget = (brand || '').trim();
         const matched = result.data.filter(item => {
           const cls = classifyPpobProduct(item);
           const fullText = `${item.category} ${item.brand} ${item.name} ${item.sku}`;
@@ -2774,12 +2814,25 @@ const handleBulkPpobMarkup = async (req, res) => {
       }
     }
 
+    const updated = await db.bulkSetPpobMarkup({
+      skus: targetSkus,
+      markup: numMarkup,
+      category: catTarget,
+      brand: brandTarget,
+      isAll: false
+    });
 
-    const updated = await db.bulkSetPpobMarkup(targetSkus, numMarkup);
+    const targetLabel = brandTarget
+      ? `khusus provider/brand "${brandTarget}"`
+      : (catTarget && catTarget !== 'SEMUA' ? `kategori "${catTarget}"` : `${updated.updatedCount} produk`);
+
     return res.json({
       success: true,
-      message: `Markup/Fee Rp ${numMarkup.toLocaleString('id-ID')} berhasil diterapkan ke ${updated.updatedCount} produk.`,
+      message: `Markup/Fee Rp ${numMarkup.toLocaleString('id-ID')} berhasil diterapkan ${targetLabel} (${updated.updatedCount} produk).`,
       markup: numMarkup,
+      scope: brandTarget ? 'brand' : (catTarget ? 'category' : 'skus'),
+      category: catTarget,
+      brand: brandTarget,
       updatedCount: updated.updatedCount
     });
   } catch (err) {

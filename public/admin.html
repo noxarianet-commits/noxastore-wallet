@@ -2078,7 +2078,7 @@
         <!-- Admin Account & Credentials Card (SQLite Database) -->
         <div
           style="background: var(--card-bg); border: 1.5px solid rgba(123, 45, 142, 0.2); padding: 24px; border-radius: 24px; box-shadow: 0 10px 30px rgba(123, 45, 142, 0.06); display: flex; flex-direction: column;">
-          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
             <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(123, 45, 142, 0.1); color: var(--primary); display: flex; align-items: center; justify-content: center;">
               <span class="material-symbols-outlined" style="font-size: 26px;">admin_panel_settings</span>
             </div>
@@ -2089,39 +2089,73 @@
             </div>
           </div>
 
-          <div style="background: rgba(123, 45, 142, 0.05); border: 1px solid rgba(123, 45, 142, 0.15); border-radius: 12px; padding: 10px 14px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
-            <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Username Aktif Saat Ini:</span>
-            <span id="admin-current-display" style="font-family: monospace; font-size: 13px; font-weight: 800; color: var(--primary); background: white; padding: 3px 10px; border-radius: 8px; border: 1px solid rgba(123,45,142,0.2);">andika123</span>
+          <!-- Security Warning Banner -->
+          <div style="background: rgba(234, 88, 12, 0.08); border: 1px solid rgba(234, 88, 12, 0.25); border-radius: 12px; padding: 10px 14px; margin-bottom: 16px; display: flex; align-items: flex-start; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #ea580c; font-size: 20px; flex-shrink: 0; margin-top: 1px;">shield_lock</span>
+            <div style="font-size: 12px; color: #9a3412; line-height: 1.4;">
+              <strong style="font-weight: 700;">Area Sensitif &amp; Terproteksi:</strong> Kredensial ini digunakan untuk autentikasi master database SQLite. Lindungi kerahasiaan username dan kata sandi Anda dari pantauan orang lain.
+            </div>
           </div>
 
-          <form id="admin-credentials-form" onsubmit="handleAdminCredentialsSubmit(event)"
+          <!-- Masked Username Display with Toggle -->
+          <div style="background: rgba(123, 45, 142, 0.05); border: 1px solid rgba(123, 45, 142, 0.15); border-radius: 12px; padding: 10px 14px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
+            <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Username Aktif Saat Ini:</span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span id="admin-current-display" style="font-family: monospace; font-size: 13px; font-weight: 800; color: var(--primary); background: white; padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(123,45,142,0.2); letter-spacing: 1px;">••••••••</span>
+              <button type="button" onclick="toggleAdminUsernameMask()" id="btn-toggle-mask-user" title="Tampilkan / Sembunyikan Username" style="background: white; border: 1px solid var(--border-color); border-radius: 8px; padding: 4px 6px; cursor: pointer; display: flex; align-items: center; color: var(--text-muted);">
+                <span class="material-symbols-outlined" style="font-size: 18px;">visibility_off</span>
+              </button>
+            </div>
+          </div>
+
+          <form id="admin-credentials-form" autocomplete="off" onsubmit="handleAdminCredentialsSubmit(event)"
             style="display: flex; flex-direction: column; gap: 14px; flex: 1;">
             
+            <!-- Hidden dummy fields to prevent aggressive browser password manager autofill -->
+            <input type="text" name="fakeusernameremembered" style="position: absolute; top: -9999px; left: -9999px; opacity: 0;" tabindex="-1" autocomplete="off" />
+            <input type="password" name="fakepasswordremembered" style="position: absolute; top: -9999px; left: -9999px; opacity: 0;" tabindex="-1" autocomplete="off" />
+
             <div class="form-grid form-grid-2col" style="margin-bottom: 0;">
               <div class="form-group">
                 <label style="font-size: 11px; font-weight: 700;">Username Lama</label>
-                <input type="text" id="admin-old-username" required placeholder="Username lama" style="font-size: 13px; padding: 10px 12px;" />
+                <input type="text" id="admin-old-username" autocomplete="new-password" placeholder="Masukkan username lama" style="font-size: 13px; padding: 10px 12px;" />
               </div>
               <div class="form-group">
                 <label style="font-size: 11px; font-weight: 700;">Password Lama</label>
-                <input type="password" id="admin-old-password" required placeholder="Password lama" style="font-size: 13px; padding: 10px 12px;" />
+                <div style="position: relative; display: flex; align-items: center;">
+                  <input type="password" id="admin-old-password" required autocomplete="new-password" placeholder="Masukkan password lama" style="font-size: 13px; padding: 10px 38px 10px 12px; width: 100%;" />
+                  <button type="button" onclick="togglePasswordVisibility('admin-old-password', this)" title="Tampilkan/sembunyikan password" style="position: absolute; right: 8px; background: transparent; border: none; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; padding: 4px;">
+                    <span class="material-symbols-outlined" style="font-size: 18px;">visibility_off</span>
+                  </button>
+                </div>
               </div>
             </div>
 
             <div class="form-grid form-grid-2col" style="margin-bottom: 0;">
               <div class="form-group">
                 <label style="font-size: 11px; font-weight: 700;">Username Baru</label>
-                <input type="text" id="admin-new-username" required placeholder="Username baru" style="font-size: 13px; padding: 10px 12px;" />
+                <input type="text" id="admin-new-username" required autocomplete="new-password" placeholder="Masukkan username baru" style="font-size: 13px; padding: 10px 12px;" />
               </div>
               <div class="form-group">
                 <label style="font-size: 11px; font-weight: 700;">Password Baru (min. 4 char)</label>
-                <input type="password" id="admin-new-password" required minlength="4" placeholder="Password baru" style="font-size: 13px; padding: 10px 12px;" />
+                <div style="position: relative; display: flex; align-items: center;">
+                  <input type="password" id="admin-new-password" required minlength="4" autocomplete="new-password" oninput="checkAdminPasswordMatch()" placeholder="Masukkan password baru" style="font-size: 13px; padding: 10px 38px 10px 12px; width: 100%;" />
+                  <button type="button" onclick="togglePasswordVisibility('admin-new-password', this)" title="Tampilkan/sembunyikan password" style="position: absolute; right: 8px; background: transparent; border: none; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; padding: 4px;">
+                    <span class="material-symbols-outlined" style="font-size: 18px;">visibility_off</span>
+                  </button>
+                </div>
               </div>
             </div>
 
             <div class="form-group">
               <label style="font-size: 11px; font-weight: 700;">Konfirmasi Password Baru</label>
-              <input type="password" id="admin-confirm-password" required minlength="4" placeholder="Ulangi password baru" style="font-size: 13px; padding: 10px 12px;" />
+              <div style="position: relative; display: flex; align-items: center;">
+                <input type="password" id="admin-confirm-password" required minlength="4" autocomplete="new-password" oninput="checkAdminPasswordMatch()" placeholder="Ulangi password baru" style="font-size: 13px; padding: 10px 38px 10px 12px; width: 100%;" />
+                <button type="button" onclick="togglePasswordVisibility('admin-confirm-password', this)" title="Tampilkan/sembunyikan password" style="position: absolute; right: 8px; background: transparent; border: none; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; padding: 4px;">
+                  <span class="material-symbols-outlined" style="font-size: 18px;">visibility_off</span>
+                </button>
+              </div>
+              <div id="admin-pass-match-indicator" style="font-size: 11px; font-weight: 700; margin-top: 4px; display: none;"></div>
             </div>
 
             <button type="submit" class="btn-primary" style="margin-top: auto; justify-content: center; background: linear-gradient(135deg, var(--primary), #9B4DB8);">
@@ -2270,7 +2304,7 @@
           </div>
           <div style="display: flex; flex-direction: column; gap: 6px; min-width: 180px; flex: 1;">
             <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Provider / Brand</label>
-            <select id="ppob-admin-brand" onchange="loadPpobAdmin()" style="background: white; border: 1px solid var(--border-color); color: var(--text-main); padding: 10px 12px; border-radius: 10px; outline: none; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;">
+            <select id="ppob-admin-brand" onchange="onPpobBrandChange()" style="background: white; border: 1px solid var(--border-color); color: var(--text-main); padding: 10px 12px; border-radius: 10px; outline: none; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;">
               <option value="">-- Semua Provider --</option>
               <option value="TELKOMSEL">Telkomsel</option>
               <option value="INDOSAT">Indosat</option>
@@ -2315,17 +2349,19 @@
           </button>
 
           <!-- Bulk Fee Tool -->
-          <div class="ppob-bulk-tool">
-            <span style="font-size: 12px; font-weight: 700; color: #4338ca; display: flex; align-items: center; gap: 4px;">
-              <span class="material-symbols-outlined" style="font-size: 16px;">tune</span> Set Fee:
+          <div class="ppob-bulk-tool" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; background: rgba(99,102,241,0.06); border: 1.5px solid rgba(99,102,241,0.25); border-radius: 12px; padding: 6px 12px;">
+            <span style="font-size: 12px; font-weight: 800; color: #4338ca; display: flex; align-items: center; gap: 4px;">
+              <span class="material-symbols-outlined" style="font-size: 17px;">tune</span> Set Fee:
             </span>
-            <input id="ppob-bulk-markup-input" type="text" placeholder="1000 / 1rb" style="width: 105px; padding: 6px 10px; border-radius: 8px; border: 1.5px solid #a5b4fc; font-size: 12px; font-weight: 700; outline: none; background: white;" />
-            <button onclick="applyBulkPpobMarkup('category')" title="Terapkan fee ke semua produk yang sedang ditampilkan di filter ini" style="background: #059669; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 4px; transition: background 0.2s;" onmouseover="this.style.background='#047857'" onmouseout="this.style.background='#059669'">
-              <span class="material-symbols-outlined" style="font-size: 15px;">bolt</span> Kategori Ini
-            </button>
-            <button onclick="applyBulkPpobMarkup('all')" title="Terapkan fee ke SEMUA produk di seluruh sistem" style="background: #4f46e5; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 4px; transition: background 0.2s;" onmouseover="this.style.background='#4338ca'" onmouseout="this.style.background='#4f46e5'">
-              <span class="material-symbols-outlined" style="font-size: 15px;">public</span> Terapkan Ke Semua
-            </button>
+            <input id="ppob-bulk-markup-input" type="text" placeholder="1000 / 1rb" style="width: 100px; padding: 6px 10px; border-radius: 8px; border: 1.5px solid #a5b4fc; font-size: 12px; font-weight: 800; outline: none; background: white;" />
+            <div id="ppob-bulk-actions" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+              <button onclick="applyBulkPpobMarkup('category')" id="btn-bulk-category" title="Terapkan fee ke semua produk di filter kategori ini" style="background: #059669; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 4px; transition: background 0.2s;">
+                <span class="material-symbols-outlined" style="font-size: 15px;">bolt</span> Kategori Ini
+              </button>
+              <button onclick="applyBulkPpobMarkup('all')" title="Terapkan fee ke SEMUA produk di seluruh sistem" style="background: #4f46e5; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 4px; transition: background 0.2s;">
+                <span class="material-symbols-outlined" style="font-size: 15px;">public</span> Terapkan Ke Semua
+              </button>
+            </div>
           </div>
         </div>
 
@@ -2732,7 +2768,7 @@
         <label style="display: block; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 6px;">Username Admin</label>
         <div style="display: flex; align-items: center; background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 0 12px;">
           <span class="material-symbols-outlined" style="color: #94a3b8; font-size: 20px; margin-right: 8px;">person</span>
-          <input id="modal-admin-user" type="text" placeholder="andika123" style="width: 100%; border: none; background: transparent; padding: 12px 0; font-size: 14px; font-weight: 600; color: #0f172a; outline: none;" onkeydown="if(event.key==='Enter') submitAdminModalLogin()" />
+          <input id="modal-admin-user" type="text" autocomplete="off" placeholder="Masukkan username admin" style="width: 100%; border: none; background: transparent; padding: 12px 0; font-size: 14px; font-weight: 600; color: #0f172a; outline: none;" onkeydown="if(event.key==='Enter') submitAdminModalLogin()" />
         </div>
       </div>
 
@@ -2740,7 +2776,10 @@
         <label style="display: block; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 6px;">Password Admin</label>
         <div style="display: flex; align-items: center; background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 0 12px;">
           <span class="material-symbols-outlined" style="color: #94a3b8; font-size: 20px; margin-right: 8px;">lock</span>
-          <input id="modal-admin-pass" type="password" placeholder="Password" style="width: 100%; border: none; background: transparent; padding: 12px 0; font-size: 14px; font-weight: 600; color: #0f172a; outline: none;" onkeydown="if(event.key==='Enter') submitAdminModalLogin()" />
+          <input id="modal-admin-pass" type="password" autocomplete="current-password" placeholder="Masukkan password" style="width: 100%; border: none; background: transparent; padding: 12px 0; font-size: 14px; font-weight: 600; color: #0f172a; outline: none;" onkeydown="if(event.key==='Enter') submitAdminModalLogin()" />
+          <button type="button" onclick="togglePasswordVisibility('modal-admin-pass', this)" title="Tampilkan/sembunyikan password" style="background: transparent; border: none; cursor: pointer; color: #94a3b8; display: flex; align-items: center; padding: 4px;">
+            <span class="material-symbols-outlined" style="font-size: 18px;">visibility_off</span>
+          </button>
         </div>
       </div>
 
@@ -3667,17 +3706,90 @@
     }
 
     // ==========================================
+    // ==========================================
     // ADMIN CREDENTIALS CRUD MANAGEMENT LOGIC (SQLITE)
     // ==========================================
+    let _realAdminUsername = '';
+    let _isAdminUsernameMasked = true;
+
+    function toggleAdminUsernameMask() {
+      _isAdminUsernameMasked = !_isAdminUsernameMasked;
+      const disp = document.getElementById('admin-current-display');
+      const btn = document.getElementById('btn-toggle-mask-user');
+      if (!disp) return;
+
+      if (_isAdminUsernameMasked) {
+        disp.innerText = '••••••••';
+        disp.style.letterSpacing = '1px';
+        if (btn) btn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 18px;">visibility_off</span>';
+        if (btn) btn.title = 'Tampilkan username';
+      } else {
+        disp.innerText = _realAdminUsername || 'admin';
+        disp.style.letterSpacing = 'normal';
+        if (btn) btn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 18px;">visibility</span>';
+        if (btn) btn.title = 'Sembunyikan username';
+      }
+    }
+
+    function togglePasswordVisibility(inputId, btnEl) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      const icon = btnEl.querySelector('.material-symbols-outlined') || btnEl;
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.innerText = 'visibility';
+        btnEl.title = 'Sembunyikan password';
+      } else {
+        input.type = 'password';
+        icon.innerText = 'visibility_off';
+        btnEl.title = 'Tampilkan password';
+      }
+    }
+
+    function checkAdminPasswordMatch() {
+      const p1 = document.getElementById('admin-new-password')?.value || '';
+      const p2 = document.getElementById('admin-confirm-password')?.value || '';
+      const ind = document.getElementById('admin-pass-match-indicator');
+      if (!ind) return;
+
+      if (!p2) {
+        ind.style.display = 'none';
+        return;
+      }
+
+      ind.style.display = 'flex';
+      ind.style.alignItems = 'center';
+      ind.style.gap = '4px';
+
+      if (p1 === p2) {
+        ind.style.color = '#059669';
+        ind.innerHTML = '<span class="material-symbols-outlined" style="font-size: 14px;">check_circle</span> Password baru cocok';
+      } else {
+        ind.style.color = '#dc2626';
+        ind.innerHTML = '<span class="material-symbols-outlined" style="font-size: 14px;">cancel</span> Konfirmasi password belum cocok';
+      }
+    }
+
     async function loadAdminCredentialsSettings() {
       try {
         const res = await adminFetch('/admin/credentials');
         if (res && res.success && res.admin) {
-          const u = res.admin.username || 'andika123';
+          _realAdminUsername = res.admin.username || 'admin';
           const disp = document.getElementById('admin-current-display');
-          if (disp) disp.innerText = u;
-          const oldU = document.getElementById('admin-old-username');
-          if (oldU && !oldU.value) oldU.value = u;
+          if (disp) {
+            disp.innerText = _isAdminUsernameMasked ? '••••••••' : _realAdminUsername;
+          }
+          // Do not expose or autofill credentials in form inputs
+          setTimeout(() => {
+            const oldU = document.getElementById('admin-old-username');
+            if (oldU) oldU.value = '';
+            const oldP = document.getElementById('admin-old-password');
+            if (oldP) oldP.value = '';
+            const newP = document.getElementById('admin-new-password');
+            if (newP) newP.value = '';
+            const confP = document.getElementById('admin-confirm-password');
+            if (confP) confP.value = '';
+          }, 150);
         }
       } catch (err) {
         console.error('Failed to load admin credentials:', err);
@@ -3686,11 +3798,16 @@
 
     async function handleAdminCredentialsSubmit(e) {
       e.preventDefault();
-      const oldUsername = document.getElementById('admin-old-username').value.trim();
+      const oldUsername = document.getElementById('admin-old-username').value.trim() || _realAdminUsername;
       const oldPassword = document.getElementById('admin-old-password').value.trim();
       const newUsername = document.getElementById('admin-new-username').value.trim();
       const newPassword = document.getElementById('admin-new-password').value.trim();
       const confirmPassword = document.getElementById('admin-confirm-password').value.trim();
+
+      if (!oldPassword) {
+        showNotification('❌ Masukkan password lama Anda untuk konfirmasi autentikasi!', 'error');
+        return;
+      }
 
       if (newPassword !== confirmPassword) {
         showNotification('❌ Konfirmasi password baru tidak cocok!', 'error');
@@ -3702,7 +3819,7 @@
         return;
       }
 
-      if (!confirm(`Apakah Anda yakin ingin mengubah kredensial admin dari "${oldUsername}" menjadi "${newUsername}"?`)) {
+      if (!confirm(`Apakah Anda yakin ingin mengubah kredensial admin menjadi "${newUsername}"?\nPastikan Anda mengingat username dan password baru ini.`)) {
         return;
       }
 
@@ -3719,13 +3836,18 @@
           adminToken = res.token;
           localStorage.setItem('noxAdminToken', res.token);
         }
+        _realAdminUsername = res.username || newUsername;
         const disp = document.getElementById('admin-current-display');
-        if (disp) disp.innerText = res.username || newUsername;
-        document.getElementById('admin-old-username').value = res.username || newUsername;
+        if (disp) {
+          disp.innerText = _isAdminUsernameMasked ? '••••••••' : _realAdminUsername;
+        }
+        document.getElementById('admin-old-username').value = '';
         document.getElementById('admin-old-password').value = '';
         document.getElementById('admin-new-username').value = '';
         document.getElementById('admin-new-password').value = '';
         document.getElementById('admin-confirm-password').value = '';
+        const ind = document.getElementById('admin-pass-match-indicator');
+        if (ind) ind.style.display = 'none';
       } else {
         showNotification('❌ Gagal: ' + (res?.error || 'Gagal mengubah kredensial admin.'), 'error');
       }
@@ -4448,11 +4570,78 @@
       'BPJS':             ['', 'BPJS']
     };
 
+    let _ppobGlobalMarkup = 1000;
+    let _ppobCategoryMarkups = {};
+    let _ppobBrandMarkups = {};
+
+    function updatePpobBulkButtons() {
+      const cat = (document.getElementById('ppob-admin-category')?.value || 'SEMUA').trim();
+      const brand = (document.getElementById('ppob-admin-brand')?.value || '').trim();
+      const container = document.getElementById('ppob-bulk-actions');
+      if (!container) return;
+
+      const catLabel = cat && cat !== 'SEMUA' ? cat : '';
+      const brandLabel = brand ? brand : '';
+
+      let html = '';
+
+      // If a specific brand/provider is selected (e.g. DANA, OVO, TELKOMSEL)
+      if (brandLabel) {
+        html += `
+          <button onclick="applyBulkPpobMarkup('brand')" title="Terapkan fee khusus provider ${escapeHtml(brandLabel)}" style="background: #059669; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 6px rgba(5,150,105,0.25);" onmouseover="this.style.background='#047857'" onmouseout="this.style.background='#059669'">
+            <span class="material-symbols-outlined" style="font-size: 15px;">bolt</span> Khusus ${escapeHtml(brandLabel)} Saja
+          </button>
+        `;
+      }
+
+      // If a specific category is selected
+      if (catLabel) {
+        html += `
+          <button onclick="applyBulkPpobMarkup('category')" title="Terapkan fee ke seluruh kategori ${escapeHtml(catLabel)}" style="background: ${brandLabel ? '#0891b2' : '#059669'}; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 6px rgba(8,145,178,0.25);" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+            <span class="material-symbols-outlined" style="font-size: 15px;">category</span> Kategori ${escapeHtml(catLabel)}
+          </button>
+        `;
+      }
+
+      // Global apply button
+      html += `
+        <button onclick="applyBulkPpobMarkup('all')" title="Terapkan fee ke SEMUA produk di seluruh sistem" style="background: #4f46e5; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 6px rgba(79,70,229,0.25);" onmouseover="this.style.background='#4338ca'" onmouseout="this.style.background='#4f46e5'">
+          <span class="material-symbols-outlined" style="font-size: 15px;">public</span> Terapkan Ke Semua
+        </button>
+      `;
+
+      container.innerHTML = html;
+    }
+
+    function syncPpobActiveMarkupInput() {
+      const cat = (document.getElementById('ppob-admin-category')?.value || 'SEMUA').trim();
+      const brand = (document.getElementById('ppob-admin-brand')?.value || '').trim();
+      const bulkInput = document.getElementById('ppob-bulk-markup-input');
+      if (!bulkInput) return;
+
+      const brandKey = brand ? brand.toUpperCase() : '';
+      if (brandKey && _ppobBrandMarkups[brandKey] !== undefined) {
+        bulkInput.value = _ppobBrandMarkups[brandKey];
+      } else if (cat && cat !== 'SEMUA' && _ppobCategoryMarkups[cat] !== undefined) {
+        bulkInput.value = _ppobCategoryMarkups[cat];
+      } else if (_ppobGlobalMarkup !== undefined) {
+        bulkInput.value = _ppobGlobalMarkup;
+      }
+    }
+
     function onPpobCategoryChange() {
       const cat = document.getElementById('ppob-admin-category').value;
       const brandSel = document.getElementById('ppob-admin-brand');
       const brands = PPOB_BRAND_MAP[cat] || [''];
       brandSel.innerHTML = brands.map(b => `<option value="${b}">${b ? b : '-- Semua Provider --'}</option>`).join('');
+      updatePpobBulkButtons();
+      syncPpobActiveMarkupInput();
+      loadPpobAdmin();
+    }
+
+    function onPpobBrandChange() {
+      updatePpobBulkButtons();
+      syncPpobActiveMarkupInput();
       loadPpobAdmin();
     }
 
@@ -4510,6 +4699,8 @@
           </td>
         </tr>`;
 
+      updatePpobBulkButtons();
+
       const res = await adminFetch(`/admin/ppob/products?category=${encodeURIComponent(category)}&brand=${encodeURIComponent(brand)}`);
 
       if (!res.success || !Array.isArray(res.products)) {
@@ -4528,11 +4719,13 @@
       _ppobFilteredData = res.products;
       ppobCurrentPage = 1;
 
-      // Populate current global markup into input
-      const bulkInput = document.getElementById('ppob-bulk-markup-input');
-      if (bulkInput && res.globalMarkup !== undefined) {
-        bulkInput.value = res.globalMarkup;
-      }
+      // Update cached markup configurations
+      if (res.globalMarkup !== undefined) _ppobGlobalMarkup = res.globalMarkup;
+      if (res.categoryMarkups) _ppobCategoryMarkups = res.categoryMarkups;
+      if (res.brandMarkups) _ppobBrandMarkups = res.brandMarkups;
+
+      syncPpobActiveMarkupInput();
+      updatePpobBulkButtons();
 
       // Clear search input on fresh load
       const searchInput = document.getElementById('ppob-search-input');
@@ -4628,8 +4821,12 @@
                 placeholder="0"
                 style="width: 75px; padding: 5px 8px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-weight: 700; font-size: 12px; color: #1e293b; outline: none; transition: border-color 0.2s;"
                 onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#cbd5e1'" />
+              ${p.brand ? `
+              <button onclick="applyOneMarkupToBrand('${escapeHtml(p.brand)}', document.getElementById('ppob-markup-input-${globalIdx}').value)" title="Terapkan fee ini khusus ke provider ${escapeHtml(p.brand)}" style="border: 1px solid #a7f3d0; background: #ecfdf5; color: #059669; border-radius: 6px; padding: 4px 6px; font-size: 10px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 2px; white-space: nowrap;">
+                <span class="material-symbols-outlined" style="font-size: 13px;">bolt</span> ${escapeHtml(p.brand).split(' ')[0]}
+              </button>` : ''}
               <button onclick="applyOneMarkupToAll(document.getElementById('ppob-markup-input-${globalIdx}').value)" title="Terapkan nominal fee ini ke SEMUA produk" style="border: 1px solid #c7d2fe; background: #eef2ff; color: #4338ca; border-radius: 6px; padding: 4px 6px; font-size: 10px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 2px; white-space: nowrap;" onmouseover="this.style.background='#c7d2fe'" onmouseout="this.style.background='#eef2ff'">
-                <span class="material-symbols-outlined" style="font-size: 13px;">bolt</span> Semua
+                <span class="material-symbols-outlined" style="font-size: 13px;">public</span> Semua
               </button>
             </div>
           </td>
@@ -4681,6 +4878,17 @@
       sellingSpan.innerText = `Rp ${selling.toLocaleString('id-ID')}`;
     }
 
+    async function applyOneMarkupToBrand(brand, rawVal) {
+      if (!brand) return applyOneMarkupToAll(rawVal);
+      const val = parseNominalInput(rawVal);
+      const input = document.getElementById('ppob-bulk-markup-input');
+      if (input) input.value = val;
+      const brandSel = document.getElementById('ppob-admin-brand');
+      if (brandSel) brandSel.value = brand;
+      updatePpobBulkButtons();
+      await applyBulkPpobMarkup('brand');
+    }
+
     async function applyOneMarkupToAll(rawVal) {
       const val = parseNominalInput(rawVal);
       const input = document.getElementById('ppob-bulk-markup-input');
@@ -4721,54 +4929,72 @@
       }
       if (input) input.value = val;
 
-      const isCategoryOnly = scope === 'category';
-      const targetData = (_ppobFilteredData && _ppobFilteredData.length > 0) ? _ppobFilteredData : (ppobProductsData || []);
-      const skus = isCategoryOnly ? targetData.map(p => p.sku) : 'ALL';
-      const countLabel = isCategoryOnly ? `${targetData.length} produk di kategori ini` : 'SEMUA produk';
+      const category = (document.getElementById('ppob-admin-category')?.value || '').trim();
+      const brand = (document.getElementById('ppob-admin-brand')?.value || '').trim();
 
-      showNotification(`⏳ Menyimpan Fee Rp ${val.toLocaleString('id-ID')} ke database untuk ${countLabel}...`, 'hourglass_empty');
+      let targetCategory = '';
+      let targetBrand = '';
+      let targetSkus = [];
+      let labelTarget = 'SEMUA produk';
 
-      // Update in-memory data and re-render table immediately
-      if (!isCategoryOnly) {
-        ppobProductsData.forEach(p => {
-          p.markup = val;
-          p.selling_price = (p.base_price || p.price || 0) + val;
-        });
-        if (_ppobFilteredData) {
-          _ppobFilteredData.forEach(p => {
-            p.markup = val;
-            p.selling_price = (p.base_price || p.price || 0) + val;
-          });
-        }
-      } else {
-        const skuSet = new Set(Array.isArray(skus) ? skus : []);
-        ppobProductsData.forEach(p => {
-          if (skuSet.has(p.sku)) {
+      if (scope === 'brand' && brand) {
+        targetBrand = brand;
+        targetCategory = category;
+        const bUpper = brand.toUpperCase();
+        targetSkus = (ppobProductsData || [])
+          .filter(p => (p.brand || '').toUpperCase().includes(bUpper))
+          .map(p => p.sku);
+        labelTarget = `khusus provider "${brand}" (${targetSkus.length} produk)`;
+
+        _ppobBrandMarkups[bUpper] = val;
+        (ppobProductsData || []).forEach(p => {
+          if ((p.brand || '').toUpperCase().includes(bUpper)) {
             p.markup = val;
             p.selling_price = (p.base_price || p.price || 0) + val;
           }
         });
-        if (_ppobFilteredData) {
-          _ppobFilteredData.forEach(p => {
-            if (skuSet.has(p.sku)) {
-              p.markup = val;
-              p.selling_price = (p.base_price || p.price || 0) + val;
-            }
-          });
-        }
+      } else if (scope === 'category' && category && category !== 'SEMUA') {
+        targetCategory = category;
+        targetSkus = (ppobProductsData || []).map(p => p.sku);
+        labelTarget = `seluruh kategori "${category}" (${targetSkus.length} produk)`;
+
+        _ppobCategoryMarkups[category] = val;
+        (ppobProductsData || []).forEach(p => {
+          p.markup = val;
+          p.selling_price = (p.base_price || p.price || 0) + val;
+        });
+      } else {
+        scope = 'all';
+        targetSkus = 'ALL';
+        labelTarget = 'SEMUA produk di seluruh katalog';
+
+        _ppobGlobalMarkup = val;
+        (ppobProductsData || []).forEach(p => {
+          p.markup = val;
+          p.selling_price = (p.base_price || p.price || 0) + val;
+        });
       }
 
-      renderPpobProductsTable();
+      showNotification(`⏳ Menyimpan Fee Rp ${val.toLocaleString('id-ID')} untuk ${labelTarget}...`, 'hourglass_empty');
+
+      applyPpobFilterAndRender();
 
       const res = await adminFetch('/admin/ppob/products/bulk-markup', {
         method: 'POST',
-        body: { skus, markup: val, applyAll: !isCategoryOnly }
+        body: {
+          scope,
+          markup: val,
+          category: targetCategory,
+          brand: targetBrand,
+          skus: targetSkus,
+          applyAll: scope === 'all'
+        }
       });
 
       if (res.success) {
-        showNotification(`✅ Fee Rp ${val.toLocaleString('id-ID')} berhasil tersimpan di database untuk ${res.updatedCount || countLabel}!`, 'verified');
+        showNotification(`✅ ${res.message || `Fee Rp ${val.toLocaleString('id-ID')} berhasil tersimpan!`}`, 'verified');
       } else {
-        showNotification('❌ Gagal menerapkan bulk markup: ' + (res.error || 'Error'), 'error');
+        showNotification('❌ Gagal menerapkan fee: ' + (res.error || 'Error'), 'error');
       }
     }
 
