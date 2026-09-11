@@ -3819,39 +3819,13 @@
       }
 
       header {
-        position: fixed !important;
-        left: 260px !important;
-        top: 0 !important;
-        width: calc(100% - 260px) !important;
-        z-index: 99 !important;
-        border-bottom: 1px solid var(--surface-low) !important;
-        box-shadow: 0 4px 20px rgba(123, 45, 142, 0.03) !important;
-        background: var(--white) !important;
-        color: var(--text-main) !important;
-        padding-left: 24px !important;
-        padding-right: 24px !important;
-      }
-
-      header .brand h1 {
-        color: var(--text-main) !important;
-      }
-
-      header .brand span {
-        color: var(--primary) !important;
-      }
-
-      header .notify-btn {
-        color: var(--text-main) !important;
-      }
-
-      header .notify-btn:hover {
-        background: var(--surface-low) !important;
+        display: none !important;
       }
 
       main {
         margin-left: 260px !important;
-        margin-top: 68px !important;
-        height: calc(100vh - 68px) !important;
+        margin-top: 0 !important;
+        height: 100vh !important;
         padding-bottom: 40px !important;
         display: block !important;
         overflow-y: auto !important;
@@ -3886,7 +3860,7 @@
         font-weight: 800;
         color: white;
         text-align: center;
-        margin-bottom: 32px;
+        margin-bottom: 28px;
         letter-spacing: 0.5px;
         text-transform: uppercase;
         background: linear-gradient(135deg, #a78bfa, #f472b6);
@@ -3922,20 +3896,76 @@
       .bottom-nav .nav-item span {
         margin-bottom: 0 !important;
         font-size: 22px !important;
+        transform: none !important;
       }
 
       .bottom-nav .nav-item label {
         font-size: 14px !important;
         font-weight: 700 !important;
         cursor: pointer !important;
+        transform: none !important;
+        color: inherit !important;
+      }
+
+      /* Desktop FAB Scan Button Styling in Sidebar */
+      .bottom-nav .nav-fab-scan {
+        margin-top: 4px !important;
+        margin-bottom: 4px !important;
+        flex-direction: row !important;
+        justify-content: flex-start !important;
+        align-items: center !important;
+        gap: 14px !important;
+        padding: 12px 18px !important;
+        width: 100% !important;
+        border-radius: 12px !important;
+        background: linear-gradient(135deg, rgba(123, 45, 142, 0.35), rgba(168, 85, 247, 0.25)) !important;
+        border: 1px solid rgba(168, 85, 247, 0.4) !important;
+        box-shadow: 0 4px 14px rgba(123, 45, 142, 0.2) !important;
+        cursor: pointer !important;
+        transition: transform 0.15s, background 0.2s !important;
+      }
+
+      .bottom-nav .nav-fab-scan:hover {
+        background: linear-gradient(135deg, rgba(123, 45, 142, 0.5), rgba(168, 85, 247, 0.4)) !important;
+        transform: translateY(-1px) !important;
+      }
+
+      .bottom-nav .nav-fab-scan:active {
+        transform: scale(0.97) !important;
+      }
+
+      .bottom-nav .nav-fab-icon-wrapper {
+        width: 28px !important;
+        height: 28px !important;
+        border-radius: 8px !important;
+        background: #7B2D8E !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-shadow: none !important;
+      }
+
+      .bottom-nav .nav-fab-icon-wrapper span {
+        font-size: 18px !important;
+        color: #ffffff !important;
+      }
+
+      .bottom-nav .nav-fab-scan label {
+        font-size: 14px !important;
+        font-weight: 700 !important;
+        color: #ffffff !important;
+        cursor: pointer !important;
+        margin-top: 0 !important;
       }
 
       /* Grid Layout for Tab 1 Home — only when active */
       .tab-panel#panel-home.active {
         display: grid !important;
-        grid-template-columns: 1.2fr 0.8fr !important;
-        gap: 32px !important;
-        padding: 32px var(--padding-side) !important;
+        grid-template-columns: 1.15fr 0.85fr !important;
+        gap: 28px !important;
+        padding: 32px 32px !important;
+        max-width: 1120px !important;
+        margin: 0 auto !important;
         align-items: start !important;
       }
 
@@ -3946,8 +3976,8 @@
 
       #panel-home .hero-banner {
         grid-column: 1 / span 2 !important;
-        border-radius: 24px !important;
-        padding: 32px !important;
+        border-radius: 20px !important;
+        padding: 28px 24px !important;
       }
 
       #panel-home .balance-card-container {
@@ -3969,19 +3999,25 @@
       /* Centered and Clean layouts for other panels */
       #panel-upload {
         padding: 32px !important;
-        max-width: 900px !important;
+        max-width: 860px !important;
         margin: 0 auto !important;
       }
 
       #panel-history {
         padding: 32px !important;
-        max-width: 900px !important;
+        max-width: 860px !important;
+        margin: 0 auto !important;
+      }
+
+      #panel-info {
+        padding: 32px !important;
+        max-width: 860px !important;
         margin: 0 auto !important;
       }
 
       #panel-profile {
         padding: 32px !important;
-        max-width: 900px !important;
+        max-width: 860px !important;
         margin: 0 auto !important;
       }
 
@@ -3990,6 +4026,64 @@
         left: 260px !important;
         width: calc(100% - 260px) !important;
         height: 100% !important;
+      }
+
+      .full-screen-panel > div:first-child {
+        padding-top: 18px !important;
+        padding-bottom: 18px !important;
+      }
+
+      /* Standard Sub-screens inner container on desktop */
+      .full-screen-panel > div:not(:first-child) {
+        max-width: 680px !important;
+        margin: 0 auto !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+      }
+
+      /* Tailored screen widths for specific sub-screens */
+      #screen-trx-detail > div:nth-child(2),
+      #screen-post-checkout-status > div:nth-child(2) {
+        max-width: 480px !important;
+        margin: 0 auto !important;
+        width: 100% !important;
+      }
+
+      #screen-transfer > div:nth-child(2),
+      #screen-topup > div:nth-child(2),
+      #screen-ewallet-dana > div:nth-child(2),
+      #screen-edit-profile > div:nth-child(2),
+      #screen-change-password > div:nth-child(2),
+      #screen-merchant > div:nth-child(2) {
+        max-width: 560px !important;
+        margin: 0 auto !important;
+        width: 100% !important;
+      }
+
+      #screen-qr-scanner > div:nth-child(2) {
+        max-width: 440px !important;
+        margin: 0 auto !important;
+        width: 100% !important;
+      }
+
+      /* Centered Modals on Desktop */
+      .modal-overlay {
+        align-items: center !important;
+        justify-content: center !important;
+      }
+
+      #modal-checkout,
+      #ppob-checkout-modal {
+        align-items: center !important;
+        justify-content: center !important;
+      }
+
+      #modal-checkout > div,
+      #ppob-checkout-modal > div {
+        border-radius: 28px !important;
+        margin: auto !important;
+        max-width: 480px !important;
+        animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
       }
 
       /* Setup / Auth Modal — Ultra Responsive Desktop Split Layout */
