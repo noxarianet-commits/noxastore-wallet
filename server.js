@@ -1651,6 +1651,10 @@ async function generateDynamicTopupQris({ amount, userId, username }) {
   }
 }
 
+// Rate Limiter / Cooldown untuk pembuatan invoice top up QRIS per user
+const userTopupCooldown = new Map(); // username -> lastTimestamp
+const userTopupHistory = new Map(); // username -> array of timestamps
+
 // POST /deposit-qris (Connect UI Top-Up to Dynamic QRIS with Locked Amount)
 app.post('/deposit-qris', requireAuth, async (req, res) => {
   const { amount } = req.body;
@@ -1661,6 +1665,29 @@ app.post('/deposit-qris', requireAuth, async (req, res) => {
   }
 
   const username = req.user.username;
+  const now = Date.now();
+
+  // 1. Anti-spam rapid click cooldown (3 detik antar request per user)
+  const lastTime = userTopupCooldown.get(username) || 0;
+  if (now - lastTime < 3000) {
+    return res.status(429).json({
+      success: false,
+      error: 'Mohon tunggu 3 detik sebelum membuat permintaan QRIS baru.'
+    });
+  }
+  userTopupCooldown.set(username, now);
+
+  // 2. Batasan kuota pembuatan invoice (maks 6 invoice / menit per user)
+  let userTimestamps = (userTopupHistory.get(username) || []).filter(t => t > now - 60000);
+  if (userTimestamps.length >= 6) {
+    const waitSec = Math.max(1, Math.ceil((userTimestamps[0] + 60000 - now) / 1000));
+    return res.status(429).json({
+      success: false,
+      error: `Batas kuota pembuatan QRIS tercapai (maks 6/menit). Coba lagi dalam ${waitSec} detik.`
+    });
+  }
+  userTimestamps.push(now);
+  userTopupHistory.set(username, userTimestamps);
 
   try {
     const topupRecord = await generateDynamicTopupQris({
@@ -1709,7 +1736,8 @@ app.post('/deposit-qris', requireAuth, async (req, res) => {
     });
   } catch (error) {
     console.error('[Deposit QRIS Error]:', error.message);
-    return res.status(500).json({ success: false, error: error.message });
+    const statusCode = error.statusCode || (error.message && error.message.includes('Batas kuota') ? 429 : 500);
+    return res.status(statusCode).json({ success: false, error: error.message });
   }
 });
 
@@ -2011,6 +2039,27 @@ app.post('/api/topup', requireAuth, async (req, res) => {
   }
   const targetUsername = user ? (user.username || user.id || user_id) : user_id;
 
+  const now = Date.now();
+  const lastTime = userTopupCooldown.get(targetUsername) || 0;
+  if (now - lastTime < 3000) {
+    return res.status(429).json({
+      success: false,
+      error: 'Mohon tunggu 3 detik sebelum membuat permintaan QRIS baru.'
+    });
+  }
+  userTopupCooldown.set(targetUsername, now);
+
+  let userTimestamps = (userTopupHistory.get(targetUsername) || []).filter(t => t > now - 60000);
+  if (userTimestamps.length >= 6) {
+    const waitSec = Math.max(1, Math.ceil((userTimestamps[0] + 60000 - now) / 1000));
+    return res.status(429).json({
+      success: false,
+      error: `Batas kuota pembuatan QRIS tercapai (maks 6/menit). Coba lagi dalam ${waitSec} detik.`
+    });
+  }
+  userTimestamps.push(now);
+  userTopupHistory.set(targetUsername, userTimestamps);
+
   try {
     const topupRecord = await generateDynamicTopupQris({
       amount: numericAmount,
@@ -2047,7 +2096,8 @@ app.post('/api/topup', requireAuth, async (req, res) => {
       instruksi: `Scan QRIS di atas. Nominal Rp ${topupRecord.total_amount.toLocaleString('id-ID')} akan OTOMATIS TERISI & TERKUNCI!`
     });
   } catch (error) {
-    return res.status(500).json({ success: false, error: error.message });
+    const statusCode = error.statusCode || (error.message && error.message.includes('Batas kuota') ? 429 : 500);
+    return res.status(statusCode).json({ success: false, error: error.message });
   }
 });
 
@@ -2173,7 +2223,7 @@ app.post(['/webhook/fincloud', '/api/webhook/fincloud', '/api/fincloud/webhook']
     }
 
     // Validate FinCloud signature (supports both MD5 and HMAC-SHA256 standards)
-    const fincloudApiKey = (process.env.FINCLOUD_API_KEY || 'fc_live_038b7a0ff8fcb9362adfd931abe2dc94').trim();
+    const fincloudApiKey = fincloudQrisService.getApiKey();
     const incomingSig = String(req.headers['x-fincloud-signature'] || req.headers['x-signature'] || payload.signature || '').trim().toLowerCase();
 
     if (incomingSig && fincloudApiKey) {

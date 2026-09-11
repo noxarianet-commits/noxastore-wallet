@@ -1,7 +1,26 @@
 const crypto = require('crypto');
 const https = require('https');
 const http = require('http');
+const fs = require('fs');
+const path = require('path');
 const QRCode = require('qrcode');
+
+/**
+ * Konfigurasi Resmi Rate Limit FinCloud Platform (Jendela Waktu Bergerak 1 Menit)
+ * Berdasarkan Dokumentasi Resmi FinCloud 2026:
+ * - Default / Create: 60 req / menit (/create_invoice, dll)
+ * - Cek Status: 30 req / menit (/cek_status, dll)
+ * - Batal Transaksi: 20 req / menit (/cancel_invoice, dll)
+ * - Cek Profil: 2 req / menit (/profile)
+ * - Withdraw Saldo: 1 req / 1 jam (/withdraw)
+ */
+const FINCLOUD_RATE_LIMITS = {
+  create: { limit: 60, safeLimit: 55, windowMs: 60 * 1000, name: 'Default / Create (/create_invoice)' },
+  check: { limit: 30, safeLimit: 25, windowMs: 60 * 1000, name: 'Cek Status (/cek_status)' },
+  cancel: { limit: 20, safeLimit: 18, windowMs: 60 * 1000, name: 'Batal Transaksi (/cancel_invoice)' },
+  profile: { limit: 2, safeLimit: 2, windowMs: 60 * 1000, name: 'Cek Profil (/profile)' },
+  withdraw: { limit: 1, safeLimit: 1, windowMs: 3600 * 1000, name: 'Withdraw Saldo (/withdraw)' }
+};
 
 /**
  * FinCloud Dynamic QRIS Service
@@ -26,6 +45,27 @@ class FinCloudQrisService {
     this.baseUrl = rawBaseUrl.replace(/\/+$/, '');
     this.apiKey = (config.apiKey || process.env.FINCLOUD_API_KEY || 'fc_live_038b7a0ff8fcb9362adfd931abe2dc94').trim();
 
+    // Sliding window tracker per kategori untuk FinCloud Rate Limiting
+    this.rateLimitWindows = {
+      create: [],
+      check: [],
+      cancel: [],
+      profile: [],
+      withdraw: []
+    };
+
+    // Cooldown penalti jika FinCloud mengembalikan HTTP 429 atau Retry-After
+    this.blockedUntil = {
+      create: 0,
+      check: 0,
+      cancel: 0,
+      profile: 0,
+      withdraw: 0
+    };
+
+    // Cache in-memory untuk status cek invoice agar polling client tidak membebani kuota FinCloud
+    this.statusCheckCache = new Map();
+
     // Daftar kandidat path untuk endpoint invoice
     this.invoiceEndpoints = [
       '/api/create_invoice',
@@ -44,7 +84,100 @@ class FinCloudQrisService {
       '/cancel_invoice'
     ];
 
-    console.log(`[FinCloud QRIS] Service diinisialisasi. Base URL: ${this.baseUrl}, API Key: ${this.apiKey ? (this.apiKey.substring(0, 10) + '...') : 'NOT SET'}`);
+    const initialKey = this.getApiKey();
+    console.log(`[FinCloud QRIS] Service diinisialisasi. Base URL: ${this.baseUrl}, API Key Aktif: ${initialKey.substring(0, 14)}...`);
+  }
+
+  /**
+   * Mengambil API Key FinCloud secara dinamis:
+   * 1. Selalu memindai langsung file .env di disk agar perubahan key langsung aktif secara instan tanpa restart Node.js
+   * 2. Fallback ke process.env atau constructor
+   * @returns {string} Active API Key
+   */
+  getApiKey() {
+    try {
+      const envPath = path.resolve(__dirname, '.env');
+      if (fs.existsSync(envPath)) {
+        const envContent = fs.readFileSync(envPath, 'utf8');
+        const match = envContent.match(/FINCLOUD_API_KEY\s*=\s*([^\r\n#]+)/);
+        if (match && match[1]) {
+          const fileKey = match[1].trim();
+          if (fileKey) {
+            process.env.FINCLOUD_API_KEY = fileKey;
+            this.apiKey = fileKey;
+            return fileKey;
+          }
+        }
+      }
+    } catch (e) {
+      // Abaikan error baca disk
+    }
+
+    const key = (process.env.FINCLOUD_API_KEY || this.apiKey || 'fc_live_038b7a0ff8fcb9362adfd931abe2dc94').trim();
+    this.apiKey = key;
+    return key;
+  }
+
+  /**
+   * Memeriksa dan menegakkan kuota Rate Limit FinCloud di sisi klien sebelum request dikirim
+   * Sesuai kuota resmi:
+   * - create: 60 req/menit
+   * - check: 30 req/menit
+   * - cancel: 20 req/menit
+   * @param {'create'|'check'|'cancel'|'profile'|'withdraw'} category
+   */
+  checkAndEnforceRateLimit(category = 'create') {
+    const config = FINCLOUD_RATE_LIMITS[category] || FINCLOUD_RATE_LIMITS.create;
+    const now = Date.now();
+
+    // 1. Cek apakah FinCloud pernah mengirim penalti 429 Retry-After sebelumnya
+    if (this.blockedUntil[category] && now < this.blockedUntil[category]) {
+      const waitSeconds = Math.max(1, Math.ceil((this.blockedUntil[category] - now) / 1000));
+      const msg = `Batas kuota API FinCloud tercapai untuk ${config.name}. Coba lagi dalam ${waitSeconds} detik (FinCloud Retry-After).`;
+      console.warn(`⚠️ [FinCloud RateLimit Cooldown]: ${msg}`);
+      const err = new Error(msg);
+      err.statusCode = 429;
+      err.retryAfter = waitSeconds;
+      throw err;
+    }
+
+    // 2. Bersihkan timestamp di luar jendela sliding (60 detik)
+    if (!this.rateLimitWindows[category]) {
+      this.rateLimitWindows[category] = [];
+    }
+    const windowStart = now - config.windowMs;
+    this.rateLimitWindows[category] = this.rateLimitWindows[category].filter(t => t > windowStart);
+
+    const currentCount = this.rateLimitWindows[category].length;
+    const limit = config.safeLimit || config.limit;
+
+    if (currentCount >= limit) {
+      const oldest = this.rateLimitWindows[category][0] || now;
+      const retryAfterSeconds = Math.max(1, Math.ceil((oldest + config.windowMs - now) / 1000));
+      const msg = `Batas kuota API FinCloud tercapai untuk ${config.name} (${currentCount}/${config.limit} req/menit). Coba lagi dalam ${retryAfterSeconds} detik.`;
+      console.warn(`⚠️ [FinCloud Rate Limit Guard]: ${msg}`);
+      const err = new Error(msg);
+      err.statusCode = 429;
+      err.retryAfter = retryAfterSeconds;
+      throw err;
+    }
+
+    // Catat request baru
+    this.rateLimitWindows[category].push(now);
+    const remaining = config.limit - this.rateLimitWindows[category].length;
+    console.log(`[FinCloud RateLimit] [${category}] ${this.rateLimitWindows[category].length}/${config.limit} req (Sisa kuota aman: ${remaining} req/menit)`);
+    return { success: true, remaining, limit: config.limit };
+  }
+
+  /**
+   * Catat penalti HTTP 429 yang dikembalikan langsung oleh server FinCloud
+   * @param {string} category
+   * @param {number} retryAfterSeconds
+   */
+  recordRateLimitPenalty(category = 'create', retryAfterSeconds = 48) {
+    const penaltyMs = Math.max(5, parseInt(retryAfterSeconds, 10) || 48) * 1000;
+    this.blockedUntil[category] = Date.now() + penaltyMs;
+    console.warn(`🛑 [FinCloud 429 Too Many Requests] Kategori '${category}' terkena cooldown FinCloud selama ${penaltyMs / 1000} detik.`);
   }
 
   /**
@@ -63,7 +196,8 @@ class FinCloudQrisService {
    * @returns {string} Hexadecimal signature
    */
   generateSignature(reffId, nominal) {
-    return this.md5(`${this.apiKey}${nominal}${reffId}`);
+    const activeKey = this.getApiKey();
+    return this.md5(`${activeKey}${nominal}${reffId}`);
   }
 
   /**
@@ -102,9 +236,14 @@ class FinCloudQrisService {
         res.on('end', () => {
           try {
             const parsed = JSON.parse(responseBody);
-            resolve({ statusCode: res.statusCode, data: parsed, raw: responseBody });
+            // Deteksi respon 429 atau pesan batas kuota dari server FinCloud
+            if (res.statusCode === 429 || (parsed && parsed.status === false && (parsed.retry_after_seconds || (parsed.msg && parsed.msg.includes('Batas kuota'))))) {
+              const retryAfter = parsed.retry_after_seconds || parseInt(res.headers['retry-after'], 10) || 48;
+              this.recordRateLimitPenalty(parsed.category || 'create', retryAfter);
+            }
+            resolve({ statusCode: res.statusCode, data: parsed, raw: responseBody, headers: res.headers });
           } catch (jsonErr) {
-            resolve({ statusCode: res.statusCode, error: 'NON_JSON', raw: responseBody });
+            resolve({ statusCode: res.statusCode, error: 'NON_JSON', raw: responseBody, headers: res.headers });
           }
         });
       });
@@ -168,6 +307,7 @@ class FinCloudQrisService {
    * 1. Buat Tagihan Dynamic QRIS FinCloud
    * Endpoint: POST /api/create_invoice
    * Payload: apikey, nominal, reff_id, signature (MD5)
+   * Dilindungi Kuota Rate Limit: 60 req / menit
    * 
    * @param {number|string} nominal - Nominal deposit (minimal 1000)
    * @param {string} reffId - ID referensi unik internal
@@ -179,14 +319,22 @@ class FinCloudQrisService {
       throw new Error('Nominal tagihan top up minimal Rp 1.000.');
     }
 
-    const cleanReffId = String(reffId || `TOPUP_${Date.now()}`).trim();
-    // Signature resmi FinCloud: MD5(apikey + nominal + reff_id)
-    const signature = this.md5(`${this.apiKey}${numNominal}${cleanReffId}`);
+    // 1. Validasi & catat Rate Limit kategori 'create' (60 req / menit)
+    this.checkAndEnforceRateLimit('create');
 
-    console.log(`[FinCloud QRIS] Membuat invoice: reff_id=${cleanReffId}, nominal=Rp ${numNominal.toLocaleString('id-ID')}, signature=${signature.substring(0, 10)}...`);
+    const cleanReffId = String(reffId || `TOPUP_${Date.now()}`).trim();
+    // 2. Ambil live API Key aktif langsung dari disk/.env
+    const activeKey = this.getApiKey();
+
+    // 3. Signature resmi FinCloud: MD5(apikey + nominal + reff_id)
+    const signature = this.md5(`${activeKey}${numNominal}${cleanReffId}`);
+
+    console.log(`[FinCloud QRIS] Membuat invoice: reff_id=${cleanReffId}, nominal=Rp ${numNominal.toLocaleString('id-ID')}`);
+    console.log(`[FinCloud QRIS] Menggunakan API Key: ${activeKey.substring(0, 14)}... (Total: ${activeKey.length} karakter)`);
+    console.log(`[FinCloud QRIS] Signature MD5: ${signature}`);
 
     const payload = {
-      apikey: this.apiKey,
+      apikey: activeKey,
       nominal: String(numNominal),
       reff_id: cleanReffId,
       signature: signature
@@ -297,6 +445,7 @@ class FinCloudQrisService {
    * 2. Pengecekan Status Pembayaran Tagihan QRIS Real-Time
    * Endpoint: POST /api/cek_status
    * Payload: apikey, reff_id, signature (MD5)
+   * Dilindungi Kuota Rate Limit: 30 req / menit & Cache 8 Detik
    * 
    * @param {string} reffId - ID referensi order kita
    * @returns {Promise<{success: boolean, status: string, rawStatus: string, reff_id: string, amount: number, data: object, raw: object}>}
@@ -307,11 +456,21 @@ class FinCloudQrisService {
       throw new Error('reff_id wajib diisi untuk cek status.');
     }
 
+    // Cek in-memory cache: jika status baru dicek dalam 8 detik terakhir, kembalikan hasil cache
+    const cached = this.statusCheckCache.get(cleanReffId);
+    if (cached && Date.now() < cached.expiresAt) {
+      return cached.data;
+    }
+
+    // Terapkan Rate Limit FinCloud resmi (30 req / menit)
+    this.checkAndEnforceRateLimit('check');
+
+    const activeKey = this.getApiKey();
     // Signature cek_status FinCloud: MD5(apikey + reff_id)
-    const signature = this.md5(`${this.apiKey}${cleanReffId}`);
+    const signature = this.md5(`${activeKey}${cleanReffId}`);
 
     const payload = {
-      apikey: this.apiKey,
+      apikey: activeKey,
       reff_id: cleanReffId,
       signature: signature
     };
@@ -349,7 +508,7 @@ class FinCloudQrisService {
       normalizedStatus = 'FAILED';
     }
 
-    return {
+    const resultObj = {
       success: true,
       status: normalizedStatus,
       rawStatus: rawStatus,
@@ -358,11 +517,20 @@ class FinCloudQrisService {
       data: resData,
       raw: apiResult
     };
+
+    // Simpan ke cache selama 8 detik agar query beruntun dari polling frontend aman dari limit
+    this.statusCheckCache.set(cleanReffId, {
+      data: resultObj,
+      expiresAt: Date.now() + 8000
+    });
+
+    return resultObj;
   }
 
   /**
    * 3. Batalkan Tagihan QRIS
    * Endpoint: POST /api/cancel_invoice
+   * Dilindungi Kuota Rate Limit: 20 req / menit
    * @param {string} reffId
    */
   async cancelInvoice(reffId) {
@@ -371,9 +539,13 @@ class FinCloudQrisService {
       throw new Error('reff_id wajib diisi untuk cancel invoice.');
     }
 
-    const signature = this.md5(`${this.apiKey}${cleanReffId}`);
+    // Terapkan Rate Limit FinCloud resmi (20 req / menit)
+    this.checkAndEnforceRateLimit('cancel');
+
+    const activeKey = this.getApiKey();
+    const signature = this.md5(`${activeKey}${cleanReffId}`);
     const payload = {
-      apikey: this.apiKey,
+      apikey: activeKey,
       reff_id: cleanReffId,
       signature: signature
     };
@@ -398,8 +570,10 @@ class FinCloudQrisService {
    */
   async checkBalance() {
     try {
+      this.checkAndEnforceRateLimit('check');
+      const activeKey = this.getApiKey();
       const result = await this.sendFormRequest('/api/cek_saldo', {
-        apikey: this.apiKey
+        apikey: activeKey
       }, 15000);
       return result.data || result;
     } catch (err) {

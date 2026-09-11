@@ -3495,7 +3495,15 @@
       top: 58%;
       left: -6%;
       animation-delay: 0.75s;
-    }    /* ─── STATUS ANIMATION CONTAINER (100% PERFECT CIRCLE & RESPONSIVE) ─── */
+    /* ─── STATUS ANIMATION CONTAINER (100% PERFECT CIRCLE & RESPONSIVE) ─── */
+    .check-container {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0 auto 14px;
+      padding-top: 4px;
+    }
     .receipt-status-icon-circle {
       width: 76px;
       height: 76px;
@@ -3503,27 +3511,26 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 12px;
+      margin: 0 auto;
       flex-shrink: 0;
       box-sizing: border-box;
       aspect-ratio: 1 / 1;
+      position: relative;
     }
     .receipt-status-icon-circle svg {
-      width: 40px;
-      height: 40px;
+      width: 76px;
+      height: 76px;
       display: block;
+      filter: drop-shadow(0 8px 20px rgba(34, 197, 94, 0.28));
     }
-    .receipt-icon-success {
-      background: #22c55e !important;
-      box-shadow: 0 8px 24px rgba(34, 197, 94, 0.28);
+    .receipt-icon-success svg {
+      filter: drop-shadow(0 8px 20px rgba(34, 197, 94, 0.28));
     }
-    .receipt-icon-failed {
-      background: #ef4444 !important;
-      box-shadow: 0 8px 24px rgba(239, 68, 68, 0.28);
+    .receipt-icon-failed svg {
+      filter: drop-shadow(0 8px 20px rgba(239, 68, 68, 0.28));
     }
-    .receipt-icon-pending {
-      background: #f59e0b !important;
-      box-shadow: 0 8px 24px rgba(245, 158, 11, 0.28);
+    .receipt-icon-pending svg {
+      filter: drop-shadow(0 8px 20px rgba(245, 158, 11, 0.28));
     }
     .status-anim-container-box {
       position: relative;
@@ -3653,13 +3660,14 @@
     .watermark-grid {
       position: absolute;
       inset: 0;
-      display: grid;
-      gap: 8px 4px;
       pointer-events: none;
       z-index: 0;
       user-select: none;
-      padding: 10px 8px;
       overflow: hidden;
+      border-radius: inherit;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='74' viewBox='0 0 160 74'%3E%3Ctext x='40' y='24' font-family='Plus Jakarta Sans, sans-serif' font-size='10.5' font-weight='700' fill='%237B2D8E' fill-opacity='0.055' text-anchor='middle' transform='rotate(-22 40 24)'%3ENoxarianetApp%3C/text%3E%3Ctext x='120' y='61' font-family='Plus Jakarta Sans, sans-serif' font-size='10.5' font-weight='700' fill='%237B2D8E' fill-opacity='0.055' text-anchor='middle' transform='rotate(-22 120 61)'%3ENoxarianetApp%3C/text%3E%3C/svg%3E");
+      background-repeat: repeat;
+      background-size: 160px 74px;
     }
     .watermark-item {
       display: flex;
@@ -3667,9 +3675,9 @@
       align-items: center;
       font-size: 10.5px;
       font-weight: 700;
-      color: rgba(123, 45, 142, 0.08);
+      color: rgba(123, 45, 142, 0.07);
       letter-spacing: 0.5px;
-      transform: rotate(-25deg);
+      transform: rotate(-22deg);
       font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
       white-space: nowrap;
       line-height: 1;
@@ -3716,6 +3724,8 @@
     .struk-row {
       display: flex;
       justify-content: space-between;
+      align-items: center;
+      gap: 12px;
       padding: 8px 0;
       font-size: 12.5px;
       color: #334155;
@@ -3727,12 +3737,16 @@
     .struk-row .label {
       font-weight: 500;
       color: #64748b;
+      flex-shrink: 0;
+      min-width: 90px;
     }
     .struk-row .value {
       font-weight: 700;
       color: #0f172a;
       text-align: right;
-      word-break: break-all;
+      word-break: break-word;
+      overflow-wrap: break-word;
+      flex: 1;
     }
     .struk-row .value.amount {
       font-size: 19px;
@@ -3747,6 +3761,10 @@
       color: #64748b;
       font-size: 11px;
       font-family: monospace;
+      word-break: break-word;
+      overflow-wrap: break-word;
+      letter-spacing: 0.2px;
+      line-height: 1.35;
     }
 
     .struk-divider {
@@ -4876,7 +4894,7 @@
       <div style="padding: 16px; overflow-y: auto; flex: 1; background-image: url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'180\' height=\'110\' viewBox=\'0 0 180 110\'%3E%3Ctext x=\'50%25\' y=\'50%25\' font-family=\'Inter, sans-serif\' font-size=\'13\' fill=\'%237B2D8E\' fill-opacity=\'0.035\' text-anchor=\'middle\' transform=\'rotate(-30 90 55)\'%3ENoxarianetApp%3C/text%3E%3C/svg%3E'); background-repeat: repeat;">
 
         <!-- MAIN RECEIPT CARD (Target Capturing html2canvas) -->
-        <div id="trx-receipt-card" style="background: #ffffff; border-radius: 32px; box-shadow: 0 20px 60px rgba(123,45,142,0.06); overflow: hidden; display: flex; flex-direction: column; position: relative; border: 1px solid rgba(123,45,142,0.08); margin-bottom: 20px; padding: 24px 20px 24px;">
+        <div id="trx-receipt-card" style="background: #ffffff; border-radius: 32px; box-shadow: 0 20px 60px rgba(123,45,142,0.06); overflow: hidden; display: flex; flex-direction: column; position: relative; border: 1px solid rgba(123,45,142,0.08); margin: 0 auto 20px; max-width: 420px; width: 100%; box-sizing: border-box; padding: 36px 20px 24px;">
 
           <!-- WATERMARK "NoxarianetApp" (Anti-Copy / Anti-Pemalsuan Rapat) -->
           <div class="watermark-grid" id="watermarkGrid"></div>
@@ -12422,6 +12440,22 @@
           lines.push(`Atas Nama        : ${accName}`);
         }
 
+        const totalNum = Math.ceil(Number(tx.amount || tx.price || 0));
+        let feeNum = 0;
+        if (tx.adminFee !== undefined && tx.adminFee !== null && Number(tx.adminFee) >= 0) {
+          feeNum = Math.max(0, Math.ceil(Number(tx.adminFee)));
+        } else if (tx.markup !== undefined && tx.markup !== null && Number(tx.markup) >= 0) {
+          feeNum = Math.max(0, Math.ceil(Number(tx.markup)));
+        } else {
+          feeNum = Math.max(0, totalNum - getProductNominalUtama(tx));
+        }
+        const subtotalNum = Math.max(0, totalNum - feeNum);
+
+        if (feeNum > 0) {
+          lines.push(`Subtotal         : ${formatRupiah(subtotalNum)}`);
+          lines.push(`Biaya Admin      : ${formatRupiah(feeNum)}`);
+        }
+
         lines.push(`Total Bayar      : ${amountStr}`);
         lines.push(`ID Transaksi     : ${txId}`);
         lines.push(`Waktu Transaksi  : ${timeStr}`);
@@ -12449,16 +12483,18 @@
         if (norm === 'BERHASIL' || norm === 'PAID' || norm === 'SUCCESS') {
           return `
             <div class="receipt-status-icon-circle receipt-icon-success">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M5 13l4 4L19 7" />
+              <svg viewBox="0 0 80 80" width="76" height="76" style="display: block;">
+                <circle cx="40" cy="40" r="38" fill="#22c55e" />
+                <path d="M25 41L35 51L55 29" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
               </svg>
             </div>
           `;
         } else if (norm === 'GAGAL' || norm === 'FAILED' || norm === 'ERROR' || norm === 'CANCELLED') {
           return `
             <div class="receipt-status-icon-circle receipt-icon-failed">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M6 18L18 6M6 6l12 12" />
+              <svg viewBox="0 0 80 80" width="76" height="76" style="display: block;">
+                <circle cx="40" cy="40" r="38" fill="#ef4444" />
+                <path d="M27 27L53 53M27 53L53 27" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
               </svg>
             </div>
           `;
@@ -12466,8 +12502,9 @@
           // DIPROSES / PENDING / PROCESSING
           return `
             <div class="receipt-status-icon-circle receipt-icon-pending">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 2s linear infinite;">
-                <circle cx="12" cy="12" r="9" stroke-dasharray="14 6" />
+              <svg viewBox="0 0 80 80" width="76" height="76" style="display: block;">
+                <circle cx="40" cy="40" r="38" fill="#f59e0b" />
+                <circle cx="40" cy="40" r="20" fill="none" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="30 14" style="animation: spin 2s linear infinite; transform-origin: 40px 40px;" />
               </svg>
             </div>
           `;
@@ -12748,9 +12785,16 @@
         }
 
         const totalVal = Math.ceil(Number(tx.amount || tx.price || 0));
-        const nominalUtamaVal = getProductNominalUtama(tx);
-        const feeVal = Math.max(0, totalVal - nominalUtamaVal);
-        const subtotalVal = nominalUtamaVal;
+        let feeVal = 0;
+        if (tx.adminFee !== undefined && tx.adminFee !== null && Number(tx.adminFee) >= 0) {
+          feeVal = Math.max(0, Math.ceil(Number(tx.adminFee)));
+        } else if (tx.markup !== undefined && tx.markup !== null && Number(tx.markup) >= 0) {
+          feeVal = Math.max(0, Math.ceil(Number(tx.markup)));
+        } else {
+          const nominalUtamaVal = getProductNominalUtama(tx);
+          feeVal = Math.max(0, totalVal - nominalUtamaVal);
+        }
+        const subtotalVal = Math.max(0, totalVal - feeVal);
 
         setTextIfExists('post-checkout-subtotal', formatRupiah(subtotalVal));
         setTextIfExists('post-checkout-fee', formatRupiah(feeVal));
@@ -12843,17 +12887,29 @@
         if (!tx) return 0;
         const total = Math.ceil(Number(tx.amount || tx.price || 0));
 
-        // 1. Explicitly stored nominal or denom
-        if (tx.nominal !== undefined && tx.nominal !== null && Number(tx.nominal) > 0) {
-          const nom = Number(tx.nominal);
-          if (nom <= total) return nom;
+        // 1. Prioritas Utama: Biaya Admin / Markup eksplisit pada data transaksi
+        if (tx.adminFee !== undefined && tx.adminFee !== null && Number(tx.adminFee) >= 0) {
+          const fee = Math.ceil(Number(tx.adminFee));
+          if (fee <= total) return total - fee;
         }
+        if (tx.markup !== undefined && tx.markup !== null && Number(tx.markup) >= 0) {
+          const mk = Math.ceil(Number(tx.markup));
+          if (mk <= total) return total - mk;
+        }
+
+        // 2. Base price check (harga modal produk)
+        if (tx.base_price !== undefined && tx.base_price !== null && Number(tx.base_price) > 0) {
+          const bp = Math.ceil(Number(tx.base_price));
+          if (bp <= total) return bp;
+        }
+
+        // 3. Denom check (nominal voucher/saldo)
         if (tx.denom !== undefined && tx.denom !== null && Number(tx.denom) > 0) {
           const dnom = Number(tx.denom);
           if (dnom <= total) return dnom;
         }
 
-        // 2. Parse product name / merchant / service (e.g. "DANA 1.000", "PULSA TELKOMSEL 5.000", "10k", "10rb")
+        // 4. Deteksi nominal dari nama produk / merchant (contoh: "DANA 10.000", "TELKOMSEL 5.000", "10k", "10rb")
         const nameStr = String(tx.merchant || tx.product_name || tx.title || tx.service || '');
         if (nameStr) {
           const matchDotted = nameStr.match(/(\d{1,3}(?:\.\d{3})+)/);
@@ -12873,22 +12929,10 @@
           }
         }
 
-        // 3. Base price check
-        if (tx.base_price !== undefined && tx.base_price !== null && Number(tx.base_price) > 0) {
-          const bp = Number(tx.base_price);
-          if (bp <= total) return bp;
-        }
-
-        // 4. If adminFee is provided
-        if (tx.adminFee !== undefined && tx.adminFee !== null && Number(tx.adminFee) >= 0) {
-          const fee = Number(tx.adminFee);
-          if (fee < total) return total - fee;
-        }
-
-        // 5. If markup is provided
-        if (tx.markup !== undefined && tx.markup !== null && Number(tx.markup) > 0) {
-          const mk = Number(tx.markup);
-          if (mk < total) return total - mk;
+        // 5. Nominal tersimpan
+        if (tx.nominal !== undefined && tx.nominal !== null && Number(tx.nominal) > 0) {
+          const nom = Number(tx.nominal);
+          if (nom <= total) return nom;
         }
 
         return total;
@@ -13008,13 +13052,20 @@
         setTextIfExists('receipt-orderid', tx.orderId || '-');
 
         // Financial Calculation Logic:
-        // Nominal Utama (Subtotal) = denom/face value received
-        // Biaya Admin = Total markup (Provider price - Nominal) + Admin markup = total - nominalUtama
-        // Total Bayar = Nominal Utama + Biaya Admin
+        // Nominal Utama (Subtotal) = harga dasar / denom
+        // Biaya Admin = Markup / Admin Fee
+        // Total Bayar = Subtotal + Biaya Admin
         const total = Math.ceil(Number(tx.amount || tx.price || 0));
-        const nominalUtama = getProductNominalUtama(tx);
-        const fee = Math.max(0, total - nominalUtama);
-        const subtotal = nominalUtama;
+        let fee = 0;
+        if (tx.adminFee !== undefined && tx.adminFee !== null && Number(tx.adminFee) >= 0) {
+          fee = Math.max(0, Math.ceil(Number(tx.adminFee)));
+        } else if (tx.markup !== undefined && tx.markup !== null && Number(tx.markup) >= 0) {
+          fee = Math.max(0, Math.ceil(Number(tx.markup)));
+        } else {
+          const nominalUtama = getProductNominalUtama(tx);
+          fee = Math.max(0, total - nominalUtama);
+        }
+        const subtotal = Math.max(0, total - fee);
 
         setTextIfExists('receipt-amount', formatRupiah(total));
         setTextIfExists('receipt-subtotal', formatRupiah(subtotal));
@@ -13069,31 +13120,22 @@
         }
       }
 
-      // Generate watermark grid programmatically to fit container dimensions (DANA-style repeating pattern)
+      // Generate watermark grid with neat, seamless staggered SVG pattern (DANA-style repeating pattern)
       function generateReceiptWatermark(targetEl) {
         const grid = targetEl || document.getElementById('watermarkGrid');
         if (!grid) return;
-        const text = 'NoxarianetApp';
-        
-        const card = grid.closest('#trx-receipt-card') || document.getElementById('trx-receipt-card');
-        const cardHeight = card ? card.offsetHeight : 650;
-        const rows = Math.max(16, Math.ceil((cardHeight || 650) / 36));
-        const cols = 4;
-
-        const total = cols * rows;
-        grid.style.display = 'grid';
-        grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-        grid.style.gridTemplateRows = `repeat(${rows}, 36px)`;
-
-        grid.innerHTML = '';
-        const fragment = document.createDocumentFragment();
-        for (let i = 0; i < total; i++) {
-          const span = document.createElement('span');
-          span.className = 'watermark-item';
-          span.textContent = text;
-          fragment.appendChild(span);
-        }
-        grid.appendChild(fragment);
+        const patId = 'noxaWMPat_' + Math.random().toString(36).substring(2, 8);
+        grid.innerHTML = `
+          <svg width="100%" height="100%" style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; border-radius: inherit; display: block;" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="${patId}" width="160" height="74" patternUnits="userSpaceOnUse">
+                <text x="40" y="24" font-family="'Plus Jakarta Sans', -apple-system, sans-serif" font-size="10.5" font-weight="700" fill="#7B2D8E" fill-opacity="0.055" text-anchor="middle" transform="rotate(-22 40 24)">NoxarianetApp</text>
+                <text x="120" y="61" font-family="'Plus Jakarta Sans', -apple-system, sans-serif" font-size="10.5" font-weight="700" fill="#7B2D8E" fill-opacity="0.055" text-anchor="middle" transform="rotate(-22 120 61)">NoxarianetApp</text>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#${patId})" />
+          </svg>
+        `;
       }
 
       // Add window resize support for watermark
@@ -13522,29 +13564,38 @@
         clone.style.borderRadius = '28px';
         clone.style.border = '1px solid rgba(123, 45, 142, 0.12)';
         clone.style.boxShadow = 'none';
+        clone.style.padding = '36px 20px 26px';
 
         // Render clean, crisp static SVG status badge in the clone (eliminates animation timing / external font rendering bugs)
         const animContainer = clone.querySelector('#receipt-status-animation-container');
         if (animContainer) {
           const isFailed = String(tx.status || '').toUpperCase() === 'GAGAL' || String(tx.status || '').toUpperCase() === 'FAILED';
           const isProcess = String(tx.status || '').toUpperCase() === 'DIPROSES' || String(tx.status || '').toUpperCase() === 'PENDING';
-          const badgeBg = isFailed ? '#ef4444' : (isProcess ? '#f59e0b' : '#22c55e');
-          const shadowColor = isFailed ? 'rgba(239, 68, 68, 0.28)' : (isProcess ? 'rgba(245, 158, 11, 0.28)' : 'rgba(34, 197, 94, 0.28)');
-          const pathD = isFailed ? 'M6 18L18 6M6 6l12 12' : (isProcess ? '' : 'M5 13l4 4L19 7');
 
           if (isProcess) {
             animContainer.innerHTML = `
-              <div style="width: 76px; height: 76px; margin: 0 auto 12px; border-radius: 50%; background: ${badgeBg}; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px ${shadowColor};">
-                <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="9" stroke-dasharray="14 6" />
+              <div style="width: 76px; height: 76px; margin: 0 auto 14px; display: flex; align-items: center; justify-content: center;">
+                <svg viewBox="0 0 80 80" width="76" height="76" style="display: block;">
+                  <circle cx="40" cy="40" r="38" fill="#f59e0b" />
+                  <circle cx="40" cy="40" r="20" fill="none" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="30 14" />
+                </svg>
+              </div>
+            `;
+          } else if (isFailed) {
+            animContainer.innerHTML = `
+              <div style="width: 76px; height: 76px; margin: 0 auto 14px; display: flex; align-items: center; justify-content: center;">
+                <svg viewBox="0 0 80 80" width="76" height="76" style="display: block;">
+                  <circle cx="40" cy="40" r="38" fill="#ef4444" />
+                  <path d="M27 27L53 53M27 53L53 27" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
               </div>
             `;
           } else {
             animContainer.innerHTML = `
-              <div style="width: 76px; height: 76px; margin: 0 auto 12px; border-radius: 50%; background: ${badgeBg}; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px ${shadowColor};">
-                <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="${pathD}" />
+              <div style="width: 76px; height: 76px; margin: 0 auto 14px; display: flex; align-items: center; justify-content: center;">
+                <svg viewBox="0 0 80 80" width="76" height="76" style="display: block;">
+                  <circle cx="40" cy="40" r="38" fill="#22c55e" />
+                  <path d="M25 41L35 51L55 29" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
               </div>
             `;
