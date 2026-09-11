@@ -1357,6 +1357,18 @@ async function updatePaymentStatus(id, status, updatedAt) {
   await run('UPDATE payments SET status = ?, updatedAt = ? WHERE id = ? OR idDepo = ?', [status, updateTime, id, id]);
 }
 
+async function deletePayment(id) {
+  if (!id) return false;
+  if (!sqlite3) {
+    const payments = readJSONFile(PAYMENTS_FILE, []);
+    const filtered = payments.filter(p => p.id !== id && p.idDepo !== id);
+    writeJSONFile(PAYMENTS_FILE, filtered);
+    return true;
+  }
+  await run('DELETE FROM payments WHERE id = ? OR idDepo = ?', [id, id]);
+  return true;
+}
+
 // WITHDRAWALS FUNCTIONS
 async function getWithdrawals() {
   if (!sqlite3) {
@@ -2292,6 +2304,7 @@ module.exports = {
   getAllPayments,
   addPayment,
   updatePaymentStatus,
+  deletePayment,
   getWithdrawals,
   addWithdrawal,
   getWithdrawalByClientRequestId,

@@ -1042,18 +1042,281 @@
       }
     }
 
-    /* Media Queries for Mobile Responsiveness */
+    /* ==========================================
+       MODERN RESPONSIVE DESIGN SYSTEM
+       ========================================== */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 14px;
+    }
+    .table-responsive::-webkit-scrollbar {
+      height: 5px;
+    }
+    .table-responsive::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 10px;
+    }
+
+    .form-grid-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    /* Map & Radar UI Component Classes */
+    .map-card {
+      position: relative;
+    }
+
+    .map-header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .map-controls-btns {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .map-radar-pill {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      z-index: 1000;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 30px;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+      pointer-events: none;
+    }
+
+    .gps-devices-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .gps-controls-bar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .gps-search-wrapper {
+      position: relative;
+      width: 240px;
+    }
+
+    .modal-loc-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .modal-loc-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* PPOB Responsive Classes */
+    .ppob-header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .ppob-filter-bar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+      padding: 16px;
+      background: #f8fafc;
+      border-radius: 16px;
+      border: 1px solid var(--border-color);
+    }
+
+    .ppob-bulk-tool {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+      background: #eef2ff;
+      border: 1px solid #c7d2fe;
+      padding: 6px 12px;
+      border-radius: 10px;
+      flex-wrap: wrap;
+    }
+
+    .ppob-pagination-bar {
+      display: none;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      background: #f8fafc;
+      padding: 12px 16px;
+      border-radius: 14px;
+      border: 1px solid var(--border-color);
+    }
+
+    /* --- Media Queries: Tablet & Large Mobile (<= 960px) --- */
+    @media (max-width: 960px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+        margin-bottom: 18px !important;
+      }
+
+      .stat-card {
+        padding: 14px 16px !important;
+        border-radius: 16px !important;
+      }
+
+      .stat-info h3 {
+        font-size: 11px !important;
+        letter-spacing: 0.4px !important;
+        margin-bottom: 4px !important;
+      }
+
+      .stat-info p {
+        font-size: clamp(16px, 4vw, 22px) !important;
+      }
+
+      .stat-icon {
+        width: 42px !important;
+        height: 42px !important;
+        border-radius: 12px !important;
+        margin-left: 8px !important;
+      }
+
+      .stat-icon span {
+        font-size: 22px !important;
+      }
+
+      #admin-gps-map {
+        height: 390px !important;
+        border-radius: 16px !important;
+      }
+
+      /* PPOB Mobile Wrapping */
+      .ppob-header-bar {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 12px !important;
+      }
+      .ppob-header-bar button {
+        width: 100% !important;
+        justify-content: center !important;
+      }
+
+      .ppob-filter-bar {
+        flex-direction: column !important;
+        gap: 10px !important;
+        padding: 12px !important;
+      }
+      .ppob-filter-bar > div {
+        width: 100% !important;
+        min-width: 0 !important;
+      }
+      .ppob-filter-bar button {
+        width: 100% !important;
+        justify-content: center !important;
+      }
+
+      #ppob-stats-bar {
+        flex-direction: row !important;
+        gap: 8px !important;
+      }
+      #ppob-stats-bar > div:not(.ppob-bulk-tool) {
+        flex: 1 1 calc(50% - 4px) !important;
+        padding: 8px 12px !important;
+        font-size: 12px !important;
+      }
+      #ppob-stats-bar > button {
+        flex: 1 1 calc(50% - 4px) !important;
+        justify-content: center !important;
+        padding: 8px 10px !important;
+        font-size: 11.5px !important;
+      }
+      .ppob-bulk-tool {
+        margin-left: 0 !important;
+        width: 100% !important;
+        justify-content: space-between !important;
+        gap: 6px !important;
+        padding: 8px 10px !important;
+      }
+      .ppob-bulk-tool input {
+        flex: 1 1 90px !important;
+        width: auto !important;
+        min-width: 70px !important;
+      }
+      .ppob-bulk-tool button {
+        flex: 1 1 auto !important;
+        justify-content: center !important;
+        padding: 6px 10px !important;
+        font-size: 11px !important;
+      }
+
+      .ppob-pagination-bar {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+        padding: 10px 12px !important;
+      }
+      .ppob-pagination-bar > div:first-child {
+        width: 100% !important;
+        min-width: 0 !important;
+      }
+      #ppob-pagination-controls {
+        justify-content: center !important;
+        flex-wrap: wrap !important;
+      }
+    }
+
+    /* --- Media Queries: Mobile Devices (<= 768px) --- */
     @media (max-width: 768px) {
       .container {
-        padding: 12px;
+        padding: 10px;
+      }
+
+      .admin-main-inner {
+        padding: 12px 10px !important;
       }
 
       header {
         flex-direction: column;
-        gap: 16px;
+        gap: 14px;
         align-items: center;
         text-align: center;
-        padding: 16px;
+        padding: 14px 16px;
         border-radius: 16px;
       }
 
@@ -1061,94 +1324,25 @@
         flex-wrap: wrap;
         justify-content: center;
         width: 100%;
-        gap: 10px;
+        gap: 8px;
       }
 
-      .header-actions>* {
+      .header-actions > * {
         font-size: 12px;
         padding: 8px 12px;
       }
 
-      .stats-grid {
-        grid-template-columns: 1fr;
-        gap: 12px;
-      }
-
-      .stat-card {
-        padding: 16px;
-        border-radius: 16px;
-      }
-
-      .admin-nav-tabs {
-        overflow-x: auto;
-        white-space: nowrap;
-        padding-bottom: 8px;
-        gap: 8px;
-        scrollbar-width: none;
-        /* Hide scrollbar Firefox */
-      }
-
-      .admin-nav-tabs::-webkit-scrollbar {
-        display: none;
-        /* Hide scrollbar Chrome/Safari */
-      }
-
-      .admin-nav-tab {
-        flex: 0 0 auto;
-        padding: 10px 16px;
-        font-size: 13px;
-        border-radius: 10px;
-      }
-
       .dashboard-layout {
         grid-template-columns: 1fr !important;
-        gap: 16px;
+        gap: 14px;
       }
 
       .list-panel,
       .detail-panel {
         height: auto;
         min-height: auto;
-        padding: 16px;
+        padding: 16px 14px;
         border-radius: 16px;
-      }
-
-      /* In mobile view, make tables horizontally scrollable */
-      .trx-table th,
-      .trx-table td {
-        padding: 10px 8px;
-        font-size: 12px;
-      }
-
-      /* Fix grids inside forms and layout views */
-      #view-settings>div {
-        grid-template-columns: 1fr !important;
-        gap: 16px;
-      }
-
-      #view-settings>div>div {
-        padding: 16px !important;
-        border-radius: 16px !important;
-      }
-
-      .form-actions {
-        flex-direction: column;
-        gap: 10px;
-      }
-
-      .form-actions button {
-        width: 100%;
-        justify-content: center;
-      }
-
-      /* Modal card adjustments */
-      .modal-card {
-        width: 95%;
-        border-radius: 16px;
-      }
-
-      .modal-body {
-        padding: 16px;
       }
 
       /* Master-Detail mobile switcher */
@@ -1162,44 +1356,180 @@
         display: inline-flex !important;
       }
 
+      /* Admin view inner cards */
       .admin-view > div {
-        padding: 16px !important;
+        padding: 16px 14px !important;
         border-radius: 16px !important;
       }
+
       .panel-header {
         flex-wrap: wrap !important;
         gap: 10px !important;
       }
-      #view-banners > div > div:first-child {
-        flex-direction: column !important;
-        align-items: flex-start !important;
+      .panel-header h2 {
+        font-size: 16px !important;
+      }
+
+      /* Table responsive min-widths and touch scrolling */
+      .trx-table {
+        min-width: 680px;
+      }
+      .trx-table th,
+      .trx-table td {
+        padding: 10px 8px;
+        font-size: 12px;
+      }
+
+      /* Form grids */
+      .form-grid,
+      .form-grid-2col {
+        grid-template-columns: 1fr !important;
         gap: 12px !important;
       }
-      #view-banners > div > div:first-child button {
-        width: 100% !important;
-        justify-content: center !important;
+
+      #view-settings > div {
+        grid-template-columns: 1fr !important;
+        gap: 16px;
       }
-      .trx-list {
-        overflow-x: auto !important;
+
+      #view-settings > div > div {
+        padding: 16px 14px !important;
+        border-radius: 16px !important;
+      }
+
+      .form-actions {
+        flex-direction: column;
+        gap: 10px;
+      }
+      .form-actions button {
+        width: 100%;
+        justify-content: center;
+      }
+
+      /* GPS Map View Mobile Controls */
+      .map-header-bar {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+      }
+      .map-controls-btns {
+        width: 100% !important;
+      }
+      .map-controls-btns button {
+        flex: 1 1 auto !important;
+        justify-content: center !important;
+        padding: 9px 12px !important;
+        font-size: 12px !important;
+      }
+      .map-radar-pill {
+        top: 10px !important;
+        right: 10px !important;
+        padding: 4px 10px !important;
+        font-size: 9.5px !important;
+        gap: 5px !important;
+      }
+
+      .gps-devices-header {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+      }
+      .gps-controls-bar {
+        width: 100% !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 8px !important;
+      }
+      .gps-search-wrapper {
+        width: 100% !important;
+      }
+      .gps-controls-bar select {
+        width: 100% !important;
+      }
+
+      /* Modal card adjustments */
+      .modal-card {
+        width: 94% !important;
+        max-width: 94% !important;
+        border-radius: 18px !important;
+        max-height: 88vh;
+        overflow-y: auto;
+      }
+      .modal-header {
+        padding: 14px 16px !important;
+      }
+      .modal-body {
+        padding: 16px 14px !important;
       }
     }
 
+    /* --- Media Queries: Small Phones (<= 480px) --- */
     @media (max-width: 480px) {
       .brand h1 {
-        font-size: 18px;
+        font-size: 16px;
       }
 
       .stat-info p {
-        font-size: 22px;
+        font-size: 18px !important;
       }
 
       .stat-icon {
-        width: 44px;
-        height: 44px;
+        width: 36px !important;
+        height: 36px !important;
+      }
+      .stat-icon span {
+        font-size: 20px !important;
       }
 
-      .stat-icon span {
-        font-size: 24px;
+      #admin-gps-map {
+        height: 330px !important;
+        border-radius: 14px !important;
+      }
+
+      .modal-loc-grid {
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+      }
+      .modal-loc-actions {
+        flex-direction: column !important;
+        gap: 8px !important;
+      }
+      .modal-loc-actions a,
+      .modal-loc-actions button {
+        width: 100% !important;
+        justify-content: center !important;
+      }
+
+      .leaflet-popup-content {
+        min-width: 210px !important;
+        max-width: 250px !important;
+      }
+      .map-popup-header {
+        padding: 10px 12px !important;
+      }
+      .map-popup-body {
+        padding: 10px 12px !important;
+        font-size: 11px !important;
+      }
+      .map-popup-row {
+        gap: 6px !important;
+        margin-bottom: 4px !important;
+      }
+      .map-popup-actions {
+        margin-top: 8px !important;
+        padding-top: 8px !important;
+      }
+      .btn-popup-action {
+        padding: 6px 8px !important;
+        font-size: 10px !important;
+      }
+    }
+
+    /* --- Media Queries: Ultra Small Screens (<= 360px) --- */
+    @media (max-width: 360px) {
+      .stats-grid {
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
       }
     }
 
@@ -1260,7 +1590,7 @@
        REAL-TIME GPS RADAR & MAP STYLES
        ========================================== */
     #admin-gps-map {
-      height: 540px;
+      height: clamp(340px, 48vh, 520px);
       width: 100%;
       border-radius: 20px;
       border: 1.5px solid #e2e8f0;
@@ -1268,6 +1598,7 @@
       position: relative;
       z-index: 1;
       background: #e2e8f0;
+      overflow: hidden;
     }
 
     .gps-marker-wrapper {
@@ -1646,7 +1977,7 @@
           </button>
         </div>
 
-        <div style="overflow-x: auto;">
+        <div class="table-responsive">
           <table class="trx-table" style="width: 100%;">
             <thead>
               <tr>
@@ -1766,7 +2097,7 @@
           <form id="admin-credentials-form" onsubmit="handleAdminCredentialsSubmit(event)"
             style="display: flex; flex-direction: column; gap: 14px; flex: 1;">
             
-            <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 0;">
+            <div class="form-grid form-grid-2col" style="margin-bottom: 0;">
               <div class="form-group">
                 <label style="font-size: 11px; font-weight: 700;">Username Lama</label>
                 <input type="text" id="admin-old-username" required placeholder="Username lama" style="font-size: 13px; padding: 10px 12px;" />
@@ -1777,7 +2108,7 @@
               </div>
             </div>
 
-            <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 0;">
+            <div class="form-grid form-grid-2col" style="margin-bottom: 0;">
               <div class="form-group">
                 <label style="font-size: 11px; font-weight: 700;">Username Baru</label>
                 <input type="text" id="admin-new-username" required placeholder="Username baru" style="font-size: 13px; padding: 10px 12px;" />
@@ -1818,7 +2149,7 @@
           </button>
         </div>
 
-        <div style="overflow-x: auto;">
+        <div class="table-responsive">
           <table class="trx-table" style="width: 100%;">
             <thead>
               <tr>
@@ -1847,7 +2178,7 @@
             Refresh
           </button>
         </div>
-        <div style="overflow-x: auto;">
+        <div class="table-responsive">
           <table style="width: 100%; border-collapse: collapse; min-width: 800px;">
             <thead>
               <tr style="border-bottom: 2px solid var(--border-color); color: var(--text-muted); text-align: left;">
@@ -1879,7 +2210,7 @@
             Refresh
           </button>
         </div>
-        <div style="overflow-x: auto;">
+        <div class="table-responsive">
           <table style="width: 100%; border-collapse: collapse; min-width: 800px;">
             <thead>
               <tr style="border-bottom: 2px solid var(--border-color); color: var(--text-muted); text-align: left;">
@@ -1906,7 +2237,7 @@
       <div style="background: var(--card-bg); border: 1px solid var(--border-color); padding: 24px; border-radius: 24px; box-shadow: 0 10px 30px rgba(123, 45, 142, 0.04);">
 
         <!-- Header -->
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+        <div class="ppob-header-bar">
           <div>
             <h2 style="font-family: var(--font-outfit); font-size: 20px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 10px;">
               <span class="material-symbols-outlined" style="color: var(--primary);">settings_input_component</span>
@@ -1921,17 +2252,20 @@
         </div>
 
         <!-- Category / Brand Selector -->
-        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; padding: 16px; background: #f8fafc; border-radius: 16px; border: 1px solid var(--border-color);">
+        <div id="ppob-filter-bar" class="ppob-filter-bar">
           <div style="display: flex; flex-direction: column; gap: 6px; min-width: 180px; flex: 1;">
             <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Kategori Layanan</label>
             <select id="ppob-admin-category" onchange="onPpobCategoryChange()" style="background: white; border: 1px solid var(--border-color); color: var(--text-main); padding: 10px 12px; border-radius: 10px; outline: none; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;">
               <option value="SEMUA">-- Semua Kategori --</option>
-              <option value="PULSA">Pulsa &amp; Paket Data</option>
-              <option value="GAMES">Voucher Game &amp; Digital</option>
-              <option value="E-Money">E-Money &amp; E-Wallet</option>
-              <option value="PLN">Token PLN Listrik</option>
-              <option value="Aplikasi Premium">Aplikasi Premium (AI / Streaming / Edit)</option>
-              <option value="SMM">Social Media Marketing (SMM)</option>
+              <option value="PULSA">📱 Pulsa &amp; Paket Data (Semua)</option>
+              <option value="PULSA_REGULER">&nbsp;&nbsp;&nbsp;↳ Pulsa Reguler Saja</option>
+              <option value="PAKET_DATA">&nbsp;&nbsp;&nbsp;↳ Paket Data / Kuota Internet</option>
+              <option value="GAMES">🎮 Voucher Game &amp; Digital</option>
+              <option value="E-Money">💳 E-Money &amp; E-Wallet</option>
+              <option value="PLN">⚡ Token PLN Listrik</option>
+              <option value="Aplikasi Premium">💎 Aplikasi Premium (AI / Streaming / Edit)</option>
+              <option value="SMM">🚀 Social Media Marketing (SMM)</option>
+              <option value="BPJS">🏥 Tagihan BPJS Kesehatan</option>
             </select>
           </div>
           <div style="display: flex; flex-direction: column; gap: 6px; min-width: 180px; flex: 1;">
@@ -1981,7 +2315,7 @@
           </button>
 
           <!-- Bulk Fee Tool -->
-          <div style="display: flex; align-items: center; gap: 8px; margin-left: auto; background: #eef2ff; border: 1px solid #c7d2fe; padding: 6px 12px; border-radius: 10px; flex-wrap: wrap;">
+          <div class="ppob-bulk-tool">
             <span style="font-size: 12px; font-weight: 700; color: #4338ca; display: flex; align-items: center; gap: 4px;">
               <span class="material-symbols-outlined" style="font-size: 16px;">tune</span> Set Fee:
             </span>
@@ -1996,7 +2330,7 @@
         </div>
 
         <!-- Fast Filter & High-Performance Pagination Controls Bar -->
-        <div id="ppob-pagination-bar" style="display: none; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; background: #f8fafc; padding: 12px 16px; border-radius: 14px; border: 1px solid var(--border-color);">
+        <div id="ppob-pagination-bar" class="ppob-pagination-bar">
           <!-- Live Search Input -->
           <div style="position: relative; flex: 1; min-width: 240px;">
             <span class="material-symbols-outlined" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 18px;">search</span>
@@ -2021,7 +2355,7 @@
         </div>
 
         <!-- Products Table -->
-        <div style="overflow-x: auto;">
+        <div class="table-responsive">
           <table class="trx-table" style="width: 100%;">
             <thead>
               <tr>
@@ -2092,8 +2426,8 @@
       </div>
 
       <!-- Map Card with Interactive Leaflet Map -->
-      <div class="content-card" style="padding: 20px; margin-bottom: 24px; position: relative;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+      <div class="content-card map-card" style="padding: 20px; margin-bottom: 24px; position: relative;">
+        <div class="map-header-bar">
           <div>
             <h3 style="font-size: 17px; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
               <span class="material-symbols-outlined" style="color: #7B2D8E;">share_location</span>
@@ -2103,7 +2437,7 @@
               Titik lokasi real-time koordinat GPS pengguna yang membuka atau menginstall aplikasi NoxarianetApp.
             </p>
           </div>
-          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+          <div class="map-controls-btns">
             <button onclick="centerMapIndonesia()" class="btn-action" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1;">
               <span class="material-symbols-outlined" style="font-size: 17px;">filter_center_focus</span>
               Pusatkan Indonesia
@@ -2119,7 +2453,7 @@
         <div style="position: relative; width: 100%;">
           <div id="admin-gps-map"></div>
           <!-- Live Radar Overlay Pill -->
-          <div style="position: absolute; top: 14px; right: 14px; z-index: 1000; background: rgba(15, 23, 42, 0.82); backdrop-filter: blur(8px); color: white; padding: 6px 14px; border-radius: 30px; font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 8px; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 4px 15px rgba(0,0,0,0.2); pointer-events: none;">
+          <div class="map-radar-pill">
             <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981; display: inline-block; box-shadow: 0 0 8px #10b981;"></span>
             <span id="map-radar-status">RADAR GPS LIVE AKTIF</span>
           </div>
@@ -2127,8 +2461,8 @@
       </div>
 
       <!-- Tracked Devices Table Card -->
-      <div class="content-card" style="padding: 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+      <div class="content-card tracked-devices-card" style="padding: 20px;">
+        <div class="gps-devices-header">
           <div>
             <h3 style="font-size: 16px; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
               <span class="material-symbols-outlined" style="color: #7B2D8E;">devices</span>
@@ -2139,8 +2473,8 @@
             </p>
           </div>
           <!-- Search & Filter Controls -->
-          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-            <div style="position: relative; width: 240px;">
+          <div class="gps-controls-bar">
+            <div class="gps-search-wrapper">
               <input type="text" id="gps-search-input" oninput="filterGpsDevicesTable()" placeholder="Cari nama, IP, atau HP..."
                 style="width: 100%; padding: 8px 12px 8px 34px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 12px; font-weight: 600; outline: none; background: #f8fafc;" />
               <span class="material-symbols-outlined" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 18px; color: #94a3b8;">search</span>
@@ -2154,7 +2488,7 @@
           </div>
         </div>
 
-        <div style="overflow-x: auto;">
+        <div class="table-responsive">
           <table class="trx-table" style="width: 100%; border-collapse: collapse;">
             <thead>
               <tr style="background: #f8fafc; border-bottom: 2px solid var(--border-color); text-align: left;">
@@ -2223,7 +2557,7 @@
                 <option value="PARTNER">PARTNER</option>
               </select>
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-grid-2col" style="gap: 16px;">
               <div class="form-group">
                 <label>Saldo Utama Awal (Rp)</label>
                 <input type="number" id="add-main-balance" value="0" min="0" />
@@ -2278,7 +2612,7 @@
               <label>Order ID Merchant</label>
               <input type="text" id="trx-order-id" placeholder="Contoh: ORD-xxxxxxxx" />
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-grid-2col" style="gap: 16px;">
               <div class="form-group">
                 <label>Tanggal Transaksi</label>
                 <input type="text" id="trx-date" placeholder="Contoh: 3 Jun 2026" />
@@ -2451,7 +2785,7 @@
         </div>
 
         <!-- Info Grid -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+        <div class="modal-loc-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
           <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 14px;">
             <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">📍 Area / Alamat</span>
             <strong id="modal-loc-location" style="font-size: 13px; color: #0f172a; display: block; word-break: break-word;">Indonesia</strong>
@@ -2488,7 +2822,7 @@
         </div>
 
         <!-- Action Buttons -->
-        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <div class="modal-loc-actions" style="display: flex; gap: 10px; flex-wrap: wrap;">
           <a id="modal-btn-gmaps" href="#" target="_blank" class="btn-primary" style="flex: 1; text-decoration: none; justify-content: center; background: linear-gradient(135deg, #2563eb, #3b82f6); box-shadow: 0 4px 14px rgba(37,99,235,0.3);">
             <span class="material-symbols-outlined">map</span>
             Buka di Google Maps
@@ -2556,7 +2890,7 @@
           adminToken = data.token;
           const modal = document.getElementById('admin-login-modal');
           if (modal) modal.style.display = 'none';
-          loadAdminDashboard();
+          initAdminSession();
         } else {
           if (errEl) {
             errEl.textContent = data.error || data.msg || 'Kredensial salah atau akses ditolak.';
@@ -2576,14 +2910,56 @@
       }
     }
 
+    // Determine which view to open on page load/refresh
+    function getInitialAdminView() {
+      const validViews = ['users', 'deposits', 'withdrawals', 'banners', 'info', 'settings', 'ppob', 'map'];
+      // 1. Check URL Hash (e.g. #map, #ppob, #deposits)
+      const hash = (window.location.hash || '').replace('#', '').trim().toLowerCase();
+      if (hash && validViews.includes(hash)) {
+        return hash;
+      }
+      // 2. Check localStorage from previous session
+      try {
+        const saved = localStorage.getItem('noxAdminActiveView');
+        if (saved && validViews.includes(saved)) {
+          return saved;
+        }
+      } catch (e) {}
+      // 3. Default fallback
+      return 'users';
+    }
+
+    function initAdminSession() {
+      const targetView = getInitialAdminView();
+      switchAdminView(targetView);
+      // Pre-fetch user data in background if initial tab is not users
+      if (targetView !== 'users') {
+        adminFetch('/admin/users').then(data => {
+          if (data && data.success) {
+            usersData = data.users || {};
+            updateStats();
+          }
+        }).catch(() => {});
+      }
+    }
+
     // Check existing auth on load — show modal if no valid admin token
     window.addEventListener('DOMContentLoaded', () => {
       const savedToken = localStorage.getItem('noxAdminToken');
       if (savedToken) {
         adminToken = savedToken;
-        loadAdminDashboard();
+        initAdminSession();
       } else {
         showAdminLoginModal();
+      }
+    });
+
+    // Support browser back/forward buttons & URL hash changes
+    window.addEventListener('hashchange', () => {
+      const hash = (window.location.hash || '').replace('#', '').trim().toLowerCase();
+      const validViews = ['users', 'deposits', 'withdrawals', 'banners', 'info', 'settings', 'ppob', 'map'];
+      if (hash && validViews.includes(hash) && hash !== currentAdminView) {
+        switchAdminView(hash);
       }
     });
 
@@ -2674,6 +3050,7 @@
     function handleAdminLogout() {
       adminToken = '';
       localStorage.removeItem('noxAdminToken');
+      localStorage.removeItem('noxAdminActiveView');
       selectedUsername = null;
       window.location.href = '/index.html';
     }
@@ -2729,6 +3106,16 @@
 
       currentAdminView = view;
 
+      // Persist active view in localStorage and URL hash so refresh restores this tab
+      try {
+        localStorage.setItem('noxAdminActiveView', view);
+        if (window.history && window.history.replaceState) {
+          window.history.replaceState(null, '', '#' + view);
+        } else {
+          window.location.hash = '#' + view;
+        }
+      } catch (e) {}
+
       // Sync mobile dropdown
       const mobileSelect = document.getElementById('admin-mobile-select');
       if (mobileSelect) mobileSelect.value = view;
@@ -2764,6 +3151,12 @@
       } else if (view === 'map') {
         initAdminMap();
         loadTrackedLocations();
+        setTimeout(() => {
+          if (adminGpsMap) adminGpsMap.invalidateSize();
+        }, 150);
+        setTimeout(() => {
+          if (adminGpsMap) adminGpsMap.invalidateSize();
+        }, 400);
       }
     }
 
@@ -2796,8 +3189,10 @@
 
           const canApprove = status !== 'PAID' && status !== 'SUCCESS' && status !== 'COMPLETED';
           const approveBtn = canApprove
-            ? `<button class="action-btn" style="background:#16a34a; color:white; padding:6px 12px; border-radius:8px; border:none; cursor:pointer; font-weight:700; font-size:12px; display:inline-flex; align-items:center; gap:4px;" onclick="approveDeposit('${p.id}')"><span class="material-symbols-outlined" style="font-size:16px;">check_circle</span> Setujui</button>`
-            : '<span style="color:#16a34a; font-weight:700; font-size:12px;">✅ Selesai</span>';
+            ? `<button class="action-btn" style="background:#16a34a; color:white; padding:6px 12px; border-radius:8px; border:none; cursor:pointer; font-weight:700; font-size:12px; display:inline-flex; align-items:center; gap:4px;" onclick="approveDeposit('${p.id}')" title="Setujui dan tambahkan saldo"><span class="material-symbols-outlined" style="font-size:16px;">check_circle</span> Setujui</button>`
+            : '<span style="color:#16a34a; font-weight:700; font-size:12px; display:inline-flex; align-items:center; gap:4px;"><span class="material-symbols-outlined" style="font-size:16px;">check_circle</span> Selesai</span>';
+
+          const deleteBtn = `<button class="action-btn" style="background:#fee2e2; border:1px solid #fecaca; color:#dc2626; padding:6px 12px; border-radius:8px; cursor:pointer; font-weight:700; font-size:12px; display:inline-flex; align-items:center; gap:4px;" onclick="deleteDeposit('${p.id}')" title="Hapus riwayat deposit"><span class="material-symbols-outlined" style="font-size:16px;">delete</span> Hapus</button>`;
 
           const dateStr = p.createdAt ? new Date(p.createdAt).toLocaleString('id-ID') : '-';
           const amt = Number(p.amount || 0).toLocaleString('id-ID');
@@ -2809,7 +3204,12 @@
               <td style="padding: 12px 16px; font-weight:600;">${p.username || '-'}</td>
               <td style="padding: 12px 16px; font-weight:800; color:#7B2D8E;">Rp ${amt}</td>
               <td style="padding: 12px 16px;">${statusBadge}</td>
-              <td style="padding: 12px 16px;">${approveBtn}</td>
+              <td style="padding: 12px 16px;">
+                <div style="display:inline-flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                  ${approveBtn}
+                  ${deleteBtn}
+                </div>
+              </td>
             </tr>
           `;
         }).join('');
@@ -2829,6 +3229,20 @@
         await loadAdminDashboard();
       } else {
         showNotification('❌ Gagal: ' + (res?.error || 'Terjadi kesalahan'), 'error');
+      }
+    }
+
+    async function deleteDeposit(paymentId) {
+      if (!confirm(`Apakah Anda yakin ingin menghapus data deposit ${paymentId}?\nTindakan ini akan menghapus riwayat transaksi secara permanen.`)) return;
+      const res = await adminFetch(`/admin/payments/${encodeURIComponent(paymentId)}`, {
+        method: 'DELETE'
+      });
+      if (res && res.success) {
+        showNotification('🗑️ ' + (res.message || 'Data deposit berhasil dihapus.'), 'delete');
+        await loadAdminPayments();
+        await loadAdminDashboard();
+      } else {
+        showNotification('❌ Gagal menghapus: ' + (res?.error || 'Terjadi kesalahan'), 'error');
       }
     }
 
@@ -4024,11 +4438,14 @@
     const PPOB_BRAND_MAP = {
       'SEMUA':            [''],
       'PULSA':            ['', 'TELKOMSEL','INDOSAT','XL','AXIS','SMARTFREN','TRI','BY.U'],
-      'GAMES':            ['', 'MOBILE LEGENDS','FREE FIRE','PUBG MOBILE','VALORANT','STUMBLE GUYS','LORDS MOBILE'],
-      'E-Money':          ['', 'DANA','OVO','GO PAY','SHOPEE PAY','LINKAJA'],
+      'PULSA_REGULER':    ['', 'TELKOMSEL','INDOSAT','XL','AXIS','SMARTFREN','TRI','BY.U'],
+      'PAKET_DATA':       ['', 'TELKOMSEL','INDOSAT','XL','AXIS','SMARTFREN','TRI','BY.U'],
+      'GAMES':            ['', 'MOBILE LEGENDS','FREE FIRE','PUBG MOBILE','VALORANT','ROBLOX','GENSHIN IMPACT','STUMBLE GUYS','LORDS MOBILE','HONOR OF KINGS','CALL OF DUTY','STEAM WALLET','GARENA','UNIPIN','POINT BLANK'],
+      'E-Money':          ['', 'DANA','OVO','GOPAY','SHOPEEPAY','LINKAJA','MAXIM','GRAB','I-SAKU'],
       'PLN':              ['', 'PLN'],
-      'Aplikasi Premium': ['', 'NETFLIX','CANVA','GEMINI AI','GROK AI','LEONARDO AI','PICSART','ALIGHT MOTION','SPOTIFY'],
-      'SMM':              ['', 'INSTAGRAM','TIKTOK','YOUTUBE']
+      'Aplikasi Premium': ['', 'NETFLIX','CANVA','GEMINI AI','CHATGPT','GROK AI','LEONARDO AI','PICSART','ALIGHT MOTION','SPOTIFY','VIDIO','WETV','YOUTUBE PREMIUM','CAPCUT','ZOOM'],
+      'SMM':              ['', 'INSTAGRAM','TIKTOK','YOUTUBE','SHOPEE','TELEGRAM','FACEBOOK','TWITTER'],
+      'BPJS':             ['', 'BPJS']
     };
 
     function onPpobCategoryChange() {
@@ -4219,7 +4636,14 @@
           <td style="font-weight: 800; color: #059669; font-size: 13px;">
             <span id="ppob-selling-price-${globalIdx}">Rp ${sellingPrice.toLocaleString('id-ID')}</span>
           </td>
-          <td style="font-size: 12px; color: var(--text-muted);">${p.subcategory || p.category || '-'}</td>
+          <td style="font-size: 12px;">
+            <span style="display:inline-block; font-weight:800; color:#7B2D8E; background:rgba(123,45,142,0.08); padding:3px 8px; border-radius:6px; font-size:11px; white-space:nowrap;">
+              ${p.category || 'PPOB'}
+            </span>
+            <div style="font-size:11px; font-weight:600; color:var(--text-muted); margin-top:3px;">
+              ${p.subcategory && p.subcategory !== p.category ? p.subcategory : (p.brand || '')}
+            </div>
+          </td>
           <td style="text-align: center;">
             <label class="ppob-switch">
               <input type="checkbox" ${isActive ? 'checked' : ''} onchange="togglePpobProduct('${p.sku}', this.checked, ${globalIdx})">
@@ -4471,16 +4895,20 @@
       if (adminGpsMap) {
         setTimeout(() => {
           adminGpsMap.invalidateSize();
-        }, 200);
+        }, 150);
+        setTimeout(() => {
+          adminGpsMap.invalidateSize();
+        }, 400);
         return;
       }
 
       try {
-        // Centered over Indonesia [-2.548926, 118.0148634] at zoom 5
+        const isMobile = window.innerWidth <= 640;
+        // Centered over Indonesia [-2.548926, 118.0148634] at zoom 4 (mobile) or 5 (desktop)
         adminGpsMap = L.map('admin-gps-map', {
           zoomControl: true,
           attributionControl: true
-        }).setView([-2.548926, 118.0148634], 5);
+        }).setView([-2.548926, 118.0148634], isMobile ? 4 : 5);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           maxZoom: 19,
@@ -4491,7 +4919,10 @@
 
         setTimeout(() => {
           if (adminGpsMap) adminGpsMap.invalidateSize();
-        }, 300);
+        }, 200);
+        setTimeout(() => {
+          if (adminGpsMap) adminGpsMap.invalidateSize();
+        }, 500);
 
         // Start SSE stream for instant location updates
         connectAdminLocationSSE();
@@ -4502,7 +4933,8 @@
 
     function centerMapIndonesia() {
       if (adminGpsMap) {
-        adminGpsMap.setView([-2.548926, 118.0148634], 5);
+        const isMobile = window.innerWidth <= 640;
+        adminGpsMap.setView([-2.548926, 118.0148634], isMobile ? 4 : 5);
       }
     }
 
@@ -4942,6 +5374,21 @@
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
     }
+
+    // Automatic Leaflet Map Resize & Invalidation on Screen Resize & Orientation Change
+    window.addEventListener('resize', () => {
+      if (adminGpsMap && currentAdminView === 'map') {
+        adminGpsMap.invalidateSize();
+      }
+    });
+
+    window.addEventListener('orientationchange', () => {
+      if (adminGpsMap && currentAdminView === 'map') {
+        setTimeout(() => {
+          if (adminGpsMap) adminGpsMap.invalidateSize();
+        }, 300);
+      }
+    });
   </script>
 
   <!-- Modal: Raw JSON Viewer -->
