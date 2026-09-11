@@ -3668,9 +3668,9 @@ async function handlePpobCheckout(req, res) {
     }
 
     if (isOrderSuccess) {
-      // Deduct balance upon successful submission
-      const newBalance = Math.max(0, currentBal - totalPrice);
-      await db.updateUser(username, { mainBalance: newBalance, saldo: newBalance });
+      // Deduct balance upon successful submission atomically
+      const deductRes = await db.atomicDeductBalance(username, totalPrice, 'mainBalance');
+      const newBalance = deductRes && deductRes.newBalance !== undefined ? deductRes.newBalance : Math.max(0, currentBal - totalPrice);
       let denom = 0;
       const matchDotted = item.name.match(/(\d{1,3}(?:\.\d{3})+)/);
       if (matchDotted) {
@@ -3867,8 +3867,10 @@ app.get('/api/ppob/check-status/:refId', async (req, res) => {
 async function handleWithdrawEwallet(req, res) {
   const username = typeof req.user === 'object' && req.user !== null ? req.user.username : String(req.user || '');
   const { amount, destination, method, requestId, pin, account_name } = req.body;
+  const destinationTarget = destination || req.body.phone || req.body.target || req.body.customerNo;
+  const methodTarget = method || req.body.walletType || req.body.ewallet || 'DANA';
 
-  if (!amount || !destination || !method || !pin) {
+  if (!amount || !destinationTarget || !methodTarget || !pin) {
     return res.status(400).json({ success: false, error: 'Data tidak lengkap. Pastikan nominal, nomor tujuan, metode, dan PIN terisi.' });
   }
 
@@ -3947,7 +3949,7 @@ async function handleWithdrawEwallet(req, res) {
     try {
       orderResult = await sekalipayService.createTransaction({
         sku: item.id,
-        target: String(destination),
+        target: String(destinationTarget),
         ref_id: refId
       });
     } catch (apiErr) {
@@ -3957,11 +3959,11 @@ async function handleWithdrawEwallet(req, res) {
     const isSuccess = orderResult && (orderResult.success || orderResult.status === true || orderResult.httpCode === 200 || orderResult.data);
     const sn = (orderResult.data && (orderResult.data.sn || orderResult.data.serial_number || orderResult.data.voucher)) || '';
     const accName = account_name || (orderResult.data && (orderResult.data.account_name || orderResult.data.customer_name)) || '';
-    const productName = item.name && item.name.toLowerCase().includes('top up') ? item.name : `Top Up ${method}`;
+    const productName = item.name && item.name.toLowerCase().includes('top up') ? item.name : `Top Up ${methodTarget}`;
 
     if (isSuccess) {
-      const newBalance = Math.max(0, currentBal - totalPrice);
-      await db.updateUser(username, { mainBalance: newBalance, saldo: newBalance });
+      const deductRes = await db.atomicDeductBalance(username, totalPrice, 'mainBalance');
+      const newBalance = deductRes && deductRes.newBalance !== undefined ? deductRes.newBalance : Math.max(0, currentBal - totalPrice);
 
       const finalAdminFee = Math.max(0, totalPrice - nominal);
 
@@ -3969,7 +3971,7 @@ async function handleWithdrawEwallet(req, res) {
         id: refId,
         merchant: productName,
         product_name: productName,
-        target: String(destination),
+        target: String(destinationTarget),
         account_name: accName,
         nominal: nominal,
         denom: nominal,
@@ -3991,7 +3993,7 @@ async function handleWithdrawEwallet(req, res) {
       broadcastRealtimeEvent('transaction', {
         targetUsername: username,
         title: '✅ Top Up E-Wallet Berhasil',
-        body: `Top Up ${method} Rp ${nominal.toLocaleString('id-ID')} ke ${destination} berhasil diproses.`,
+        body: `Top Up ${methodTarget} Rp ${nominal.toLocaleString('id-ID')} ke ${destinationTarget} berhasil diproses.`,
         type: 'ewallet_success',
         amount: totalPrice
       });
@@ -3999,10 +4001,10 @@ async function handleWithdrawEwallet(req, res) {
       return res.json({
         success: true,
         status: 'BERHASIL',
-        msg: `Berhasil Top Up ${method} Rp ${nominal.toLocaleString('id-ID')} ke ${destination}`,
+        msg: `Berhasil Top Up ${methodTarget} Rp ${nominal.toLocaleString('id-ID')} ke ${destinationTarget}`,
         mainBalance: newBalance,
         history: userHistory,
-        data: { id: refId, merchant: productName, target: destination, account_name: accName, nominal: nominal, base_price: nominal, adminFee: finalAdminFee, markup: finalAdminFee, amount: totalPrice, sn }
+        data: { id: refId, merchant: productName, target: destinationTarget, account_name: accName, nominal: nominal, base_price: nominal, adminFee: finalAdminFee, markup: finalAdminFee, amount: totalPrice, sn }
       });
     } else {
       const rawErr = (orderResult && (orderResult.message || orderResult.error)) || 'Respon gagal dari provider.';
@@ -4049,11 +4051,92 @@ async function handleWithdrawEwallet(req, res) {
   }
 }
 
+// ==========================================
+// PENCAIRAN SALDO QRIS MERCHANT KE AKUN UTAMA
+// POST /withdraw-qris & POST /api/merchant/withdraw
+// ==========================================
+async function handleWithdrawMerchantQris(req, res) {
+  const username = typeof req.user === 'object' && req.user !== null ? req.user.username : String(req.user || '');
+  const { amount, pin } = req.body;
+  const numAmt = Math.ceil(Number(amount) || 0);
+
+  if (!numAmt || numAmt <= 0) {
+    return res.status(400).json({ success: false, error: 'Nominal pencairan tidak valid.' });
+  }
+
+  try {
+    const user = await db.getUser(username);
+    if (!user) return res.status(404).json({ success: false, error: 'User tidak ditemukan.' });
+
+    // Verify PIN if set on user account
+    if (user.transactionPin || user.pin) {
+      if (pin && !verifyUserPin(user, pin)) {
+        return res.status(400).json({ success: false, error: 'PIN transaksi tidak valid.' });
+      }
+    }
+
+    const curQris = Number(user.qrisBalance || 0);
+    if (curQris < numAmt) {
+      return res.status(400).json({ success: false, error: `Saldo QRIS tidak mencukupi. Saldo saat ini: Rp ${curQris.toLocaleString('id-ID')}` });
+    }
+
+    const deductRes = await db.atomicDeductBalance(username, numAmt, 'qrisBalance');
+    if (!deductRes.success) {
+      return res.status(400).json({ success: false, error: deductRes.error || 'Gagal memotong saldo QRIS.' });
+    }
+
+    const addRes = await db.atomicAddBalance(username, numAmt, 'mainBalance');
+
+    const txId = `WD-QRIS-${Date.now()}`;
+    await db.addHistory(username, {
+      id: txId,
+      merchant: 'Pencairan Saldo QRIS Merchant',
+      product_name: 'Pencairan Saldo QRIS',
+      amount: numAmt,
+      status: 'BERHASIL',
+      type: 'WITHDRAW',
+      category: 'Pencairan Merchant',
+      note: 'Pencairan saldo QRIS ke akun utama',
+      description: `Pencairan saldo QRIS ke akun utama Rp ${numAmt.toLocaleString('id-ID')}`,
+      createdAt: new Date().toISOString()
+    });
+
+    const updatedUser = await db.getUser(username);
+    const newMain = updatedUser ? (updatedUser.mainBalance !== undefined ? updatedUser.mainBalance : updatedUser.saldo || 0) : (addRes.newBalance || 0);
+    const newQris = updatedUser ? (updatedUser.qrisBalance || 0) : (deductRes.newBalance || 0);
+
+    broadcastRealtimeEvent('balance_update', {
+      targetUsername: username,
+      title: '💰 Saldo Merchant Dicairkan',
+      body: `Pencairan Rp ${numAmt.toLocaleString('id-ID')} dari saldo QRIS ke saldo utama berhasil.`,
+      type: 'merchant_withdraw'
+    });
+
+    return res.json({
+      success: true,
+      status: true,
+      message: `Berhasil mencairkan Rp ${numAmt.toLocaleString('id-ID')} ke akun utama.`,
+      mainBalance: newMain,
+      qrisBalance: newQris,
+      history: updatedUser ? updatedUser.history : []
+    });
+  } catch (err) {
+    console.error('[Withdraw QRIS Error]', err);
+    return res.status(500).json({ success: false, error: `Error server: ${err.message}` });
+  }
+}
+
 app.post('/withdraw-buatqris', requireAuth, handleWithdrawEwallet);
 app.post('/api/ewallet/order', requireAuth, handleWithdrawEwallet);
 app.post('/api/ewallet/checkout', requireAuth, handleWithdrawEwallet);
 app.post('/withdraw-dana', requireAuth, handleWithdrawEwallet);
-app.post('/withdraw-qris', requireAuth, handleWithdrawEwallet);
+app.post('/withdraw-qris', requireAuth, (req, res) => {
+  if (req.body && (req.body.destination || req.body.method || req.body.phone || req.body.walletType)) {
+    return handleWithdrawEwallet(req, res);
+  }
+  return handleWithdrawMerchantQris(req, res);
+});
+app.post('/api/merchant/withdraw', requireAuth, handleWithdrawMerchantQris);
 
 // Merchant Config
 app.get('/api/merchant-config', async (req, res) => {

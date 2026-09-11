@@ -3657,6 +3657,7 @@
     }
 
     /* Anti-Forgery Repeating Watermark Grid (NoxarianetApp) */
+    /* Anti-Forgery Repeating Watermark Grid (Subtle, Clean Background) */
     .watermark-grid {
       position: absolute;
       inset: 0;
@@ -3665,32 +3666,22 @@
       user-select: none;
       overflow: hidden;
       border-radius: inherit;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='74' viewBox='0 0 160 74'%3E%3Ctext x='40' y='24' font-family='Plus Jakarta Sans, sans-serif' font-size='10.5' font-weight='700' fill='%237B2D8E' fill-opacity='0.055' text-anchor='middle' transform='rotate(-22 40 24)'%3ENoxarianetApp%3C/text%3E%3Ctext x='120' y='61' font-family='Plus Jakarta Sans, sans-serif' font-size='10.5' font-weight='700' fill='%237B2D8E' fill-opacity='0.055' text-anchor='middle' transform='rotate(-22 120 61)'%3ENoxarianetApp%3C/text%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='100' viewBox='0 0 220 100'%3E%3Ctext x='55' y='32' font-family='Plus Jakarta Sans, sans-serif' font-size='10' font-weight='700' fill='%237B2D8E' fill-opacity='0.018' text-anchor='middle' transform='rotate(-20 55 32)'%3ENoxarianetApp%3C/text%3E%3Ctext x='165' y='82' font-family='Plus Jakarta Sans, sans-serif' font-size='10' font-weight='700' fill='%237B2D8E' fill-opacity='0.018' text-anchor='middle' transform='rotate(-20 165 82)'%3ENoxarianetApp%3C/text%3E%3C/svg%3E");
       background-repeat: repeat;
-      background-size: 160px 74px;
+      background-size: 220px 100px;
     }
     .watermark-item {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 10.5px;
-      font-weight: 700;
-      color: rgba(123, 45, 142, 0.07);
-      letter-spacing: 0.5px;
-      transform: rotate(-22deg);
-      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
-      white-space: nowrap;
-      line-height: 1;
+      display: none;
     }
 
-    /* Struk Premium styles */
+    /* Struk Clean Elegant styles */
     .struk-box {
-      background: rgba(123, 45, 142, 0.02);
-      border: 1px solid rgba(123, 45, 142, 0.08);
-      border-radius: 20px;
+      background: #ffffff;
+      border: 1px solid #f1f5f9;
+      border-radius: 18px;
       padding: 16px 18px;
-      margin: 8px 0 16px;
-      backdrop-filter: blur(4px);
+      margin: 10px 0 16px;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.02);
       position: relative;
       z-index: 2;
     }
@@ -3699,26 +3690,27 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-bottom: 10px;
-      border-bottom: 1px solid rgba(123, 45, 142, 0.06);
-      margin-bottom: 10px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #f1f5f9;
+      margin-bottom: 12px;
     }
     .struk-header .date {
-      font-size: 11px;
+      font-size: 11.5px;
       color: #64748b;
-      font-weight: 500;
+      font-weight: 600;
     }
     .struk-header .status-badge {
       font-size: 11px;
-      font-weight: 700;
-      color: #7B2D8E;
-      background: rgba(123, 45, 142, 0.08);
-      padding: 3px 10px;
-      border-radius: 30px;
-      border: 1px solid rgba(123, 45, 142, 0.15);
+      font-weight: 800;
+      color: #16a34a;
+      background: #f0fdf4;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid #bbf7d0;
       display: inline-flex;
       align-items: center;
-      gap: 3px;
+      gap: 4px;
+      letter-spacing: 0.3px;
     }
 
     .struk-row {
@@ -3726,13 +3718,9 @@
       justify-content: space-between;
       align-items: center;
       gap: 12px;
-      padding: 8px 0;
-      font-size: 12.5px;
+      padding: 9px 0;
+      font-size: 13px;
       color: #334155;
-      border-bottom: 1px solid rgba(123, 45, 142, 0.03);
-    }
-    .struk-row:last-child {
-      border-bottom: none;
     }
     .struk-row .label {
       font-weight: 500;
@@ -3749,52 +3737,51 @@
       flex: 1;
     }
     .struk-row .value.amount {
-      font-size: 19px;
+      font-size: 21px;
       font-weight: 800;
       color: #7B2D8E;
+      letter-spacing: -0.5px;
     }
     .struk-row .value.success {
-      color: #7B2D8E;
+      color: #16a34a;
     }
     .struk-row .value.id-text {
-      font-weight: 600;
-      color: #64748b;
+      font-weight: 700;
+      color: #475569;
       font-size: 11px;
       font-family: monospace;
-      word-break: break-word;
-      overflow-wrap: break-word;
-      letter-spacing: 0.2px;
-      line-height: 1.35;
+      letter-spacing: 0.3px;
+      line-height: 1.4;
     }
 
     .struk-divider {
       border: none;
-      border-top: 1.5px dashed rgba(123, 45, 142, 0.12);
-      margin: 12px 0 10px;
+      border-top: 1px dashed #e2e8f0;
+      margin: 10px 0;
     }
 
     .struk-detail {
-      margin-top: 4px;
+      margin-top: 2px;
     }
     .struk-detail .struk-row {
-      padding: 6px 0;
+      padding: 7px 0;
     }
     .struk-detail .struk-row .label {
       color: #64748b;
-      font-size: 11.5px;
+      font-size: 12px;
     }
     .struk-detail .struk-row .value {
-      font-size: 12.5px;
+      font-size: 13px;
     }
 
     .struk-footer {
-      margin-top: 8px;
-      padding-top: 8px;
-      border-top: 1px solid rgba(123, 45, 142, 0.06);
-      font-size: 9.5px;
-      color: #64748b;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid #f1f5f9;
+      font-size: 10px;
+      color: #94a3b8;
       text-align: center;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.3px;
       font-weight: 600;
     }
 
@@ -4985,10 +4972,10 @@
         </div>
       </div>
 
-      <div style="padding: 16px; overflow-y: auto; flex: 1; background-image: url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'180\' height=\'110\' viewBox=\'0 0 180 110\'%3E%3Ctext x=\'50%25\' y=\'50%25\' font-family=\'Inter, sans-serif\' font-size=\'13\' fill=\'%237B2D8E\' fill-opacity=\'0.035\' text-anchor=\'middle\' transform=\'rotate(-30 90 55)\'%3ENoxarianetApp%3C/text%3E%3C/svg%3E'); background-repeat: repeat;">
+      <div style="padding: 16px; overflow-y: auto; flex: 1; background: #f8fafc;">
 
         <!-- MAIN RECEIPT CARD (Target Capturing html2canvas) -->
-        <div id="trx-receipt-card" style="background: #ffffff; border-radius: 32px; box-shadow: 0 20px 60px rgba(123,45,142,0.06); overflow: hidden; display: flex; flex-direction: column; position: relative; border: 1px solid rgba(123,45,142,0.08); margin: 0 auto 20px; max-width: 420px; width: 100%; box-sizing: border-box; padding: 36px 20px 24px;">
+        <div id="trx-receipt-card" style="background: #ffffff; border-radius: 28px; box-shadow: 0 10px 30px rgba(0,0,0,0.04); overflow: hidden; display: flex; flex-direction: column; position: relative; border: 1px solid #f1f5f9; margin: 0 auto 20px; max-width: 420px; width: 100%; box-sizing: border-box; padding: 32px 20px 24px;">
 
           <!-- WATERMARK "NoxarianetApp" (Anti-Copy / Anti-Pemalsuan Rapat) -->
           <div class="watermark-grid" id="watermarkGrid"></div>
@@ -5079,7 +5066,7 @@
                 </div>
                 <div class="struk-row">
                   <span class="label">Kode Keamanan</span>
-                  <span class="value id-text" id="receipt-hash">SEC: NXW-VERIFIED</span>
+                  <span class="value id-text" id="receipt-hash" style="font-size: 10px; letter-spacing: 0.2px; white-space: nowrap; font-family: monospace;">SEC: NXW-VERIFIED</span>
                 </div>
               </div>
 
@@ -5481,7 +5468,62 @@
       </div>
     </div>
 
-    <!-- MODAL KUNCI APLIKASI TELAH DIHAPUS SESUAI PERMINTAAN USER -->
+    <!-- ====================================================== -->
+    <!-- MODAL VERIFIKASI PIN TRANSAKSI (Transfer / PPOB / E-Wallet) -->
+    <!-- ====================================================== -->
+    <div id="modal-transaction-pin"
+      style="display:none; position: fixed; inset: 0; z-index: 9999; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 20px;">
+      <div
+        style="background: white; border-radius: 26px; padding: 28px 22px; width: 100%; max-width: 380px; box-shadow: 0 25px 60px rgba(0,0,0,0.25); text-align: center; position: relative; animation: slideUpModal 0.25s ease;">
+        
+        <button type="button" onclick="closePinOverlay()" style="position: absolute; top: 16px; right: 16px; background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #64748b;">
+          <span class="material-symbols-outlined" style="font-size: 18px;">close</span>
+        </button>
+
+        <div style="width: 56px; height: 56px; background: rgba(123,45,142,0.1); border-radius: 18px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; color: #7B2D8E;">
+          <span class="material-symbols-outlined" style="font-size: 28px;">lock</span>
+        </div>
+
+        <h3 id="tpin-modal-title" style="font-size: 18px; font-weight: 800; color: #0f172a; margin: 0 0 6px;">PIN Transaksi</h3>
+        <p id="tpin-modal-desc" style="font-size: 12px; color: #64748b; margin: 0 0 18px; line-height: 1.45;">Masukkan 6 digit PIN akun Anda untuk mengonfirmasi transaksi.</p>
+
+        <!-- 6 Digit Inputs -->
+        <div style="display: flex; gap: 7px; justify-content: center; margin-bottom: 12px;">
+          <input type="password" inputmode="numeric" maxlength="1" class="pin-digit-input" id="tpin-d1"
+            style="width: 44px; height: 50px; text-align: center; font-size: 22px; font-weight: 800; border: 2px solid #e2e8f0; border-radius: 12px; outline: none; color: #0f172a;"
+            oninput="movePinFocus(this, 'tpin-d2')" />
+          <input type="password" inputmode="numeric" maxlength="1" class="pin-digit-input" id="tpin-d2"
+            style="width: 44px; height: 50px; text-align: center; font-size: 22px; font-weight: 800; border: 2px solid #e2e8f0; border-radius: 12px; outline: none; color: #0f172a;"
+            oninput="movePinFocus(this, 'tpin-d3')" onkeydown="pinBackspace(event, 'tpin-d1')" />
+          <input type="password" inputmode="numeric" maxlength="1" class="pin-digit-input" id="tpin-d3"
+            style="width: 44px; height: 50px; text-align: center; font-size: 22px; font-weight: 800; border: 2px solid #e2e8f0; border-radius: 12px; outline: none; color: #0f172a;"
+            oninput="movePinFocus(this, 'tpin-d4')" onkeydown="pinBackspace(event, 'tpin-d2')" />
+          <input type="password" inputmode="numeric" maxlength="1" class="pin-digit-input" id="tpin-d4"
+            style="width: 44px; height: 50px; text-align: center; font-size: 22px; font-weight: 800; border: 2px solid #e2e8f0; border-radius: 12px; outline: none; color: #0f172a;"
+            oninput="movePinFocus(this, 'tpin-d5')" onkeydown="pinBackspace(event, 'tpin-d3')" />
+          <input type="password" inputmode="numeric" maxlength="1" class="pin-digit-input" id="tpin-d5"
+            style="width: 44px; height: 50px; text-align: center; font-size: 22px; font-weight: 800; border: 2px solid #e2e8f0; border-radius: 12px; outline: none; color: #0f172a;"
+            oninput="movePinFocus(this, 'tpin-d6')" onkeydown="pinBackspace(event, 'tpin-d4')" />
+          <input type="password" inputmode="numeric" maxlength="1" class="pin-digit-input" id="tpin-d6"
+            style="width: 44px; height: 50px; text-align: center; font-size: 22px; font-weight: 800; border: 2px solid #e2e8f0; border-radius: 12px; outline: none; color: #0f172a;"
+            onkeydown="pinBackspace(event, 'tpin-d5')" oninput="onLastPinDigitEntered(this)" />
+        </div>
+
+        <p id="tpin-error-msg" style="font-size: 11.5px; color: #dc2626; font-weight: 700; margin: 4px 0 12px; display: none;"></p>
+
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 14px;">
+          <button type="button" id="tpin-confirm-btn" onclick="submitTransactionPinOverlay()"
+            style="width: 100%; padding: 14px; border-radius: 14px; border: none; background: linear-gradient(135deg, #7B2D8E, #9B4DB8); color: white; font-weight: 800; font-size: 14px; cursor: pointer; box-shadow: 0 4px 14px rgba(123,45,142,0.3); transition: opacity 0.2s;">
+            Konfirmasi Transaksi
+          </button>
+          <button type="button" id="tpin-biometric-btn" onclick="triggerBiometricForTransaction()"
+            style="display: none; width: 100%; padding: 11px; border-radius: 14px; border: 1.5px solid #cbd5e1; background: #f8fafc; color: #334155; font-weight: 700; font-size: 13px; cursor: pointer; align-items: center; justify-content: center; gap: 6px;">
+            <span class="material-symbols-outlined" style="font-size: 18px; color: #7B2D8E;">fingerprint</span>
+            Gunakan Sidik Jari
+          </button>
+        </div>
+      </div>
+    </div>
 
     <!-- PPOB Purchase Screen -->
     <div id="screen-ppob" class="full-screen-panel"
@@ -8497,12 +8539,7 @@
       let _checkoutType = 'WITHDRAW'; // 'WITHDRAW' or 'TRANSFER'
       let _pendingTransferData = {};
 
-      // Fitur Kirim Saldo dinonaktifkan
-      function openTransferScreen() { showNotification('⚠ Fitur transfer saldo tidak tersedia.'); }
-      function closeTransferScreen() { }
-      function setTransferAmount() { }
-      function validateTransferForm() { }
-      async function openTransferCheckoutModal() { }
+
 
 
 
@@ -8589,8 +8626,8 @@
         clearPinInputs('pin');
       }
 
-      async function confirmWithdrawWithPin() {
-        const pin = getPinValue('pin');
+      async function confirmWithdrawWithPin(passedPin) {
+        const pin = passedPin || getPinValue('pin');
         if (pin.length < 6) { showNotification('⚠ Masukkan 6 digit PIN.'); return; }
 
         const btn = document.getElementById('btn-confirm-checkout');
@@ -8678,6 +8715,92 @@
       }
 
       // ============================================
+      // TRANSACTION PIN OVERLAY MODAL HANDLERS
+      // ============================================
+      var _pinOverlayCallback = null;
+      var _pinOverlayType = null;
+
+      function openPinOverlay(callbackOrType, optionalCallback) {
+        if (typeof callbackOrType === 'function') {
+          _pinOverlayCallback = callbackOrType;
+          _pinOverlayType = 'custom';
+        } else {
+          _pinOverlayType = callbackOrType || 'transaction';
+          _pinOverlayCallback = optionalCallback || null;
+        }
+
+        clearPinInputs('tpin');
+        const errMsg = document.getElementById('tpin-error-msg');
+        if (errMsg) { errMsg.innerText = ''; errMsg.style.display = 'none'; }
+
+        const modal = document.getElementById('modal-transaction-pin');
+        if (modal) {
+          pushNavigationState('modal-transaction-pin');
+          modal.style.display = 'flex';
+        }
+
+        const bioBtn = document.getElementById('tpin-biometric-btn');
+        if (bioBtn) {
+          bioBtn.style.display = isBiometricEnabled ? 'inline-flex' : 'none';
+        }
+
+        setTimeout(() => {
+          const firstInput = document.getElementById('tpin-d1');
+          if (firstInput) firstInput.focus();
+        }, 150);
+      }
+
+      function closePinOverlay() {
+        const modal = document.getElementById('modal-transaction-pin');
+        if (modal) modal.style.display = 'none';
+        clearPinInputs('tpin');
+        _pinOverlayCallback = null;
+        _pinOverlayType = null;
+      }
+
+      function onLastPinDigitEntered(el) {
+        if (el && el.value.length === 1) {
+          setTimeout(() => {
+            submitTransactionPinOverlay();
+          }, 100);
+        }
+      }
+
+      async function triggerBiometricForTransaction() {
+        await triggerBiometricAuth('transaction');
+      }
+
+      function _pinOverlaySubmit(pinValue) {
+        const pin = pinValue || getPinValue('tpin');
+        if (!pin || pin.length < 6) {
+          const errMsg = document.getElementById('tpin-error-msg');
+          if (errMsg) {
+            errMsg.innerText = 'Masukkan 6 digit PIN secara lengkap.';
+            errMsg.style.display = 'block';
+          }
+          return;
+        }
+
+        if (pin && /^\d{6}$/.test(pin)) {
+          try { localStorage.setItem('noxaUserPin', pin); } catch(e) {}
+        }
+
+        const cb = _pinOverlayCallback;
+        const type = _pinOverlayType;
+        closePinOverlay();
+
+        if (typeof cb === 'function') {
+          cb(pin);
+        } else if (type === 'WITHDRAW') {
+          confirmWithdrawWithPin(pin);
+        }
+      }
+
+      function submitTransactionPinOverlay() {
+        _pinOverlaySubmit();
+      }
+
+      // ============================================
       // APP LOCK & NUMPAD PIN VERIFICATION
       // ============================================
       let isAppLockActive = false;
@@ -8760,7 +8883,8 @@
       window.onBiometricResult = window.onBiometricAuthResult;
 
       async function triggerBiometricAuth(context) {
-        if (context === 'transaction' || !isBiometricEnabled) {
+        if (!isBiometricEnabled) {
+          showNotification('ℹ️ Sidik jari dinonaktifkan di pengaturan.');
           return false;
         }
 
@@ -8914,8 +9038,13 @@
 
         if (context === 'transaction') {
           showNotification('✅ Sidik Jari Terverifikasi! Memproses transaksi...');
-          if (_pinOverlayType) {
-            _pinOverlaySubmit('BIOMETRIC_OK');
+          const savedPin = localStorage.getItem('noxaUserPin');
+          if (savedPin && /^\d{6}$/.test(savedPin)) {
+            _pinOverlaySubmit(savedPin);
+          } else {
+            showNotification('ℹ️ Sidik jari valid. Masukkan 6-digit PIN untuk menyelesaikan konfirmasi.');
+            const d1 = document.getElementById('tpin-d1');
+            if (d1) d1.focus();
           }
         }
       }
@@ -9239,6 +9368,82 @@
 
         const brandEl = document.getElementById('merchant-brand-name');
         if (brandEl) brandEl.innerText = userBrandName || localStorage.getItem('noxaBrandName') || 'Nama Toko';
+      }
+
+      function closeMerchantScreen() {
+        const screen = document.getElementById('screen-merchant');
+        if (!screen) return;
+        screen.classList.remove('active');
+        setTimeout(() => {
+          try { screen.style.display = 'none'; } catch (e) {}
+        }, 250);
+      }
+
+      function fillMaxMerchantWithdraw() {
+        const input = document.getElementById('merchant-withdraw-amount');
+        if (input) input.value = Math.max(0, Math.floor(qrisBalance || 0));
+      }
+
+      async function submitMerchantWithdraw() {
+        const input = document.getElementById('merchant-withdraw-amount');
+        const amount = parseInt(input ? input.value : 0, 10);
+        if (!amount || amount <= 0) {
+          showNotification('❌ Masukkan nominal pencairan yang valid.');
+          return;
+        }
+        if (amount > qrisBalance) {
+          showNotification('❌ Saldo QRIS merchant tidak mencukupi.');
+          return;
+        }
+
+        openPinOverlay(async (pin) => {
+          showNotification('⚡ Memproses pencairan saldo merchant...', 'info');
+          try {
+            const response = await fetch('/withdraw-qris', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + getAuthToken()
+              },
+              body: JSON.stringify({ amount: amount, pin: pin })
+            });
+            const result = await response.json();
+
+            if (result.success) {
+              const oldMainBalance = currentBalance;
+              currentBalance = result.mainBalance;
+              qrisBalance = result.qrisBalance;
+              if (result.history) {
+                transactionHistory = result.history;
+                saveHistoryCache();
+              }
+
+              playSuccessSound();
+              showNotification(`✅ Berhasil mencairkan Rp ${amount.toLocaleString('id-ID')} ke Akun Utama!`);
+
+              const merchantSaldoEl = document.getElementById('merchant-saldo-text');
+              if (merchantSaldoEl) merchantSaldoEl.innerText = formatRupiah(qrisBalance);
+              const maxLabel = document.getElementById('merchant-max-withdraw-label');
+              if (maxLabel) maxLabel.innerText = formatRupiah(qrisBalance);
+              if (input) input.value = '';
+
+              closeMerchantScreen();
+              switchTab('home');
+
+              const balanceTextEl = document.getElementById('home-balance-text');
+              if (!isBalanceHidden) {
+                animateBalanceCounter(balanceTextEl, oldMainBalance, currentBalance, 1200);
+              } else {
+                updateBalanceDisplay();
+              }
+              await syncServerState();
+            } else {
+              showNotification('❌ Gagal: ' + (result.error || 'Terjadi kesalahan'));
+            }
+          } catch (err) {
+            showNotification('❌ Kesalahan jaringan saat menghubungi server.');
+          }
+        });
       }
 
       async function refreshMerchantData(btn) {
@@ -9715,9 +9920,10 @@
       // ================================================
 
       var _qrHtml5Scanner = null;
+      var _isQRProcessing = false;
       var _qrScannerMode = 'standalone'; // 'standalone' | 'transfer'
 
-      function openTransferScreen() {
+      function openTransferScreen(targetUser = '') {
         pushNavigationState('transfer');
         const screen = document.getElementById('screen-transfer');
         if (!screen) return;
@@ -9730,13 +9936,21 @@
         const amt = document.getElementById('transfer-amount');
         const note = document.getElementById('transfer-note');
         const recipName = document.getElementById('transfer-recipient-name');
-        if (tgt) tgt.value = '';
+        if (tgt) tgt.value = targetUser || '';
         if (amt) amt.value = '';
         if (note) note.value = '';
         if (recipName) { recipName.textContent = ''; recipName.style.display = 'none'; }
         screen.style.display = 'flex';
         void screen.offsetWidth;
         screen.classList.add('active');
+
+        if (targetUser) {
+          checkTransferTargetUser(targetUser);
+          setTimeout(() => {
+            const inputAmt = document.getElementById('transfer-amount');
+            if (inputAmt) inputAmt.focus();
+          }, 450);
+        }
       }
 
       function closeTransferScreen() {
@@ -9807,6 +10021,10 @@
 
         if (!target) { showNotification('❌ Harap isi username atau nomor penerima.'); return; }
         if (amount < 1000) { showNotification('❌ Nominal transfer minimal Rp 1.000.'); return; }
+        if (amount > currentBalance) {
+          showNotification('❌ Saldo tidak mencukupi untuk transfer nominal ini.');
+          return;
+        }
 
         // Open PIN overlay for verification
         openPinOverlay(async (pin) => {
@@ -9822,9 +10040,35 @@
             const data = await res.json();
             if (data.success) {
               closeTransferScreen();
+              playSuccessSound();
+
+              if (data.mainBalance !== undefined) {
+                applyBalanceUpdate(data.mainBalance, data.history, true);
+              }
+              await syncServerState();
+
               const displayName = data.recipientName ? `${data.recipientName} (@${data.recipientUsername || target})` : target;
+              const txData = (data.history && data.history[0]) ? Object.assign({}, data.history[0]) : {
+                id: 'TF-' + Date.now(),
+                merchant: 'Transfer ke ' + (data.recipientName || target),
+                product_name: 'Transfer Saldo',
+                amount: amount,
+                target: target,
+                account_name: data.recipientName || '',
+                note: note || '',
+                status: 'BERHASIL',
+                type: 'TRANSFER',
+                category: 'Transfer',
+                createdAt: new Date().toISOString()
+              };
+              if (!txData.target) txData.target = target;
+              if (!txData.account_name && data.recipientName) txData.account_name = data.recipientName;
+              if (!txData.amount) txData.amount = amount;
+              if (!txData.note && note) txData.note = note;
+              if (!txData.type) txData.type = 'TRANSFER';
+
+              openPostCheckoutStatus(txData);
               showNotification(`✅ Transfer Rp ${amount.toLocaleString('id-ID')} ke ${displayName} berhasil!`);
-              syncServerState();
             } else {
               showNotification('❌ ' + (data.error || 'Transfer gagal.'));
             }
@@ -9873,6 +10117,7 @@
           showNotification('❌ Library scanner belum siap, coba refresh halaman.');
           return;
         }
+        _isQRProcessing = false;
         const statusEl = document.getElementById('qr-scanner-status');
         const hintEl = document.getElementById('qr-scanner-hint');
         if (statusEl) { statusEl.textContent = ''; statusEl.style.display = 'none'; }
@@ -9886,6 +10131,8 @@
             { facingMode: 'environment' },
             { fps: 20, qrbox: { width: 240, height: 320 } },
             (decodedText) => {
+              if (_isQRProcessing) return;
+              _isQRProcessing = true;
               _onQRScanned(decodedText);
             },
             () => {}
@@ -9984,10 +10231,10 @@
           } catch(e) {}
         }
 
-        // Force stop ALL media stream tracks attached to any video element
+        // Only after Html5Qrcode has stopped, safely release any residual tracks in qr-reader
         try {
-          const videoElements = document.querySelectorAll('video');
-          videoElements.forEach(videoEl => {
+          const readerVideos = document.querySelectorAll('#qr-reader video');
+          readerVideos.forEach(videoEl => {
             if (videoEl && videoEl.srcObject) {
               const tracks = videoEl.srcObject.getTracks ? videoEl.srcObject.getTracks() : [];
               tracks.forEach(track => {
@@ -10019,45 +10266,45 @@
       });
 
       async function _onQRScanned(decodedText) {
-        // Synchronously stop camera video tracks to release camera hardware immediately
+        _isQRProcessing = true;
+
+        // Cleanly stop scanner first without throwing IndexSizeError
         try {
-          const videoElements = document.querySelectorAll('#qr-reader video');
-          videoElements.forEach(videoEl => {
-            if (videoEl && videoEl.srcObject) {
-              const tracks = videoEl.srcObject.getTracks ? videoEl.srcObject.getTracks() : [];
-              tracks.forEach(track => { try { track.stop(); } catch(e) {} });
-              videoEl.srcObject = null;
-            }
-          });
+          await _stopQRScanner();
+        } catch(e) {
+          console.warn('[QR Stop Error]', e);
+        }
+
+        let raw = (decodedText || '').trim();
+        let targetUser = '';
+
+        try {
+          raw = decodeURIComponent(raw);
         } catch(e) {}
 
-        // Wait for full scanner stop
-        await _stopQRScanner();
+        if (raw.startsWith('noxa-transfer:')) {
+          targetUser = raw.replace('noxa-transfer:', '').trim();
+        } else if (raw.startsWith('noxa:')) {
+          targetUser = raw.replace('noxa:', '').trim();
+        } else if (raw.startsWith('{') && raw.endsWith('}')) {
+          try {
+            const parsed = JSON.parse(raw);
+            targetUser = (parsed.username || parsed.target || parsed.user || '').trim();
+          } catch(e) {}
+        } else if (!raw.includes(' ') && !raw.includes('/') && !raw.includes('?') && raw.length >= 3 && raw.length <= 40) {
+          targetUser = raw;
+        }
 
-        // Expected format: noxa-transfer:<username>
-        if (decodedText && decodedText.startsWith('noxa-transfer:')) {
-          const targetUser = decodedText.replace('noxa-transfer:', '').trim();
+        if (targetUser) {
+          try { playSuccessSound(); } catch(e) {}
           closeQRScannerScreen();
-          openTransferScreen();
-          
-          // Wait for the slide-in transition of screen-transfer to fully finish (400ms)
-          setTimeout(async () => {
-            const tgt = document.getElementById('transfer-target');
-            if (tgt) { tgt.value = targetUser; }
-            
-            // Wait for user verification to complete and render in the DOM
-            await checkTransferTargetUser(targetUser);
-            
-            // Once the layout has settled, focus the input to smoothly show the keyboard
-            setTimeout(() => {
-              const amtInput = document.getElementById('transfer-amount');
-              if (amtInput) amtInput.focus();
-            }, 100);
-          }, 400);
+          openTransferScreen(targetUser);
         } else {
           showNotification('⚠️ QR ini bukan kode transfer pengguna yang valid.');
-          // Restart scanner after 2 seconds
-          setTimeout(() => _startQRScanner(), 2000);
+          setTimeout(() => {
+            _isQRProcessing = false;
+            _startQRScanner();
+          }, 2000);
         }
       }
 
@@ -13174,8 +13421,7 @@
           hash |= 0;
         }
         const hashHex = Math.abs(hash).toString(16).toUpperCase().padStart(8, '0');
-        const amountCode = (tx.amount || 0).toString(36).toUpperCase().padStart(6, '0');
-        currentPrintTx._secCode = `NXW-${hashHex}-${amountCode}-VERIFIED`;
+        currentPrintTx._secCode = `NXW-${hashHex}-VERIFIED`;
         document.getElementById('receipt-hash').innerText = `SEC: ${currentPrintTx._secCode}`;
 
         // Update status badge & failure/processing alert dynamically
@@ -13222,9 +13468,9 @@
         grid.innerHTML = `
           <svg width="100%" height="100%" style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; border-radius: inherit; display: block;" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <pattern id="${patId}" width="160" height="74" patternUnits="userSpaceOnUse">
-                <text x="40" y="24" font-family="'Plus Jakarta Sans', -apple-system, sans-serif" font-size="10.5" font-weight="700" fill="#7B2D8E" fill-opacity="0.055" text-anchor="middle" transform="rotate(-22 40 24)">NoxarianetApp</text>
-                <text x="120" y="61" font-family="'Plus Jakarta Sans', -apple-system, sans-serif" font-size="10.5" font-weight="700" fill="#7B2D8E" fill-opacity="0.055" text-anchor="middle" transform="rotate(-22 120 61)">NoxarianetApp</text>
+              <pattern id="${patId}" width="220" height="100" patternUnits="userSpaceOnUse">
+                <text x="55" y="32" font-family="'Plus Jakarta Sans', -apple-system, sans-serif" font-size="10" font-weight="700" fill="#7B2D8E" fill-opacity="0.018" text-anchor="middle" transform="rotate(-20 55 32)">NoxarianetApp</text>
+                <text x="165" y="82" font-family="'Plus Jakarta Sans', -apple-system, sans-serif" font-size="10" font-weight="700" fill="#7B2D8E" fill-opacity="0.018" text-anchor="middle" transform="rotate(-20 165 82)">NoxarianetApp</text>
               </pattern>
             </defs>
             <rect width="100%" height="100%" fill="url(#${patId})" />
@@ -13258,9 +13504,9 @@
             subTitle.innerText = 'TRANSAKSI SELESAI • DANA DITERIMA';
             subTitle.style.color = '#64748b';
           }
-          badge.style.background = 'rgba(123, 45, 142, 0.08)';
-          badge.style.color = '#7B2D8E';
-          badge.style.borderColor = 'rgba(123, 45, 142, 0.15)';
+          badge.style.background = '#f0fdf4';
+          badge.style.color = '#16a34a';
+          badge.style.borderColor = '#bbf7d0';
           badge.innerHTML = '<span class="material-symbols-outlined" style="font-size: 13px;">check_circle</span> BERHASIL';
           if (alertBox) alertBox.style.display = 'none';
         } else if (normalized === 'GAGAL' || normalized === 'FAILED') {
@@ -13656,7 +13902,7 @@
         clone.style.boxSizing = 'border-box';
         clone.style.background = '#ffffff';
         clone.style.borderRadius = '28px';
-        clone.style.border = '1px solid rgba(123, 45, 142, 0.12)';
+        clone.style.border = '1px solid #f1f5f9';
         clone.style.boxShadow = 'none';
         clone.style.padding = '36px 20px 26px';
 
