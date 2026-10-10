@@ -5120,7 +5120,7 @@
       <!-- Sticky Top Header -->
       <div style="background: linear-gradient(135deg, #7B2D8E 0%, #9B4DB8 100%); padding: 18px 16px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; position: sticky; top: 0; z-index: 20; box-shadow: 0 4px 20px rgba(123,45,142,0.25);">
         <div style="display: flex; align-items: center; gap: 12px;">
-          <button onclick="history.back()"
+          <button onclick="finishPostCheckoutAndReturnHome()"
             style="background: rgba(255,255,255,0.2); border: none; color: white; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: background 0.2s;">
             <span class="material-symbols-outlined" style="font-size: 20px;">close</span>
           </button>
@@ -5236,7 +5236,7 @@
           <button onclick="openTrxDetailFromPostCheckout()" style="width: 100%; height: 46px; background: #ffffff; color: #7B2D8E; border: 1.5px solid #e9d5ff; border-radius: 14px; font-weight: 700; font-size: 13.5px; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 8px rgba(123,45,142,0.06); transition: all 0.25s ease;">
             <span class="material-symbols-outlined" style="font-size: 18px;">receipt_long</span> Lihat / Cetak Struk Pembayaran
           </button>
-          <button onclick="history.back()" style="width: 100%; height: 44px; background: #f1f5f9; border: none; color: #475569; border-radius: 14px; font-weight: 700; font-size: 13px; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; transition: background 0.2s;">
+          <button onclick="finishPostCheckoutAndReturnHome()" style="width: 100%; height: 44px; background: #f1f5f9; border: none; color: #475569; border-radius: 14px; font-weight: 700; font-size: 13px; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; transition: background 0.2s;">
             Selesai & Kembali ke Beranda
           </button>
         </div>
@@ -7529,6 +7529,7 @@
                     generateDynamicQR();
                     updateProfileAnalytics();
                     checkAndPromptPin();
+                    initUserChatWebSocket();
                   }).catch(() => {
                     generateDynamicQR();
                     checkAndPromptPin();
@@ -8716,11 +8717,8 @@
 
       // ============================================
       // TRANSACTION PIN OVERLAY MODAL HANDLERS
-      // ============================================
-      var _pinOverlayCallback = null;
-      var _pinOverlayType = null;
-
-      function openPinOverlay(callbackOrType, optionalCallback) {
+      // Legacy PIN Modal Handler (Retained for backwards compatibility)
+      function openLegacyPinModal(callbackOrType, optionalCallback) {
         if (typeof callbackOrType === 'function') {
           _pinOverlayCallback = callbackOrType;
           _pinOverlayType = 'custom';
@@ -8750,7 +8748,7 @@
         }, 150);
       }
 
-      function closePinOverlay() {
+      function closeLegacyPinModal() {
         const modal = document.getElementById('modal-transaction-pin');
         if (modal) modal.style.display = 'none';
         clearPinInputs('tpin');
@@ -8791,7 +8789,7 @@
 
         if (typeof cb === 'function') {
           cb(pin);
-        } else if (type === 'WITHDRAW') {
+        } else if (type === 'WITHDRAW' || type === 'ewallet' || type === 'transaction') {
           confirmWithdrawWithPin(pin);
         }
       }
@@ -9437,11 +9435,14 @@
                 updateBalanceDisplay();
               }
               await syncServerState();
+              return { success: true };
             } else {
               showNotification('❌ Gagal: ' + (result.error || 'Terjadi kesalahan'));
+              return { error: result.error || 'Pencairan saldo gagal.' };
             }
           } catch (err) {
             showNotification('❌ Kesalahan jaringan saat menghubungi server.');
+            return { error: 'Kesalahan jaringan saat menghubungi server.' };
           }
         });
       }
@@ -10069,11 +10070,14 @@
 
               openPostCheckoutStatus(txData);
               showNotification(`✅ Transfer Rp ${amount.toLocaleString('id-ID')} ke ${displayName} berhasil!`);
+              return { success: true };
             } else {
               showNotification('❌ ' + (data.error || 'Transfer gagal.'));
+              return { error: data.error || 'Transfer gagal.' };
             }
           } catch (e) {
             showNotification('❌ Koneksi error: ' + e.message);
+            return { error: 'Koneksi error: ' + e.message };
           } finally {
             if (btn) { btn.disabled = false; btn.textContent = 'Kirim Saldo'; }
           }
@@ -14075,7 +14079,7 @@
         }
       }
 
-      function shareReceiptToWA() {
+      function shareReceiptTextToWA() {
         const tx = currentPrintTx || _currentPostCheckoutTx;
         if (!tx) {
           showNotification('⚠️ Data transaksi belum dimuat.');
@@ -14356,7 +14360,11 @@
       }
 
       async function shareReceiptToWA() {
-        if (!currentPrintTx) return;
+        const tx = currentPrintTx || _currentPostCheckoutTx;
+        if (!tx) {
+          showNotification('⚠️ Data transaksi belum dimuat.');
+          return;
+        }
         const btn = document.getElementById('share-wa-btn');
         const originalHTML = btn ? btn.innerHTML : '';
         if (btn) {
@@ -14365,29 +14373,29 @@
         }
 
         try {
-          const targetNo = currentPrintTx.target || currentPrintTx.phoneNumber || currentPrintTx.customerNo || currentPrintTx.noTujuan || '-';
-          const accName = currentPrintTx.account_name || currentPrintTx.customerName || '-';
-          const snCode = currentPrintTx.product_license || currentPrintTx.license || currentPrintTx.sn || currentPrintTx.voucher || '-';
-          const txDate = document.getElementById('receipt-date-time') ? document.getElementById('receipt-date-time').innerText : (currentPrintTx.date || '-');
-          const secHash = currentPrintTx._secCode || 'NXW-VERIFIED';
+          const targetNo = tx.target || tx.phoneNumber || tx.customerNo || tx.noTujuan || '-';
+          const accName = tx.account_name || tx.customerName || '-';
+          const snCode = tx.product_license || tx.license || tx.sn || tx.voucher || '-';
+          const txDate = document.getElementById('receipt-date-time') ? document.getElementById('receipt-date-time').innerText : (tx.date || '-');
+          const secHash = tx._secCode || 'NXW-VERIFIED';
 
           const captionText = `🧾 *STRUK PEMBAYARAN RESMI NOXAPAY*\n` +
             `----------------------------------------\n` +
-            `📌 *Layanan / Produk:* ${currentPrintTx.merchant || currentPrintTx.product_name || 'NoxaPay'}\n` +
-            `👤 *Atas Nama / Penerima:* ${accName !== '-' ? accName : (currentPrintTx.merchant || 'Pelanggan')}\n` +
+            `📌 *Layanan / Produk:* ${tx.merchant || tx.product_name || 'NoxaPay'}\n` +
+            `👤 *Atas Nama / Penerima:* ${accName !== '-' ? accName : (tx.merchant || 'Pelanggan')}\n` +
             `📱 *No. Tujuan / ID:* ${targetNo}\n` +
-            `💵 *Total Pembayaran:* ${formatRupiah(currentPrintTx.amount || 0)}\n` +
-            `✅ *Status Transaksi:* ${currentPrintTx.status || 'BERHASIL'}\n` +
+            `💵 *Total Pembayaran:* ${formatRupiah(tx.amount || 0)}\n` +
+            `✅ *Status Transaksi:* ${tx.status || 'BERHASIL'}\n` +
             `🕒 *Waktu Transaksi:* ${txDate}\n` +
-            `🔢 *ID Transaksi:* ${currentPrintTx.transactionId || currentPrintTx.id || '-'}\n` +
+            `🔢 *ID Transaksi:* ${tx.transactionId || tx.id || '-'}\n` +
             (snCode && snCode !== '-' ? `🔑 *SN / Lisensi:* ${snCode}\n` : '') +
             `🔐 *Kode Keamanan:* SEC: ${secHash}\n` +
             `----------------------------------------\n` +
             `*NoxariaNet Wallet — Transaksi Enkripsi Sah & Diterbitkan Resmi.*`;
 
-          const canvas = await captureReceiptCardToCanvas(currentPrintTx);
+          const canvas = await captureReceiptCardToCanvas(tx);
           const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
-          const fileName = `Struk_NoxaPay_${currentPrintTx.id || 'TRX'}.png`;
+          const fileName = `Struk_NoxaPay_${tx.id || 'TRX'}.png`;
           const file = new File([blob], fileName, { type: 'image/png' });
 
           if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -16033,6 +16041,7 @@
       var _pinOverlayCallback = null;
 
       function openPinOverlay(type, callback) {
+        pushNavigationState('pin-overlay');
         if (typeof type === 'function') {
           _pinOverlayCallback = type;
           _pinOverlayType = 'custom';
@@ -16046,8 +16055,6 @@
         if (err) err.textContent = '';
         var overlay = document.getElementById('pin-entry-overlay');
         if (overlay) overlay.style.display = 'flex';
-
-
       }
 
       function closePinOverlay() {
@@ -16122,7 +16129,9 @@
           }
         }
 
-        var pin = (isBiometric === 'BIOMETRIC_OK') ? savedPin : _pinOverlayDigits.join('');
+        var pin = (typeof isBiometric === 'string' && /^\d{6}$/.test(isBiometric))
+          ? isBiometric
+          : ((isBiometric === 'BIOMETRIC_OK') ? savedPin : _pinOverlayDigits.join(''));
         if (pin.length !== 6) return;
         localStorage.setItem('noxaUserPin', pin);
 
@@ -16134,8 +16143,19 @@
           await _submitEwalletWithPin(pin);
         } else if (typeof _pinOverlayCallback === 'function') {
           const cb = _pinOverlayCallback;
-          closePinOverlay();
-          cb(pin);
+          try {
+            const res = await cb(pin);
+            if (res && res.error) {
+              const isPinErr = String(res.error).toLowerCase().includes('pin');
+              _pinOverlayShowError(isPinErr ? 'PIN salah. Coba lagi.' : res.error);
+              if (!isPinErr) setTimeout(closePinOverlay, 1500);
+            } else {
+              closePinOverlay();
+            }
+          } catch(e) {
+            _pinOverlayShowError('Koneksi bermasalah. Coba lagi.');
+            setTimeout(closePinOverlay, 1500);
+          }
         }
       }
 
@@ -16154,6 +16174,8 @@
           if (result.success) {
             closePinOverlay();
             closePPOBCheckout();
+            closePPOBScreen();
+            if (typeof closeGameListScreen === 'function') closeGameListScreen();
             if (result.mainBalance !== undefined) applyBalanceUpdate(result.mainBalance, result.history, true);
             await syncServerState();
 
@@ -16387,6 +16409,24 @@
         } catch(e) {}
       }
 
+      function finishPostCheckoutAndReturnHome() {
+        closePostCheckoutStatus();
+        if (typeof closeTrxDetail === 'function') closeTrxDetail();
+        if (typeof closePPOBScreen === 'function') closePPOBScreen();
+        if (typeof closePPOBCheckout === 'function') closePPOBCheckout();
+        if (typeof closeGameListScreen === 'function') closeGameListScreen();
+        if (typeof closeEwalletDanaScreen === 'function') closeEwalletDanaScreen();
+        if (typeof closeEwalletListScreen === 'function') closeEwalletListScreen();
+        if (typeof closeTransferScreen === 'function') closeTransferScreen();
+        if (typeof closeTopUpScreen === 'function') closeTopUpScreen();
+        if (typeof closePinOverlay === 'function') closePinOverlay();
+        if (typeof closeCheckoutModal === 'function') closeCheckoutModal();
+        if (typeof switchTab === 'function') switchTab('home');
+        try {
+          history.replaceState({ root: true, screen: 'home' }, '');
+        } catch(e) {}
+      }
+
       function closeSetupModal() {
         const username = localStorage.getItem('noxaUsername');
         if (username) {
@@ -16396,6 +16436,37 @@
       }
 
       window.addEventListener('popstate', function(event) {
+        // 0. Top-most floating modals and overlays
+        const customAlert = document.getElementById('app-custom-alert-modal');
+        if (customAlert && customAlert.style.display !== 'none') {
+          if (typeof closeCustomAlert === 'function') closeCustomAlert();
+          return;
+        }
+
+        const logoutOverlay = document.getElementById('logout-confirm-overlay');
+        if (logoutOverlay && (logoutOverlay.classList.contains('active') || logoutOverlay.style.display === 'flex')) {
+          if (typeof cancelLogout === 'function') cancelLogout();
+          return;
+        }
+
+        const infoDetailModal = document.getElementById('info-detail-modal');
+        if (infoDetailModal && infoDetailModal.style.display !== 'none') {
+          if (typeof closeInfoDetailModal === 'function') closeInfoDetailModal();
+          return;
+        }
+
+        const csModal = document.getElementById('cs-modal');
+        if (csModal && (csModal.style.display !== 'none' || csModal.classList.contains('active'))) {
+          if (typeof closeCSModal === 'function') closeCSModal();
+          return;
+        }
+
+        const setupPinModal = document.getElementById('modal-setup-pin');
+        if (setupPinModal && setupPinModal.style.display !== 'none') {
+          if (typeof closeSetupPinModal === 'function') closeSetupPinModal();
+          return;
+        }
+
         // 1. Close active modals & screens in reverse z-index / stack order
         const setupModal = document.getElementById('setup-modal');
         if (setupModal && setupModal.style.display !== 'none') {
@@ -16452,12 +16523,6 @@
         }
 
         // 2. Close active full-screen panels in reverse hierarchical stack order (deepest child first)
-        const ewalletDanaScreen = document.getElementById('screen-ewallet-dana');
-        if (ewalletDanaScreen && ewalletDanaScreen.style.display !== 'none') {
-          closeEwalletDanaScreen();
-          return;
-        }
-
         const trxDetailScreen = document.getElementById('screen-trx-detail');
         if (trxDetailScreen && trxDetailScreen.style.display !== 'none') {
           closeTrxDetail();
@@ -16466,7 +16531,13 @@
 
         const postCheckoutScreen = document.getElementById('screen-post-checkout-status');
         if (postCheckoutScreen && postCheckoutScreen.style.display !== 'none') {
-          closePostCheckoutStatus();
+          finishPostCheckoutAndReturnHome();
+          return;
+        }
+
+        const ewalletDanaScreen = document.getElementById('screen-ewallet-dana');
+        if (ewalletDanaScreen && ewalletDanaScreen.style.display !== 'none') {
+          closeEwalletDanaScreen();
           return;
         }
 
@@ -16577,6 +16648,8 @@
                 fullname = parsed.fullname || '';
               }
             }
+            username = username || localStorage.getItem('noxaUsername') || '';
+            fullname = fullname || localStorage.getItem('noxaFullname') || '';
           } catch(e) {}
           return { username, fullname };
         }
