@@ -228,6 +228,99 @@
       perspective: 1000px;
     }
 
+    /* Ultra-Smooth Skeleton Shimmer Loaders & GPU Accelerated Panels */
+    @keyframes skeletonShimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+
+    .skeleton-shimmer {
+      background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+      background-size: 200% 100%;
+      animation: skeletonShimmer 1.5s infinite ease-in-out;
+      border-radius: 8px;
+    }
+
+    .skeleton-box {
+      display: block;
+      width: 100%;
+    }
+
+    .skeleton-card {
+      background: #ffffff;
+      border-radius: 14px;
+      border: 1px solid #e2e8f0;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+
+    .skeleton-line {
+      height: 12px;
+      border-radius: 6px;
+    }
+
+    .skeleton-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* =========================================================
+       NATIVE APP SLIDE IN / PUSH TRANSITION (GESER MASUK)
+       ========================================================= */
+    .full-screen-panel {
+      position: fixed !important;
+      inset: 0 !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      height: 100dvh !important;
+      z-index: 1000;
+      display: flex !important;
+      flex-direction: column;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain;
+      will-change: transform, opacity;
+      transform: translate3d(100%, 0, 0);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.24s ease, visibility 0.32s;
+    }
+
+    .full-screen-panel.active {
+      transform: translate3d(0, 0, 0) !important;
+      opacity: 1 !important;
+      visibility: visible !important;
+      pointer-events: auto !important;
+    }
+
+    /* Push effect on underlying background container */
+    body.panel-open .app-container > main,
+    body.panel-open .app-container > header {
+      transform: translate3d(-18%, 0, 0);
+      opacity: 0.94;
+      filter: brightness(0.97);
+      transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.24s ease, filter 0.32s;
+      pointer-events: none;
+    }
+
+    body .app-container > main,
+    body .app-container > header {
+      will-change: transform, opacity;
+      transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.24s ease, filter 0.3s;
+    }
+
     body {
       background-color: var(--background);
       font-family: 'Plus Jakarta Sans', sans-serif;
@@ -1051,7 +1144,8 @@
       left: 0;
       width: 100%;
       z-index: 2;
-      animation: slideInRightTab 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      will-change: transform, opacity;
+      animation: slideInRightTab 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
     .tab-panel.slide-out-left {
@@ -1061,7 +1155,8 @@
       left: 0;
       width: 100%;
       z-index: 1;
-      animation: slideOutLeftTab 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      will-change: transform, opacity;
+      animation: slideOutLeftTab 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
     .tab-panel.slide-in-left {
@@ -1071,7 +1166,8 @@
       left: 0;
       width: 100%;
       z-index: 2;
-      animation: slideInLeftTab 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      will-change: transform, opacity;
+      animation: slideInLeftTab 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
     .tab-panel.slide-out-right {
@@ -1081,46 +1177,51 @@
       left: 0;
       width: 100%;
       z-index: 1;
-      animation: slideOutRightTab 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      will-change: transform, opacity;
+      animation: slideOutRightTab 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
     @keyframes slideInRightTab {
       from {
-        transform: translateX(100vw);
+        transform: translate3d(100%, 0, 0);
+        opacity: 0.9;
       }
-
       to {
-        transform: translateX(0);
+        transform: translate3d(0, 0, 0);
+        opacity: 1;
       }
     }
 
     @keyframes slideOutLeftTab {
       from {
-        transform: translateX(0);
+        transform: translate3d(0, 0, 0);
+        opacity: 1;
       }
-
       to {
-        transform: translateX(-100vw);
+        transform: translate3d(-25%, 0, 0);
+        opacity: 0.85;
       }
     }
 
     @keyframes slideInLeftTab {
       from {
-        transform: translateX(-100vw);
+        transform: translate3d(-25%, 0, 0);
+        opacity: 0.85;
       }
-
       to {
-        transform: translateX(0);
+        transform: translate3d(0, 0, 0);
+        opacity: 1;
       }
     }
 
     @keyframes slideOutRightTab {
       from {
-        transform: translateX(0);
+        transform: translate3d(0, 0, 0);
+        opacity: 1;
       }
-
       to {
-        transform: translateX(100vw);
+        transform: translate3d(100%, 0, 0);
+        opacity: 0.9;
       }
     }
 
@@ -4751,7 +4852,7 @@
     <!-- ========================================== -->
     <div id="screen-mutasi" class="full-screen-panel" style="background: #f8fafc; display: none;">
       <div style="background: linear-gradient(135deg, #2563eb, #3b82f6); padding: 18px 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; position: sticky; top: 0; z-index: 20;">
-        <button onclick="history.back()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+        <button onclick="handleAppBackNavigation()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
           <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
         </button>
         <div>
@@ -4802,7 +4903,7 @@
     <div id="screen-qr-scanner" class="full-screen-panel" style="background: radial-gradient(circle at 50% 30%, #1e0f36 0%, #0a0614 100%); display: none;">
       <!-- Sticky Top Header -->
       <div style="background: linear-gradient(135deg, #2a1147, #4c1d95); padding: 18px 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; position: sticky; top: 0; z-index: 20; border-bottom: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
-        <button onclick="history.back()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s;" onmousedown="this.style.background='rgba(255,255,255,0.3)'" onmouseup="this.style.background='rgba(255,255,255,0.15)'">
+        <button onclick="handleAppBackNavigation()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s;" onmousedown="this.style.background='rgba(255,255,255,0.3)'" onmouseup="this.style.background='rgba(255,255,255,0.15)'">
           <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
         </button>
         <div>
@@ -4862,7 +4963,7 @@
     <!-- ========================================== -->
     <div id="screen-transfer" class="full-screen-panel" style="background: #f8fafc; display: none;">
       <div style="background: linear-gradient(135deg, #7B2D8E, #a855f7); padding: 18px 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; position: sticky; top: 0; z-index: 20;">
-        <button onclick="history.back()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+        <button onclick="handleAppBackNavigation()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
           <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
         </button>
         <div>
@@ -4956,7 +5057,7 @@
       <!-- Sticky Top Header -->
       <div style="background: linear-gradient(135deg, #1e1b4b, #4c1d95); padding: 18px 16px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; position: sticky; top: 0; z-index: 20;">
         <div style="display: flex; align-items: center; gap: 12px;">
-          <button onclick="history.back()"
+          <button onclick="handleAppBackNavigation()"
             style="background: rgba(255,255,255,0.15); border: none; color: white; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;">
             <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
           </button>
@@ -5263,7 +5364,7 @@
       <div class="merchant-header"
         style="background: var(--primary-gradient); display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
         <div style="display: flex; gap: 16px; align-items: flex-start;">
-          <button class="back-btn" onclick="history.back()">
+          <button class="back-btn" onclick="handleAppBackNavigation()">
             <span class="material-symbols-outlined">arrow_back</span>
           </button>
           <h2>Merchant</h2>
@@ -5530,7 +5631,7 @@
       style="display:none; position: fixed; inset: 0; background: #f8fafc; z-index: 1000; flex-direction: column;">
       <div
         style="background: var(--primary-gradient); padding: 16px; color: white; display: flex; align-items: center; gap: 16px;">
-        <button onclick="history.back()"
+        <button onclick="handleAppBackNavigation()"
           style="background: none; border: none; color: white; cursor: pointer; display: flex;"><span
             class="material-symbols-outlined">arrow_back</span></button>
         <h2 id="ppob-screen-title" style="font-size: 16px; font-weight: 700; flex: 1;">Layanan Digital</h2>
@@ -5572,11 +5673,58 @@
         <!-- Product List -->
         <div style="display: flex; flex-direction: column; gap: 8px; flex: 1;">
           <label style="font-size: 12px; font-weight: 700; color: #64748b;">Pilih Paket / Denominasi</label>
-          <div id="ppob-products-loading"
-            style="display: flex; justify-content: center; align-items: center; padding: 40px; color: #64748b; font-size: 13px; font-weight: 500;">
-            <div class="loader-spinner"
-              style="margin-right: 8px; width: 16px; height: 16px; border: 2px solid #e2e8f0; border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite;">
-            </div> Memuat produk...
+          <!-- Shimmering Skeleton Product Grid Loading -->
+          <div id="ppob-products-loading" style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+              <div class="skeleton-card">
+                <div class="skeleton-shimmer skeleton-line" style="width: 75%; height: 14px;"></div>
+                <div class="skeleton-shimmer skeleton-line" style="width: 90%; height: 11px;"></div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+                  <div class="skeleton-shimmer skeleton-line" style="width: 50%; height: 16px;"></div>
+                  <div class="skeleton-shimmer" style="width: 38px; height: 18px; border-radius: 8px;"></div>
+                </div>
+              </div>
+              <div class="skeleton-card">
+                <div class="skeleton-shimmer skeleton-line" style="width: 65%; height: 14px;"></div>
+                <div class="skeleton-shimmer skeleton-line" style="width: 85%; height: 11px;"></div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+                  <div class="skeleton-shimmer skeleton-line" style="width: 55%; height: 16px;"></div>
+                  <div class="skeleton-shimmer" style="width: 38px; height: 18px; border-radius: 8px;"></div>
+                </div>
+              </div>
+              <div class="skeleton-card">
+                <div class="skeleton-shimmer skeleton-line" style="width: 80%; height: 14px;"></div>
+                <div class="skeleton-shimmer skeleton-line" style="width: 60%; height: 11px;"></div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+                  <div class="skeleton-shimmer skeleton-line" style="width: 45%; height: 16px;"></div>
+                  <div class="skeleton-shimmer" style="width: 38px; height: 18px; border-radius: 8px;"></div>
+                </div>
+              </div>
+              <div class="skeleton-card">
+                <div class="skeleton-shimmer skeleton-line" style="width: 70%; height: 14px;"></div>
+                <div class="skeleton-shimmer skeleton-line" style="width: 90%; height: 11px;"></div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+                  <div class="skeleton-shimmer skeleton-line" style="width: 50%; height: 16px;"></div>
+                  <div class="skeleton-shimmer" style="width: 38px; height: 18px; border-radius: 8px;"></div>
+                </div>
+              </div>
+              <div class="skeleton-card">
+                <div class="skeleton-shimmer skeleton-line" style="width: 60%; height: 14px;"></div>
+                <div class="skeleton-shimmer skeleton-line" style="width: 80%; height: 11px;"></div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+                  <div class="skeleton-shimmer skeleton-line" style="width: 52%; height: 16px;"></div>
+                  <div class="skeleton-shimmer" style="width: 38px; height: 18px; border-radius: 8px;"></div>
+                </div>
+              </div>
+              <div class="skeleton-card">
+                <div class="skeleton-shimmer skeleton-line" style="width: 70%; height: 14px;"></div>
+                <div class="skeleton-shimmer skeleton-line" style="width: 85%; height: 11px;"></div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+                  <div class="skeleton-shimmer skeleton-line" style="width: 48%; height: 16px;"></div>
+                  <div class="skeleton-shimmer" style="width: 38px; height: 18px; border-radius: 8px;"></div>
+                </div>
+              </div>
+            </div>
           </div>
           <div id="ppob-products-list" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
             <!-- Dynamic product cards -->
@@ -5599,7 +5747,7 @@
             <h2 style="font-size: 18px; font-weight: 800; color: #0f172a; margin: 0;">Konfirmasi Pembelian</h2>
             <p style="font-size: 12px; color: #64748b; margin: 4px 0 0;">Periksa detail sebelum melanjutkan</p>
           </div>
-          <button onclick="history.back()"
+          <button onclick="handleAppBackNavigation()"
             style="background: #f1f5f9; border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;">
             <span class="material-symbols-outlined" style="font-size: 20px; color: #64748b;">close</span>
           </button>
@@ -5655,7 +5803,7 @@
     <!-- e-Wallet List Screen (Squircle Grid Layout - Styled per user design) -->
     <div id="screen-ewallet-list" class="full-screen-panel" style="display:none; position: fixed; inset: 0; background: #f8fafc; z-index: 1000; flex-direction: column;">
       <div style="background: linear-gradient(135deg, #7B2D8E 0%, #9B4DB8 100%); padding: 16px; color: white; display: flex; align-items: center; gap: 14px; box-shadow: 0 4px 16px rgba(123,45,142,0.15);">
-        <button onclick="history.back()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+        <button onclick="handleAppBackNavigation()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
           <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
         </button>
         <div>
@@ -5745,7 +5893,7 @@
     <!-- Game Selection Screen (4-Column Squircle Grid Layout with Game Icons) -->
     <div id="screen-game-list" class="full-screen-panel" style="display:none; position: fixed; inset: 0; background: #f8fafc; z-index: 1000; flex-direction: column;">
       <div style="background: linear-gradient(135deg, #7B2D8E 0%, #9B4DB8 100%); padding: 16px; color: white; display: flex; align-items: center; gap: 14px; box-shadow: 0 4px 16px rgba(123,45,142,0.15);">
-        <button onclick="history.back()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+        <button onclick="handleAppBackNavigation()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
           <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
         </button>
         <div>
@@ -5847,7 +5995,7 @@
       style="display:none; position: fixed; inset: 0; background: #f8fafc; z-index: 1001; flex-direction: column;">
       <div
         style="background: var(--primary-gradient); padding: 16px; color: white; display: flex; align-items: center; gap: 16px;">
-        <button onclick="history.back()"
+        <button onclick="handleAppBackNavigation()"
           style="background: none; border: none; color: white; cursor: pointer; display: flex;"><span
             class="material-symbols-outlined">arrow_back</span></button>
         <h2 id="ewallet-withdraw-title" style="font-size: 16px; font-weight: 700; flex: 1;">Top Up DANA</h2>
@@ -5885,13 +6033,32 @@
             <span style="color: #7B2D8E;">Saldo: <span id="dana-main-balance-text">Rp 0</span></span>
           </label>
 
-          <!-- Loading state -->
-          <div id="ewallet-nominal-loading"
-            style="text-align: center; padding: 20px 0; display: flex; flex-direction: column; align-items: center; gap: 8px;">
-            <div
-              style="width: 24px; height: 24px; border: 3px solid #e2e8f0; border-top-color: #7B2D8E; border-radius: 50%; animation: spin 0.8s linear infinite;">
+          <!-- Shimmering Skeleton Nominal Grid Loading -->
+          <div id="ewallet-nominal-loading" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%;">
+            <div class="skeleton-card" style="padding: 16px; align-items: center;">
+              <div class="skeleton-shimmer skeleton-line" style="width: 65%; height: 16px; margin-bottom: 6px;"></div>
+              <div class="skeleton-shimmer skeleton-line" style="width: 40%; height: 11px;"></div>
             </div>
-            <span style="font-size: 12px; color: #94a3b8;">Memuat nominal dari provider...</span>
+            <div class="skeleton-card" style="padding: 16px; align-items: center;">
+              <div class="skeleton-shimmer skeleton-line" style="width: 60%; height: 16px; margin-bottom: 6px;"></div>
+              <div class="skeleton-shimmer skeleton-line" style="width: 40%; height: 11px;"></div>
+            </div>
+            <div class="skeleton-card" style="padding: 16px; align-items: center;">
+              <div class="skeleton-shimmer skeleton-line" style="width: 70%; height: 16px; margin-bottom: 6px;"></div>
+              <div class="skeleton-shimmer skeleton-line" style="width: 40%; height: 11px;"></div>
+            </div>
+            <div class="skeleton-card" style="padding: 16px; align-items: center;">
+              <div class="skeleton-shimmer skeleton-line" style="width: 65%; height: 16px; margin-bottom: 6px;"></div>
+              <div class="skeleton-shimmer skeleton-line" style="width: 40%; height: 11px;"></div>
+            </div>
+            <div class="skeleton-card" style="padding: 16px; align-items: center;">
+              <div class="skeleton-shimmer skeleton-line" style="width: 60%; height: 16px; margin-bottom: 6px;"></div>
+              <div class="skeleton-shimmer skeleton-line" style="width: 40%; height: 11px;"></div>
+            </div>
+            <div class="skeleton-card" style="padding: 16px; align-items: center;">
+              <div class="skeleton-shimmer skeleton-line" style="width: 75%; height: 16px; margin-bottom: 6px;"></div>
+              <div class="skeleton-shimmer skeleton-line" style="width: 40%; height: 11px;"></div>
+            </div>
           </div>
 
           <!-- Dynamic nominal grid (diisi oleh JS) -->
@@ -6434,7 +6601,7 @@
 
       <!-- Header Top Bar (Ungu Putih) -->
       <div style="background: linear-gradient(135deg, #7B2D8E 0%, #9B4DB8 100%); padding: max(44px, calc(env(safe-area-inset-top) + 14px)) 16px 18px; color: white; display: flex; align-items: center; gap: 14px; box-shadow: 0 4px 16px rgba(123,45,142,0.15);">
-        <button onclick="history.back()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+        <button onclick="handleAppBackNavigation()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
           <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
         </button>
         <div>
@@ -6548,9 +6715,12 @@
             <div style="background: #f8fafc; border-radius: 16px; padding: 20px; display: flex; justify-content: center; align-items: center; margin-bottom: 16px; min-height: 240px; border: 1px solid #e2e8f0;">
               <img id="topup-qr-image" style="width: 100%; max-width: 220px; height: auto; aspect-ratio: 1/1; object-fit: contain; display: none; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.06);" alt="Kode QRIS Top Up" />
 
-              <div id="topup-qr-loading" style="display: flex; flex-direction: column; align-items: center; gap: 14px;">
-                <div style="width: 44px; height: 44px; border: 4px solid #e2e8f0; border-top-color: #7B2D8E; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
-                <span style="font-size: 13px; font-weight: 700; color: #7B2D8E;">Membuat QRIS Instan...</span>
+              <!-- Shimmering Skeleton QR Card Loading -->
+              <div id="topup-qr-loading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; width: 100%;">
+                <div class="skeleton-shimmer" style="width: 200px; height: 200px; border-radius: 16px; display: flex; align-items: center; justify-content: center;">
+                  <div style="width: 44px; height: 44px; border: 4px solid rgba(123,45,142,0.2); border-top-color: #7B2D8E; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+                </div>
+                <div class="skeleton-shimmer skeleton-line" style="width: 140px; height: 14px;"></div>
               </div>
 
               <div id="topup-qr-error" style="display: none; flex-direction: column; align-items: center; gap: 10px; color: #ef4444;">
@@ -6592,7 +6762,7 @@
       <!-- Sticky Header -->
       <div
         style="background: linear-gradient(135deg, #7B2D8E, #8b5cf6); padding: 18px 16px; display: flex; align-items: center; gap: 14px; box-shadow: 0 4px 20px rgba(123, 45, 142,0.15); position: sticky; top: 0; z-index: 10;">
-        <button onclick="history.back()"
+        <button onclick="handleAppBackNavigation()"
           style="background: rgba(255,255,255,0.15); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: background 0.2s;"
           onmouseover="this.style.background='rgba(255,255,255,0.25)'"
           onmouseout="this.style.background='rgba(255,255,255,0.15)'">
@@ -6698,7 +6868,7 @@
       <!-- Sticky Header -->
       <div
         style="background: linear-gradient(135deg, #1e1b4b, #4c1d95); padding: 20px 16px 16px; display: flex; align-items: center; gap: 14px; flex-shrink: 0; position: sticky; top: 0; z-index: 10;">
-        <button onclick="history.back()"
+        <button onclick="handleAppBackNavigation()"
           style="background: rgba(255,255,255,0.15); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: background 0.2s;"
           onmouseover="this.style.background='rgba(255,255,255,0.25)'"
           onmouseout="this.style.background='rgba(255,255,255,0.15)'">
@@ -6810,7 +6980,7 @@
       <!-- Top App Bar (WhatsApp Style Header) -->
       <div style="background: linear-gradient(135deg, #7B2D8E 0%, #4c1d95 100%); color: white; padding: max(16px, env(safe-area-inset-top)) 16px 14px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 16px rgba(123,45,142,0.25); flex-shrink: 0; z-index: 20;">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <button onclick="history.back()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='none'">
+          <button onclick="handleAppBackNavigation()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='none'">
             <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
           </button>
           
@@ -8215,7 +8385,10 @@
         const screen = document.getElementById('screen-game-list');
         if (!screen) return;
         screen.classList.remove('active');
-        setTimeout(() => { try { screen.style.display = 'none'; } catch (e) { } }, 250);
+        setTimeout(() => {
+          if (screen.classList.contains('active')) return;
+          try { screen.style.display = 'none'; } catch (e) { }
+        }, 320);
       }
 
       function openEwalletListScreen() {
@@ -8239,7 +8412,10 @@
         const screen = document.getElementById('screen-ewallet-list');
         if (!screen) return;
         screen.classList.remove('active');
-        setTimeout(() => { try { screen.style.display = 'none'; } catch (e) { } }, 250);
+        setTimeout(() => {
+          if (screen.classList.contains('active')) return;
+          try { screen.style.display = 'none'; } catch (e) { }
+        }, 320);
       }
 
       function openEwalletDanaScreen() {
@@ -8473,7 +8649,10 @@
         const screen = document.getElementById('screen-ewallet-dana');
         if (!screen) return;
         screen.classList.remove('active');
-        setTimeout(() => { try { screen.style.display = 'none'; } catch (e) { } }, 250);
+        setTimeout(() => {
+          if (screen.classList.contains('active')) return;
+          try { screen.style.display = 'none'; } catch (e) { }
+        }, 320);
       }
 
       function selectDanaNominal(amount, price, targetCard) {
@@ -9395,8 +9574,9 @@
         if (!screen) return;
         screen.classList.remove('active');
         setTimeout(() => {
+          if (screen.classList.contains('active')) return;
           try { screen.style.display = 'none'; } catch (e) {}
-        }, 250);
+        }, 320);
       }
 
       function fillMaxMerchantWithdraw() {
@@ -9501,9 +9681,28 @@
         if (!ptrElement) return;
 
         function isScrollAtTop() {
-          // Check if active full screen modal or active panel is scrolled down
-          const activeScreen = document.querySelector('.full-screen-panel.active');
-          if (activeScreen && activeScreen.scrollTop > 0) return false;
+          // Never trigger PTR when any full-screen panel or overlay is open
+          const allPanels = document.querySelectorAll('.full-screen-panel');
+          for (let i = 0; i < allPanels.length; i++) {
+            const p = allPanels[i];
+            if (p.classList.contains('active') || (p.style.display && p.style.display !== 'none')) {
+              return false;
+            }
+          }
+
+          // Check if any modal is open
+          const modalIds = ['modal-checkout', 'ppob-checkout-modal', 'receipt-download-modal', 'pin-entry-overlay', 'screen-topup', 'setup-modal'];
+          for (let i = 0; i < modalIds.length; i++) {
+            const m = document.getElementById(modalIds[i]);
+            if (m && (m.classList.contains('active') || (m.style.display && m.style.display !== 'none'))) {
+              return false;
+            }
+          }
+
+          // Only allow PTR on home or merchant tab
+          if (typeof currentTab !== 'undefined' && currentTab !== 'home' && currentTab !== 'merchant') {
+            return false;
+          }
 
           const activePanel = document.querySelector('.tab-panel.active');
           if (activePanel && activePanel.scrollTop > 0) return false;
@@ -9692,7 +9891,10 @@
         const screen = document.getElementById('screen-merchant');
         if (!screen) return;
         screen.classList.remove('active');
-        setTimeout(() => { try { screen.style.display = 'none'; } catch (e) { } }, 250);
+        setTimeout(() => {
+          if (screen.classList.contains('active')) return;
+          try { screen.style.display = 'none'; } catch (e) { }
+        }, 320);
       }
 
       var _screenWakeLock = null;
@@ -13234,8 +13436,14 @@
         if (!screen) return;
         screen.classList.remove('active');
         setTimeout(() => {
+          if (screen.classList.contains('active')) return;
           try { screen.style.display = 'none'; } catch(e) {}
-        }, 200);
+        }, 320);
+      }
+
+      function finishPostCheckoutAndReturnHome() {
+        closePostCheckoutStatus();
+        if (typeof switchTab === 'function') switchTab('home');
       }
 
       function copyPostCheckoutProduct() {
@@ -14689,7 +14897,10 @@
         const screen = document.getElementById('screen-edit-profile');
         if (!screen) return;
         screen.classList.remove('active');
-        setTimeout(() => { screen.style.display = 'none'; }, 200);
+        setTimeout(() => {
+          if (screen.classList.contains('active')) return;
+          screen.style.display = 'none';
+        }, 320);
       }
 
       function openChangePasswordScreen() {
@@ -14709,7 +14920,10 @@
         const screen = document.getElementById('screen-change-password');
         if (!screen) return;
         screen.classList.remove('active');
-        setTimeout(() => { screen.style.display = 'none'; }, 200);
+        setTimeout(() => {
+          if (screen.classList.contains('active')) return;
+          screen.style.display = 'none';
+        }, 320);
       }
 
       async function submitUpdateProfile(btn) {
@@ -14949,7 +15163,10 @@
         const screen = document.getElementById('screen-live-chat');
         if (!screen) return;
         screen.classList.remove('active');
-        setTimeout(() => { screen.style.display = 'none'; }, 200);
+        setTimeout(() => {
+          if (screen.classList.contains('active')) return;
+          screen.style.display = 'none';
+        }, 320);
       }
 
       function initUserChatWebSocket() {
@@ -15308,7 +15525,10 @@
         const screen = document.getElementById('screen-ppob');
         if (!screen) return;
         screen.classList.remove('active');
-        setTimeout(() => { try { screen.style.display = 'none'; } catch (e) { } }, 250);
+        setTimeout(() => {
+          if (screen.classList.contains('active')) return;
+          try { screen.style.display = 'none'; } catch (e) { }
+        }, 320);
       }
 
       async function fetchPpobProducts(category, brand) {
@@ -16321,7 +16541,10 @@
         const screen = document.getElementById('screen-mutasi');
         if (!screen) return;
         screen.classList.remove('active');
-        setTimeout(() => { screen.style.display = 'none'; }, 200);
+        setTimeout(() => {
+          if (screen.classList.contains('active')) return;
+          screen.style.display = 'none';
+        }, 320);
       }
 
       function filterMutasi(type, btn) {
@@ -16331,6 +16554,50 @@
           btn.classList.add('active');
         }
         renderMutasiList();
+      }
+
+      function renderMutasiSkeleton(container) {
+        if (!container) return;
+        container.innerHTML = `
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div class="skeleton-card" style="padding: 14px 16px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
+                  <div class="skeleton-shimmer skeleton-avatar"></div>
+                  <div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
+                    <div class="skeleton-shimmer skeleton-line" style="width: 50%; height: 13px;"></div>
+                    <div class="skeleton-shimmer skeleton-line" style="width: 35%; height: 10px;"></div>
+                  </div>
+                </div>
+                <div class="skeleton-shimmer skeleton-line" style="width: 25%; height: 16px;"></div>
+              </div>
+            </div>
+            <div class="skeleton-card" style="padding: 14px 16px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
+                  <div class="skeleton-shimmer skeleton-avatar"></div>
+                  <div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
+                    <div class="skeleton-shimmer skeleton-line" style="width: 45%; height: 13px;"></div>
+                    <div class="skeleton-shimmer skeleton-line" style="width: 30%; height: 10px;"></div>
+                  </div>
+                </div>
+                <div class="skeleton-shimmer skeleton-line" style="width: 28%; height: 16px;"></div>
+              </div>
+            </div>
+            <div class="skeleton-card" style="padding: 14px 16px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
+                  <div class="skeleton-shimmer skeleton-avatar"></div>
+                  <div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
+                    <div class="skeleton-shimmer skeleton-line" style="width: 60%; height: 13px;"></div>
+                    <div class="skeleton-shimmer skeleton-line" style="width: 40%; height: 10px;"></div>
+                  </div>
+                </div>
+                <div class="skeleton-shimmer skeleton-line" style="width: 22%; height: 16px;"></div>
+              </div>
+            </div>
+          </div>
+        `;
       }
 
       function renderMutasiList() {
@@ -16416,7 +16683,7 @@
       }
 
       // ============================================================
-      // NATIVE PHONE HARDWARE BACK BUTTON NAVIGATION HANDLER
+      // NATIVE PHONE HARDWARE BACK BUTTON & IN-APP BACK NAVIGATION
       // ============================================================
       // Seed root history entry if not set
       try {
@@ -16457,189 +16724,255 @@
         }
       }
 
-      window.addEventListener('popstate', function(event) {
+      // Safe, crash-proof helper to check if an element is genuinely active & visible
+      function isElementTrulyActive(el) {
+        if (!el) return false;
+        // For full-screen panels, active class is the absolute truth of visibility
+        if (el.classList && el.classList.contains('full-screen-panel')) {
+          return el.classList.contains('active');
+        }
+        // Check active class
+        if (el.classList && el.classList.contains('active')) return true;
+        // Check inline style
+        if (el.style && el.style.display && el.style.display !== 'none') return true;
+        return false;
+      }
+
+      // Automatic Slide In / Push Parallax State Synchronizer
+      function syncAppPanelState() {
+        try {
+          const hasActivePanel = !!document.querySelector('.full-screen-panel.active');
+          if (hasActivePanel) {
+            document.body.classList.add('panel-open');
+          } else {
+            document.body.classList.remove('panel-open');
+          }
+        } catch(e) {}
+      }
+
+      // Live mutation observer for instant push/parallax responsiveness
+      try {
+        const _panelObserver = new MutationObserver(syncAppPanelState);
+        window.addEventListener('DOMContentLoaded', () => {
+          document.querySelectorAll('.full-screen-panel').forEach(p => {
+            _panelObserver.observe(p, { attributes: true, attributeFilter: ['class'] });
+          });
+          syncAppPanelState();
+        });
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+          document.querySelectorAll('.full-screen-panel').forEach(p => {
+            _panelObserver.observe(p, { attributes: true, attributeFilter: ['class'] });
+          });
+          syncAppPanelState();
+        }
+      } catch(e) {}
+
+      // Unified Navigation & Back Controller (handles in-app buttons & physical hardware back)
+      function handleAppBackNavigation(fromPopstate = false) {
         // 0. Top-most floating modals and overlays
         const customAlert = document.getElementById('app-custom-alert-modal');
-        if (customAlert && customAlert.style.display !== 'none') {
+        if (isElementTrulyActive(customAlert)) {
           if (typeof closeCustomAlert === 'function') closeCustomAlert();
-          return;
+          return true;
         }
 
         const logoutOverlay = document.getElementById('logout-confirm-overlay');
-        if (logoutOverlay && (logoutOverlay.classList.contains('active') || logoutOverlay.style.display === 'flex')) {
+        if (isElementTrulyActive(logoutOverlay)) {
           if (typeof cancelLogout === 'function') cancelLogout();
-          return;
+          return true;
         }
 
         const infoDetailModal = document.getElementById('info-detail-modal');
-        if (infoDetailModal && infoDetailModal.style.display !== 'none') {
+        if (isElementTrulyActive(infoDetailModal)) {
           if (typeof closeInfoDetailModal === 'function') closeInfoDetailModal();
-          return;
+          return true;
         }
 
         const csModal = document.getElementById('cs-modal');
-        if (csModal && (csModal.style.display !== 'none' || csModal.classList.contains('active'))) {
+        if (isElementTrulyActive(csModal)) {
           if (typeof closeCSModal === 'function') closeCSModal();
-          return;
+          return true;
+        }
+
+        const contactHelperModal = document.getElementById('inapp-contact-helper-modal');
+        if (isElementTrulyActive(contactHelperModal)) {
+          if (typeof closeInAppContactHelperModal === 'function') closeInAppContactHelperModal();
+          return true;
         }
 
         const setupPinModal = document.getElementById('modal-setup-pin');
-        if (setupPinModal && setupPinModal.style.display !== 'none') {
+        if (isElementTrulyActive(setupPinModal)) {
           if (typeof closeSetupPinModal === 'function') closeSetupPinModal();
-          return;
-        }
-
-        // 1. Close active modals & screens in reverse z-index / stack order
-        const setupModal = document.getElementById('setup-modal');
-        if (setupModal && setupModal.style.display !== 'none') {
-          closeSetupModal();
-          return;
+          return true;
         }
 
         const pinOverlay = document.getElementById('pin-entry-overlay');
-        if (pinOverlay && pinOverlay.style.display !== 'none') {
-          closePinOverlay();
-          return;
+        if (isElementTrulyActive(pinOverlay)) {
+          if (typeof closePinOverlay === 'function') closePinOverlay();
+          return true;
         }
 
         const modalCheckout = document.getElementById('modal-checkout');
-        if (modalCheckout && modalCheckout.style.display !== 'none') {
-          closeCheckoutModal();
-          return;
+        if (isElementTrulyActive(modalCheckout)) {
+          if (typeof closeCheckoutModal === 'function') closeCheckoutModal();
+          return true;
         }
 
         const ppobCheckoutModal = document.getElementById('ppob-checkout-modal');
-        if (ppobCheckoutModal && ppobCheckoutModal.style.display !== 'none' && ppobCheckoutModal.style.display !== '') {
-          closePPOBCheckout();
-          return;
+        if (isElementTrulyActive(ppobCheckoutModal)) {
+          if (typeof closePPOBCheckout === 'function') closePPOBCheckout();
+          return true;
         }
 
         const receiptModal = document.getElementById('receipt-download-modal');
-        if (receiptModal && receiptModal.style.display !== 'none') {
-          closeReceiptDownloadModal();
-          return;
+        if (isElementTrulyActive(receiptModal)) {
+          if (typeof closeReceiptDownloadModal === 'function') closeReceiptDownloadModal();
+          return true;
         }
 
         const qrModal = document.getElementById('qr-modal');
-        if (qrModal && qrModal.style.display !== 'none' && qrModal.classList.contains('active')) {
-          closeQRModal();
-          return;
+        if (isElementTrulyActive(qrModal)) {
+          if (typeof closeQRModal === 'function') closeQRModal();
+          return true;
         }
 
         const withdrawModal = document.getElementById('withdraw-modal');
-        if (withdrawModal && withdrawModal.style.display !== 'none' && withdrawModal.classList.contains('active')) {
-          closeWithdrawModal();
-          return;
+        if (isElementTrulyActive(withdrawModal)) {
+          if (typeof closeWithdrawModal === 'function') closeWithdrawModal();
+          return true;
         }
 
         const myQrModal = document.getElementById('modal-my-qr');
-        if (myQrModal && myQrModal.style.display !== 'none') {
-          closeMyQRModal();
-          return;
+        if (isElementTrulyActive(myQrModal)) {
+          if (typeof closeMyQRModal === 'function') closeMyQRModal();
+          return true;
         }
 
         const zoomOverlay = document.getElementById('zoom-overlay');
-        if (zoomOverlay && zoomOverlay.style.display !== 'none' && zoomOverlay.classList.contains('active')) {
-          closeZoomModal();
-          return;
+        if (isElementTrulyActive(zoomOverlay)) {
+          if (typeof closeZoomModal === 'function') closeZoomModal();
+          return true;
         }
 
-        // 2. Close active full-screen panels in reverse hierarchical stack order (deepest child first)
+        // 1. Transaction Detail & Receipt Screen
         const trxDetailScreen = document.getElementById('screen-trx-detail');
-        if (trxDetailScreen && trxDetailScreen.style.display !== 'none') {
-          closeTrxDetail();
-          return;
+        if (isElementTrulyActive(trxDetailScreen)) {
+          if (typeof closeTrxDetail === 'function') closeTrxDetail();
+          return true;
         }
 
         const postCheckoutScreen = document.getElementById('screen-post-checkout-status');
-        if (postCheckoutScreen && postCheckoutScreen.style.display !== 'none') {
-          finishPostCheckoutAndReturnHome();
-          return;
+        if (isElementTrulyActive(postCheckoutScreen)) {
+          if (typeof finishPostCheckoutAndReturnHome === 'function') finishPostCheckoutAndReturnHome();
+          return true;
+        }
+
+        // 2. Sub-screens under services
+        const topupQrisStep = document.getElementById('topup-step-qris');
+        const topupScreen = document.getElementById('screen-topup');
+        if (isElementTrulyActive(topupScreen)) {
+          if (isElementTrulyActive(topupQrisStep)) {
+            if (typeof resetTopUpToInput === 'function') {
+              resetTopUpToInput();
+              return true;
+            }
+          }
+          if (typeof closeTopUpScreen === 'function') closeTopUpScreen();
+          return true;
         }
 
         const ewalletDanaScreen = document.getElementById('screen-ewallet-dana');
-        if (ewalletDanaScreen && ewalletDanaScreen.style.display !== 'none') {
-          closeEwalletDanaScreen();
-          return;
+        if (isElementTrulyActive(ewalletDanaScreen)) {
+          if (typeof closeEwalletDanaScreen === 'function') closeEwalletDanaScreen();
+          return true;
         }
 
         const ppobScreen = document.getElementById('screen-ppob');
-        if (ppobScreen && ppobScreen.style.display !== 'none') {
-          closePPOBScreen();
-          return;
+        if (isElementTrulyActive(ppobScreen)) {
+          if (typeof closePPOBScreen === 'function') closePPOBScreen();
+          return true;
         }
 
-        // First-level full-screen screens (opened from Home)
+        // 3. First-level full-screen screens
         const gameListScreen = document.getElementById('screen-game-list');
-        if (gameListScreen && gameListScreen.style.display !== 'none') {
-          closeGameListScreen();
-          return;
+        if (isElementTrulyActive(gameListScreen)) {
+          if (typeof closeGameListScreen === 'function') closeGameListScreen();
+          return true;
         }
 
         const ewalletListScreen = document.getElementById('screen-ewallet-list');
-        if (ewalletListScreen && ewalletListScreen.style.display !== 'none') {
-          closeEwalletListScreen();
-          return;
+        if (isElementTrulyActive(ewalletListScreen)) {
+          if (typeof closeEwalletListScreen === 'function') closeEwalletListScreen();
+          return true;
         }
 
         const merchantScreen = document.getElementById('screen-merchant');
-        if (merchantScreen && merchantScreen.style.display !== 'none') {
-          closeMerchantScreen();
-          return;
+        if (isElementTrulyActive(merchantScreen)) {
+          if (typeof closeMerchantScreen === 'function') closeMerchantScreen();
+          return true;
         }
 
         const qrScannerScreen = document.getElementById('screen-qr-scanner');
-        if (qrScannerScreen && qrScannerScreen.style.display !== 'none') {
-          closeQRScannerScreen();
-          return;
+        if (isElementTrulyActive(qrScannerScreen)) {
+          if (typeof closeQRScannerScreen === 'function') closeQRScannerScreen();
+          return true;
         }
 
         const transferScreen = document.getElementById('screen-transfer');
-        if (transferScreen && transferScreen.style.display !== 'none') {
-          closeTransferScreen();
-          return;
-        }
-
-        const topupScreen = document.getElementById('screen-topup');
-        if (topupScreen && topupScreen.style.display !== 'none') {
-          closeTopUpScreen();
-          return;
+        if (isElementTrulyActive(transferScreen)) {
+          if (typeof closeTransferScreen === 'function') closeTransferScreen();
+          return true;
         }
 
         const mutasiScreen = document.getElementById('screen-mutasi');
-        if (mutasiScreen && mutasiScreen.style.display !== 'none') {
-          closeMutasiScreen();
-          return;
+        if (isElementTrulyActive(mutasiScreen)) {
+          if (typeof closeMutasiScreen === 'function') closeMutasiScreen();
+          return true;
         }
 
         const editProfileScreen = document.getElementById('screen-edit-profile');
-        if (editProfileScreen && editProfileScreen.style.display !== 'none') {
-          closeEditProfileScreen();
-          return;
+        if (isElementTrulyActive(editProfileScreen)) {
+          if (typeof closeEditProfileScreen === 'function') closeEditProfileScreen();
+          return true;
         }
 
         const changePasswordScreen = document.getElementById('screen-change-password');
-        if (changePasswordScreen && changePasswordScreen.style.display !== 'none') {
-          closeChangePasswordScreen();
-          return;
+        if (isElementTrulyActive(changePasswordScreen)) {
+          if (typeof closeChangePasswordScreen === 'function') closeChangePasswordScreen();
+          return true;
         }
 
         const liveChatScreen = document.getElementById('screen-live-chat');
-        if (liveChatScreen && liveChatScreen.style.display !== 'none') {
-          closeLiveChatScreen();
-          return;
+        if (isElementTrulyActive(liveChatScreen)) {
+          if (typeof closeLiveChatScreen === 'function') closeLiveChatScreen();
+          return true;
         }
 
-        // 3. If no modal/panel is open, switch back to Home tab if currently on sub-tabs
+        // 4. Setup modal auth screen (only close if logged in)
+        const setupModal = document.getElementById('setup-modal');
+        if (isElementTrulyActive(setupModal)) {
+          const username = localStorage.getItem('noxaUsername');
+          if (username) {
+            closeSetupModal();
+            return true;
+          }
+        }
+
+        // 5. If no modal/panel is open, switch back to Home tab if currently on other tabs
         if (typeof currentTab !== 'undefined' && currentTab !== 'home') {
-          switchTab('home');
-          return;
+          if (typeof switchTab === 'function') switchTab('home');
+          return true;
         }
 
-        // 4. Root Guard: If on Home tab, re-push a guard state so back press NEVER exits app unexpectedly
+        // 6. Root Guard: If on Home tab, re-push a guard state so phone back button NEVER exits app or crashes webview
         try {
           history.pushState({ root: true, screen: 'home' }, '');
         } catch(e) {}
+        return false;
+      }
+
+      window.addEventListener('popstate', function(event) {
+        handleAppBackNavigation(true);
       });
     </script>
 
