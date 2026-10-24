@@ -231,18 +231,20 @@
     /* Ultra-Smooth Skeleton Shimmer Loaders & GPU Accelerated Panels */
     @keyframes skeletonShimmer {
       0% {
-        background-position: -200% 0;
+        background-position: 200% 0;
       }
       100% {
-        background-position: 200% 0;
+        background-position: -200% 0;
       }
     }
 
     .skeleton-shimmer {
-      background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
-      background-size: 200% 100%;
-      animation: skeletonShimmer 1.5s infinite ease-in-out;
+      background: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 20%, #cbd5e1 50%, #e2e8f0 80%, #f1f5f9 100%);
+      background-size: 250% 100%;
+      animation: skeletonShimmer 1.6s infinite linear;
       border-radius: 8px;
+      position: relative;
+      overflow: hidden;
     }
 
     .skeleton-box {
@@ -250,27 +252,31 @@
       width: 100%;
     }
 
-    .skeleton-card {
-      background: #ffffff;
-      border-radius: 14px;
-      border: 1px solid #e2e8f0;
-      padding: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
-    }
-
     .skeleton-line {
-      height: 12px;
+      height: 14px;
+      margin-bottom: 6px;
       border-radius: 6px;
     }
 
     .skeleton-avatar {
-      width: 40px;
-      height: 40px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
       flex-shrink: 0;
+    }
+
+    .skeleton-card {
+      background: #ffffff;
+      border-radius: 12px;
+      border: 1.5px solid #e2e8f0;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 8px;
+      min-height: 82px;
+      box-sizing: border-box;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
     }
 
     /* =========================================================
@@ -5674,55 +5680,47 @@
         <div style="display: flex; flex-direction: column; gap: 8px; flex: 1;">
           <label style="font-size: 12px; font-weight: 700; color: #64748b;">Pilih Paket / Denominasi</label>
           <!-- Shimmering Skeleton Product Grid Loading -->
-          <div id="ppob-products-loading" style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
-              <div class="skeleton-card">
-                <div class="skeleton-shimmer skeleton-line" style="width: 75%; height: 14px;"></div>
-                <div class="skeleton-shimmer skeleton-line" style="width: 90%; height: 11px;"></div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
-                  <div class="skeleton-shimmer skeleton-line" style="width: 50%; height: 16px;"></div>
-                  <div class="skeleton-shimmer" style="width: 38px; height: 18px; border-radius: 8px;"></div>
-                </div>
+          <div id="ppob-products-loading" style="display: none; grid-template-columns: repeat(2, 1fr); gap: 8px; width: 100%;">
+            <div class="skeleton-card">
+              <div class="skeleton-shimmer" style="width: 75%; height: 14px; border-radius: 6px;"></div>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-top: auto; border-top: 1px dashed #f1f5f9; padding-top: 6px;">
+                <div class="skeleton-shimmer" style="width: 55%; height: 16px; border-radius: 6px;"></div>
+                <div class="skeleton-shimmer" style="width: 36px; height: 18px; border-radius: 8px;"></div>
               </div>
-              <div class="skeleton-card">
-                <div class="skeleton-shimmer skeleton-line" style="width: 65%; height: 14px;"></div>
-                <div class="skeleton-shimmer skeleton-line" style="width: 85%; height: 11px;"></div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
-                  <div class="skeleton-shimmer skeleton-line" style="width: 55%; height: 16px;"></div>
-                  <div class="skeleton-shimmer" style="width: 38px; height: 18px; border-radius: 8px;"></div>
-                </div>
+            </div>
+            <div class="skeleton-card">
+              <div class="skeleton-shimmer" style="width: 65%; height: 14px; border-radius: 6px;"></div>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-top: auto; border-top: 1px dashed #f1f5f9; padding-top: 6px;">
+                <div class="skeleton-shimmer" style="width: 50%; height: 16px; border-radius: 6px;"></div>
+                <div class="skeleton-shimmer" style="width: 36px; height: 18px; border-radius: 8px;"></div>
               </div>
-              <div class="skeleton-card">
-                <div class="skeleton-shimmer skeleton-line" style="width: 80%; height: 14px;"></div>
-                <div class="skeleton-shimmer skeleton-line" style="width: 60%; height: 11px;"></div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
-                  <div class="skeleton-shimmer skeleton-line" style="width: 45%; height: 16px;"></div>
-                  <div class="skeleton-shimmer" style="width: 38px; height: 18px; border-radius: 8px;"></div>
-                </div>
+            </div>
+            <div class="skeleton-card">
+              <div class="skeleton-shimmer" style="width: 80%; height: 14px; border-radius: 6px;"></div>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-top: auto; border-top: 1px dashed #f1f5f9; padding-top: 6px;">
+                <div class="skeleton-shimmer" style="width: 60%; height: 16px; border-radius: 6px;"></div>
+                <div class="skeleton-shimmer" style="width: 36px; height: 18px; border-radius: 8px;"></div>
               </div>
-              <div class="skeleton-card">
-                <div class="skeleton-shimmer skeleton-line" style="width: 70%; height: 14px;"></div>
-                <div class="skeleton-shimmer skeleton-line" style="width: 90%; height: 11px;"></div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
-                  <div class="skeleton-shimmer skeleton-line" style="width: 50%; height: 16px;"></div>
-                  <div class="skeleton-shimmer" style="width: 38px; height: 18px; border-radius: 8px;"></div>
-                </div>
+            </div>
+            <div class="skeleton-card">
+              <div class="skeleton-shimmer" style="width: 70%; height: 14px; border-radius: 6px;"></div>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-top: auto; border-top: 1px dashed #f1f5f9; padding-top: 6px;">
+                <div class="skeleton-shimmer" style="width: 52%; height: 16px; border-radius: 6px;"></div>
+                <div class="skeleton-shimmer" style="width: 36px; height: 18px; border-radius: 8px;"></div>
               </div>
-              <div class="skeleton-card">
-                <div class="skeleton-shimmer skeleton-line" style="width: 60%; height: 14px;"></div>
-                <div class="skeleton-shimmer skeleton-line" style="width: 80%; height: 11px;"></div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
-                  <div class="skeleton-shimmer skeleton-line" style="width: 52%; height: 16px;"></div>
-                  <div class="skeleton-shimmer" style="width: 38px; height: 18px; border-radius: 8px;"></div>
-                </div>
+            </div>
+            <div class="skeleton-card">
+              <div class="skeleton-shimmer" style="width: 60%; height: 14px; border-radius: 6px;"></div>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-top: auto; border-top: 1px dashed #f1f5f9; padding-top: 6px;">
+                <div class="skeleton-shimmer" style="width: 48%; height: 16px; border-radius: 6px;"></div>
+                <div class="skeleton-shimmer" style="width: 36px; height: 18px; border-radius: 8px;"></div>
               </div>
-              <div class="skeleton-card">
-                <div class="skeleton-shimmer skeleton-line" style="width: 70%; height: 14px;"></div>
-                <div class="skeleton-shimmer skeleton-line" style="width: 85%; height: 11px;"></div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
-                  <div class="skeleton-shimmer skeleton-line" style="width: 48%; height: 16px;"></div>
-                  <div class="skeleton-shimmer" style="width: 38px; height: 18px; border-radius: 8px;"></div>
-                </div>
+            </div>
+            <div class="skeleton-card">
+              <div class="skeleton-shimmer" style="width: 75%; height: 14px; border-radius: 6px;"></div>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-top: auto; border-top: 1px dashed #f1f5f9; padding-top: 6px;">
+                <div class="skeleton-shimmer" style="width: 55%; height: 16px; border-radius: 6px;"></div>
+                <div class="skeleton-shimmer" style="width: 36px; height: 18px; border-radius: 8px;"></div>
               </div>
             </div>
           </div>
@@ -6034,30 +6032,48 @@
           </label>
 
           <!-- Shimmering Skeleton Nominal Grid Loading -->
-          <div id="ewallet-nominal-loading" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%;">
-            <div class="skeleton-card" style="padding: 16px; align-items: center;">
-              <div class="skeleton-shimmer skeleton-line" style="width: 65%; height: 16px; margin-bottom: 6px;"></div>
-              <div class="skeleton-shimmer skeleton-line" style="width: 40%; height: 11px;"></div>
+          <div id="ewallet-nominal-loading" style="display: none; grid-template-columns: repeat(2, 1fr); gap: 8px; width: 100%;">
+            <div class="skeleton-card">
+              <div class="skeleton-shimmer" style="width: 75%; height: 14px; border-radius: 6px;"></div>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-top: auto; border-top: 1px dashed #f1f5f9; padding-top: 6px;">
+                <div class="skeleton-shimmer" style="width: 55%; height: 16px; border-radius: 6px;"></div>
+                <div class="skeleton-shimmer" style="width: 36px; height: 18px; border-radius: 8px;"></div>
+              </div>
             </div>
-            <div class="skeleton-card" style="padding: 16px; align-items: center;">
-              <div class="skeleton-shimmer skeleton-line" style="width: 60%; height: 16px; margin-bottom: 6px;"></div>
-              <div class="skeleton-shimmer skeleton-line" style="width: 40%; height: 11px;"></div>
+            <div class="skeleton-card">
+              <div class="skeleton-shimmer" style="width: 65%; height: 14px; border-radius: 6px;"></div>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-top: auto; border-top: 1px dashed #f1f5f9; padding-top: 6px;">
+                <div class="skeleton-shimmer" style="width: 50%; height: 16px; border-radius: 6px;"></div>
+                <div class="skeleton-shimmer" style="width: 36px; height: 18px; border-radius: 8px;"></div>
+              </div>
             </div>
-            <div class="skeleton-card" style="padding: 16px; align-items: center;">
-              <div class="skeleton-shimmer skeleton-line" style="width: 70%; height: 16px; margin-bottom: 6px;"></div>
-              <div class="skeleton-shimmer skeleton-line" style="width: 40%; height: 11px;"></div>
+            <div class="skeleton-card">
+              <div class="skeleton-shimmer" style="width: 80%; height: 14px; border-radius: 6px;"></div>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-top: auto; border-top: 1px dashed #f1f5f9; padding-top: 6px;">
+                <div class="skeleton-shimmer" style="width: 60%; height: 16px; border-radius: 6px;"></div>
+                <div class="skeleton-shimmer" style="width: 36px; height: 18px; border-radius: 8px;"></div>
+              </div>
             </div>
-            <div class="skeleton-card" style="padding: 16px; align-items: center;">
-              <div class="skeleton-shimmer skeleton-line" style="width: 65%; height: 16px; margin-bottom: 6px;"></div>
-              <div class="skeleton-shimmer skeleton-line" style="width: 40%; height: 11px;"></div>
+            <div class="skeleton-card">
+              <div class="skeleton-shimmer" style="width: 70%; height: 14px; border-radius: 6px;"></div>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-top: auto; border-top: 1px dashed #f1f5f9; padding-top: 6px;">
+                <div class="skeleton-shimmer" style="width: 52%; height: 16px; border-radius: 6px;"></div>
+                <div class="skeleton-shimmer" style="width: 36px; height: 18px; border-radius: 8px;"></div>
+              </div>
             </div>
-            <div class="skeleton-card" style="padding: 16px; align-items: center;">
-              <div class="skeleton-shimmer skeleton-line" style="width: 60%; height: 16px; margin-bottom: 6px;"></div>
-              <div class="skeleton-shimmer skeleton-line" style="width: 40%; height: 11px;"></div>
+            <div class="skeleton-card">
+              <div class="skeleton-shimmer" style="width: 60%; height: 14px; border-radius: 6px;"></div>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-top: auto; border-top: 1px dashed #f1f5f9; padding-top: 6px;">
+                <div class="skeleton-shimmer" style="width: 48%; height: 16px; border-radius: 6px;"></div>
+                <div class="skeleton-shimmer" style="width: 36px; height: 18px; border-radius: 8px;"></div>
+              </div>
             </div>
-            <div class="skeleton-card" style="padding: 16px; align-items: center;">
-              <div class="skeleton-shimmer skeleton-line" style="width: 75%; height: 16px; margin-bottom: 6px;"></div>
-              <div class="skeleton-shimmer skeleton-line" style="width: 40%; height: 11px;"></div>
+            <div class="skeleton-card">
+              <div class="skeleton-shimmer" style="width: 75%; height: 14px; border-radius: 6px;"></div>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-top: auto; border-top: 1px dashed #f1f5f9; padding-top: 6px;">
+                <div class="skeleton-shimmer" style="width: 55%; height: 16px; border-radius: 6px;"></div>
+                <div class="skeleton-shimmer" style="width: 36px; height: 18px; border-radius: 8px;"></div>
+              </div>
             </div>
           </div>
 
@@ -8533,7 +8549,7 @@
         // Reset nominal grid ke state loading
         const loadingEl = document.getElementById('ewallet-nominal-loading');
         const gridEl = document.getElementById('ewallet-nominal-grid');
-        if (loadingEl) loadingEl.style.display = 'flex';
+        if (loadingEl) loadingEl.style.display = 'grid';
         if (gridEl) gridEl.innerHTML = '';
 
         const submitBtn = document.getElementById('btn-submit-dana');
@@ -15545,8 +15561,8 @@
         const loading = document.getElementById('ppob-products-loading');
         const list = document.getElementById('ppob-products-list');
 
-        loading.style.display = 'flex';
-        list.innerHTML = '';
+        if (loading) loading.style.display = 'grid';
+        if (list) list.innerHTML = '';
 
         try {
           const uname = localStorage.getItem('noxaUsername') || 'guest';
@@ -16531,7 +16547,16 @@
         const mutasiBalEl = document.getElementById('mutasi-current-balance');
         if (balEl && mutasiBalEl) mutasiBalEl.innerText = balEl.innerText;
 
-        renderMutasiList();
+        const container = document.getElementById('mutasi-list-container');
+        if (container) {
+          renderMutasiSkeleton(container);
+          setTimeout(() => {
+            renderMutasiList();
+          }, 180);
+        } else {
+          renderMutasiList();
+        }
+
         screen.style.display = 'flex';
         void screen.offsetWidth;
         screen.classList.add('active');
@@ -16553,47 +16578,79 @@
           btn.parentElement.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
         }
-        renderMutasiList();
+        const container = document.getElementById('mutasi-list-container');
+        if (container) {
+          renderMutasiSkeleton(container);
+          setTimeout(() => {
+            renderMutasiList();
+          }, 150);
+        } else {
+          renderMutasiList();
+        }
       }
 
       function renderMutasiSkeleton(container) {
         if (!container) return;
         container.innerHTML = `
           <div style="display: flex; flex-direction: column; gap: 10px;">
-            <div class="skeleton-card" style="padding: 14px 16px;">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="background: white; border-radius: 16px; padding: 14px 16px; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.03); display: flex; flex-direction: column; gap: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                 <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
-                  <div class="skeleton-shimmer skeleton-avatar"></div>
+                  <div class="skeleton-shimmer" style="width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0;"></div>
                   <div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
-                    <div class="skeleton-shimmer skeleton-line" style="width: 50%; height: 13px;"></div>
-                    <div class="skeleton-shimmer skeleton-line" style="width: 35%; height: 10px;"></div>
+                    <div class="skeleton-shimmer" style="width: 60%; height: 13px; border-radius: 6px;"></div>
+                    <div class="skeleton-shimmer" style="width: 40%; height: 10px; border-radius: 6px;"></div>
                   </div>
                 </div>
-                <div class="skeleton-shimmer skeleton-line" style="width: 25%; height: 16px;"></div>
+                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px; width: 30%;">
+                  <div class="skeleton-shimmer" style="width: 75%; height: 14px; border-radius: 6px;"></div>
+                  <div class="skeleton-shimmer" style="width: 55%; height: 18px; border-radius: 10px;"></div>
+                </div>
               </div>
             </div>
-            <div class="skeleton-card" style="padding: 14px 16px;">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="background: white; border-radius: 16px; padding: 14px 16px; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.03); display: flex; flex-direction: column; gap: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                 <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
-                  <div class="skeleton-shimmer skeleton-avatar"></div>
+                  <div class="skeleton-shimmer" style="width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0;"></div>
                   <div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
-                    <div class="skeleton-shimmer skeleton-line" style="width: 45%; height: 13px;"></div>
-                    <div class="skeleton-shimmer skeleton-line" style="width: 30%; height: 10px;"></div>
+                    <div class="skeleton-shimmer" style="width: 50%; height: 13px; border-radius: 6px;"></div>
+                    <div class="skeleton-shimmer" style="width: 35%; height: 10px; border-radius: 6px;"></div>
                   </div>
                 </div>
-                <div class="skeleton-shimmer skeleton-line" style="width: 28%; height: 16px;"></div>
+                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px; width: 30%;">
+                  <div class="skeleton-shimmer" style="width: 70%; height: 14px; border-radius: 6px;"></div>
+                  <div class="skeleton-shimmer" style="width: 55%; height: 18px; border-radius: 10px;"></div>
+                </div>
               </div>
             </div>
-            <div class="skeleton-card" style="padding: 14px 16px;">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="background: white; border-radius: 16px; padding: 14px 16px; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.03); display: flex; flex-direction: column; gap: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                 <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
-                  <div class="skeleton-shimmer skeleton-avatar"></div>
+                  <div class="skeleton-shimmer" style="width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0;"></div>
                   <div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
-                    <div class="skeleton-shimmer skeleton-line" style="width: 60%; height: 13px;"></div>
-                    <div class="skeleton-shimmer skeleton-line" style="width: 40%; height: 10px;"></div>
+                    <div class="skeleton-shimmer" style="width: 65%; height: 13px; border-radius: 6px;"></div>
+                    <div class="skeleton-shimmer" style="width: 45%; height: 10px; border-radius: 6px;"></div>
                   </div>
                 </div>
-                <div class="skeleton-shimmer skeleton-line" style="width: 22%; height: 16px;"></div>
+                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px; width: 30%;">
+                  <div class="skeleton-shimmer" style="width: 80%; height: 14px; border-radius: 6px;"></div>
+                  <div class="skeleton-shimmer" style="width: 55%; height: 18px; border-radius: 10px;"></div>
+                </div>
+              </div>
+            </div>
+            <div style="background: white; border-radius: 16px; padding: 14px 16px; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.03); display: flex; flex-direction: column; gap: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
+                  <div class="skeleton-shimmer" style="width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0;"></div>
+                  <div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
+                    <div class="skeleton-shimmer" style="width: 55%; height: 13px; border-radius: 6px;"></div>
+                    <div class="skeleton-shimmer" style="width: 30%; height: 10px; border-radius: 6px;"></div>
+                  </div>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px; width: 30%;">
+                  <div class="skeleton-shimmer" style="width: 65%; height: 14px; border-radius: 6px;"></div>
+                  <div class="skeleton-shimmer" style="width: 55%; height: 18px; border-radius: 10px;"></div>
+                </div>
               </div>
             </div>
           </div>
