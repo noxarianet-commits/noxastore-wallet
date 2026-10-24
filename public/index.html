@@ -296,12 +296,13 @@
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       overscroll-behavior-y: contain;
-      will-change: transform, opacity;
+      will-change: transform;
       transform: translate3d(100%, 0, 0);
       opacity: 0;
       visibility: hidden;
       pointer-events: none;
-      transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.24s ease, visibility 0.32s;
+      transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, visibility 0.26s;
+      background-color: #F8FAFC;
     }
 
     .full-screen-panel.active {
@@ -311,20 +312,17 @@
       pointer-events: auto !important;
     }
 
-    /* Push effect on underlying background container */
-    body.panel-open .app-container > main,
-    body.panel-open .app-container > header {
-      transform: translate3d(-18%, 0, 0);
-      opacity: 0.94;
-      filter: brightness(0.97);
-      transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.24s ease, filter 0.32s;
+    /* Lightweight background push without heavy filter rasterization */
+    body.panel-open #app-container > main {
+      transform: translate3d(-5%, 0, 0);
+      opacity: 0.96;
+      transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
       pointer-events: none;
     }
 
-    body .app-container > main,
-    body .app-container > header {
-      will-change: transform, opacity;
-      transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.24s ease, filter 0.3s;
+    body #app-container > main {
+      will-change: transform;
+      transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
     }
 
     body {
@@ -1131,7 +1129,18 @@
       color: var(--primary);
     }
 
-    /* Tabs Panel visibility controller */
+    /* Tabs Panel visibility controller - Silky Smooth 60/120 FPS */
+    @keyframes tabFadeIn {
+      0% {
+        opacity: 0;
+        transform: translate3d(0, 10px, 0);
+      }
+      100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+      }
+    }
+
     .tab-panel {
       display: none;
       width: 100%;
@@ -1140,95 +1149,8 @@
 
     .tab-panel.active {
       display: block;
-    }
-
-    /* Slide animations — absolute positioned, parent height locked by JS */
-    .tab-panel.slide-in-right {
-      display: block !important;
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      z-index: 2;
-      will-change: transform, opacity;
-      animation: slideInRightTab 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-
-    .tab-panel.slide-out-left {
-      display: block !important;
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      z-index: 1;
-      will-change: transform, opacity;
-      animation: slideOutLeftTab 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-
-    .tab-panel.slide-in-left {
-      display: block !important;
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      z-index: 2;
-      will-change: transform, opacity;
-      animation: slideInLeftTab 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-
-    .tab-panel.slide-out-right {
-      display: block !important;
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      z-index: 1;
-      will-change: transform, opacity;
-      animation: slideOutRightTab 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-
-    @keyframes slideInRightTab {
-      from {
-        transform: translate3d(100%, 0, 0);
-        opacity: 0.9;
-      }
-      to {
-        transform: translate3d(0, 0, 0);
-        opacity: 1;
-      }
-    }
-
-    @keyframes slideOutLeftTab {
-      from {
-        transform: translate3d(0, 0, 0);
-        opacity: 1;
-      }
-      to {
-        transform: translate3d(-25%, 0, 0);
-        opacity: 0.85;
-      }
-    }
-
-    @keyframes slideInLeftTab {
-      from {
-        transform: translate3d(-25%, 0, 0);
-        opacity: 0.85;
-      }
-      to {
-        transform: translate3d(0, 0, 0);
-        opacity: 1;
-      }
-    }
-
-    @keyframes slideOutRightTab {
-      from {
-        transform: translate3d(0, 0, 0);
-        opacity: 1;
-      }
-      to {
-        transform: translate3d(100%, 0, 0);
-        opacity: 0.9;
-      }
+      animation: tabFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      will-change: opacity, transform;
     }
 
     /* File Upload Zone styling */
@@ -2019,33 +1941,6 @@
       justify-content: center;
       cursor: pointer;
       color: var(--text-muted);
-    }
-
-    /* Merchant Screen Full Overlay */
-    .full-screen-panel {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: #F8FAFC;
-      z-index: 300;
-      display: flex;
-      flex-direction: column;
-      transform: translate3d(100%, 0, 0);
-      opacity: 0;
-      visibility: hidden;
-      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.25s step-end;
-      overflow-y: auto;
-      will-change: transform, opacity;
-      backface-visibility: hidden;
-    }
-
-    .full-screen-panel.active {
-      transform: translate3d(0, 0, 0);
-      opacity: 1;
-      visibility: visible;
-      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s step-start;
     }
 
     /* Automatically add top safe-area-inset padding to any full screen panel's header bar */
@@ -8393,8 +8288,9 @@
         const screen = document.getElementById('screen-game-list');
         if (!screen) return;
         screen.style.display = 'flex';
-        void screen.offsetWidth;
-        screen.classList.add('active');
+        requestAnimationFrame(() => {
+          screen.classList.add('active');
+        });
       }
 
       function closeGameListScreen() {
@@ -8404,7 +8300,7 @@
         setTimeout(() => {
           if (screen.classList.contains('active')) return;
           try { screen.style.display = 'none'; } catch (e) { }
-        }, 320);
+        }, 280);
       }
 
       function openEwalletListScreen() {
@@ -8420,8 +8316,9 @@
         const screen = document.getElementById('screen-ewallet-list');
         if (!screen) return;
         screen.style.display = 'flex';
-        void screen.offsetWidth;
-        screen.classList.add('active');
+        requestAnimationFrame(() => {
+          screen.classList.add('active');
+        });
       }
 
       function closeEwalletListScreen() {
@@ -8562,8 +8459,9 @@
         }
 
         screen.style.display = 'flex';
-        void screen.offsetWidth;
-        screen.classList.add('active');
+        requestAnimationFrame(() => {
+          screen.classList.add('active');
+        });
 
         // Fetch nominals dari SekaliPay
         await fetchEwalletNominals(method);
@@ -9573,8 +9471,9 @@
         if (!screen) return showNotification('ℹ️ Fitur Merchant tidak tersedia.');
         pushNavigationState('merchant');
         screen.style.display = 'flex';
-        void screen.offsetWidth;
-        screen.classList.add('active');
+        requestAnimationFrame(() => {
+          screen.classList.add('active');
+        });
         setTextIfExists('merchant-saldo-text', formatRupiah(qrisBalance));
         setTextIfExists('merchant-max-withdraw-label', formatRupiah(qrisBalance));
 
@@ -9990,8 +9889,9 @@
           zoomedImg.src = dynamicQrDataUrl;
         }
         overlay.style.display = 'flex';
-        void overlay.offsetWidth;
-        overlay.classList.add('active');
+        requestAnimationFrame(() => {
+          overlay.classList.add('active');
+        });
       }
 
       function closeZoomModal() {
@@ -10000,7 +9900,7 @@
         overlay.classList.remove('active');
         setTimeout(() => {
           overlay.style.display = 'none';
-        }, 300);
+        }, 280);
       }
 
 
@@ -10021,8 +9921,9 @@
         }
 
         modal.style.display = 'flex';
-        void modal.offsetWidth;
-        modal.classList.add('active');
+        requestAnimationFrame(() => {
+          modal.classList.add('active');
+        });
       }
 
       function closeQRModal() {
@@ -10177,8 +10078,9 @@
         if (note) note.value = '';
         if (recipName) { recipName.textContent = ''; recipName.style.display = 'none'; }
         screen.style.display = 'flex';
-        void screen.offsetWidth;
-        screen.classList.add('active');
+        requestAnimationFrame(() => {
+          screen.classList.add('active');
+        });
 
         if (targetUser) {
           checkTransferTargetUser(targetUser);
@@ -10569,7 +10471,6 @@
         }
 
         modal.style.display = 'flex';
-        void modal.offsetWidth;
       }
 
       function closeMyQRModal() {
@@ -10605,8 +10506,9 @@
         }
 
         screen.style.display = 'flex';
-        void screen.offsetWidth;
-        screen.classList.add('active');
+        requestAnimationFrame(() => {
+          screen.classList.add('active');
+        });
       }
 
       function openTopUpModal() {
@@ -10971,8 +10873,9 @@
 
         const modal = document.getElementById('withdraw-modal');
         modal.style.display = 'flex';
-        void modal.offsetWidth;
-        modal.classList.add('active');
+        requestAnimationFrame(() => {
+          modal.classList.add('active');
+        });
       }
 
       function closeWithdrawModal() {
@@ -10980,7 +10883,7 @@
         modal.classList.remove('active');
         setTimeout(() => {
           modal.style.display = 'none';
-        }, 300);
+        }, 280);
       }
 
       async function submitWithdraw() {
@@ -11197,27 +11100,13 @@
         'profile': 4
       };
 
-      // Tab Navigation Switcher (Bulletproof & Error-Safe)
+      // Tab Navigation Switcher (Ultra Smooth & 60/120 FPS Ready)
       function switchTab(tabName, clickedNavItem = null) {
         const targetPanel = document.getElementById(`panel-${tabName}`);
-        if (!targetPanel) {
-          isTabTransitioning = false;
-          return;
-        }
+        if (!targetPanel) return;
 
         const activePanel = document.querySelector('.tab-panel.active');
-        if (activePanel === targetPanel) {
-          isTabTransitioning = false;
-          return;
-        }
-
-        if (isTabTransitioning) {
-          // Safety timeout reset in case transition was interrupted
-          setTimeout(() => { isTabTransitioning = false; }, 400);
-          return;
-        }
-
-        isTabTransitioning = true;
+        if (activePanel === targetPanel) return;
 
         try {
           // Deactivate all nav buttons
@@ -11231,57 +11120,29 @@
             if (navBtn) navBtn.classList.add('active');
           }
 
-          if (tabName === 'info') {
-            loadClientInformations();
-          } else if (tabName === 'profile') {
-            initBiometricSetting();
-            updateProfileAnalytics();
-          } else if (tabName === 'history') {
-            renderHistoryList();
+          // Smoothly switch active panel
+          if (activePanel) {
+            activePanel.classList.remove('active');
           }
+          targetPanel.classList.add('active');
 
-          if (activePanel && targetPanel) {
-            const activeTabName = activePanel.id ? activePanel.id.replace('panel-', '') : '';
-            const activeIndex = (activeTabName && tabIndices[activeTabName] !== undefined) ? tabIndices[activeTabName] : 0;
-            const targetIndex = (tabIndices[tabName] !== undefined) ? tabIndices[tabName] : 0;
+          // Scroll main to top immediately without jank
+          const mainEl = document.querySelector('main');
+          if (mainEl) mainEl.scrollTop = 0;
 
-            const isNext = targetIndex > activeIndex;
-
-            const mainEl = document.querySelector('main');
-            if (mainEl) {
-              const panelHeight = activePanel.offsetHeight || 0;
-              mainEl.style.height = Math.max(panelHeight, mainEl.clientHeight || 0) + 'px';
-              mainEl.style.overflowY = 'hidden';
-              void mainEl.offsetHeight;
-              mainEl.scrollTop = 0;
+          // Defer heavier rendering to the next animation frame so transition never stutters
+          requestAnimationFrame(() => {
+            if (tabName === 'info') {
+              loadClientInformations();
+            } else if (tabName === 'profile') {
+              initBiometricSetting();
+              updateProfileAnalytics();
+            } else if (tabName === 'history') {
+              renderHistoryList();
             }
-
-            if (isNext) {
-              activePanel.className = 'tab-panel slide-out-left';
-              targetPanel.className = 'tab-panel slide-in-right';
-            } else {
-              activePanel.className = 'tab-panel slide-out-right';
-              targetPanel.className = 'tab-panel slide-in-left';
-            }
-
-            setTimeout(() => {
-              activePanel.className = 'tab-panel';
-              targetPanel.className = 'tab-panel active';
-              if (mainEl) {
-                mainEl.style.height = '';
-                mainEl.style.overflowY = 'auto';
-              }
-              isTabTransitioning = false;
-            }, 340);
-
-          } else {
-            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-            targetPanel.className = 'tab-panel active';
-            isTabTransitioning = false;
-          }
+          });
         } catch (err) {
           console.error('switchTab error:', err);
-          isTabTransitioning = false;
         }
       }
 
@@ -13435,8 +13296,9 @@
         }
 
         screen.style.display = 'flex';
-        void screen.offsetWidth;
-        screen.classList.add('active');
+        requestAnimationFrame(() => {
+          screen.classList.add('active');
+        });
       }
 
       function closePostCheckoutStatus() {
@@ -13699,8 +13561,9 @@
         const screen = document.getElementById('screen-trx-detail');
         if (screen) {
           screen.style.display = 'flex';
-          void screen.offsetWidth;
-          screen.classList.add('active');
+          requestAnimationFrame(() => {
+            screen.classList.add('active');
+          });
         }
       }
 
@@ -14484,8 +14347,9 @@
         renderInAppRecentContactsList('');
 
         modal.style.display = 'flex';
-        void modal.offsetWidth;
-        modal.classList.add('active');
+        requestAnimationFrame(() => {
+          modal.classList.add('active');
+        });
       }
 
       function renderInAppRecentContactsList(filterQuery = '') {
@@ -14894,8 +14758,9 @@
         document.getElementById('editprof-display-email').innerText = localStorage.getItem('noxaEmail') || '-';
 
         screen.style.display = 'flex';
-        void screen.offsetWidth;
-        screen.classList.add('active');
+        requestAnimationFrame(() => {
+          screen.classList.add('active');
+        });
       }
 
       function closeEditProfileScreen() {
@@ -14905,7 +14770,7 @@
         setTimeout(() => {
           if (screen.classList.contains('active')) return;
           screen.style.display = 'none';
-        }, 320);
+        }, 280);
       }
 
       function openChangePasswordScreen() {
@@ -14917,8 +14782,9 @@
         document.getElementById('cp-new').value = '';
 
         screen.style.display = 'flex';
-        void screen.offsetWidth;
-        screen.classList.add('active');
+        requestAnimationFrame(() => {
+          screen.classList.add('active');
+        });
       }
 
       function closeChangePasswordScreen() {
@@ -15156,8 +15022,9 @@
         }
 
         screen.style.display = 'flex';
-        void screen.offsetWidth;
-        screen.classList.add('active');
+        requestAnimationFrame(() => {
+          screen.classList.add('active');
+        });
 
         // Init WebSocket & load chat history
         initUserChatWebSocket();
@@ -15491,8 +15358,9 @@
         const screen = document.getElementById('screen-ppob');
         if (screen) {
           screen.style.display = 'flex';
-          void screen.offsetWidth;
-          screen.classList.add('active');
+          requestAnimationFrame(() => {
+            screen.classList.add('active');
+          });
         }
       }
 
@@ -15723,7 +15591,6 @@
         const checkoutModal = document.getElementById('ppob-checkout-modal');
         pushNavigationState('ppob-checkout');
         checkoutModal.style.display = 'flex';
-        void checkoutModal.offsetWidth; // force reflow
         setTimeout(() => {
           const firstBox = document.querySelector('.ppob-pin-box');
           if (firstBox) firstBox.focus();
@@ -16545,8 +16412,9 @@
         }
 
         screen.style.display = 'flex';
-        void screen.offsetWidth;
-        screen.classList.add('active');
+        requestAnimationFrame(() => {
+          screen.classList.add('active');
+        });
       }
 
       function closeMutasiScreen() {

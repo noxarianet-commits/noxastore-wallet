@@ -2902,13 +2902,17 @@ app.post('/admin/ppob/markup/bulk', requireAdminAuth, handleBulkPpobMarkup);
 // Admin PPOB Sync Endpoint
 app.post('/admin/ppob/sync', requireAdminAuth, async (req, res) => {
   try {
-    const result = await sekalipayService.getItems();
+    const result = await sekalipayService.getItems(true);
+    const count = result && Array.isArray(result.data) ? result.data.length : 0;
     res.json({
       success: true,
-      message: 'Katalog produk SekaliPay berhasil disinkronkan.',
-      count: result && Array.isArray(result.data) ? result.data.length : 0
+      message: 'Katalog produk SekaliPay berhasil disinkronkan dengan provider pusat.',
+      total: count,
+      count: count,
+      added: 0
     });
   } catch (err) {
+    console.error('[SekaliPay Sync Error]', err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
