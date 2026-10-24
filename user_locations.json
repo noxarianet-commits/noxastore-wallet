@@ -1,0 +1,20 @@
+[
+  {
+    "deviceId": "inst_1792809779656_2iqz12a",
+    "username": "Pengunjung Web",
+    "fullname": "Pengguna Baru (Web)",
+    "latitude": -6.92843,
+    "longitude": 109.578117,
+    "accuracy": 333,
+    "ip": "127.0.0.1",
+    "deviceModel": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "deviceType": "desktop",
+    "os": "Windows 10/11",
+    "browser": "Google Chrome",
+    "locationName": "Jaringan Lokal / WiFi Internal (127.0.0.1)",
+    "isAppInstall": 0,
+    "lastSeen": "2026-10-24T02:43:05.182Z",
+    "lastSeenWib": "09:43:05 WIB, 24 Okt 2026",
+    "updatedAt": "2026-10-24T02:43:05.182Z"
+  }
+]
