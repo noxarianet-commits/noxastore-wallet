@@ -6105,6 +6105,18 @@
                 </div>
               </div>
 
+              <!-- Konfirmasi Password (ke-2x) -->
+              <div class="clean-form-group">
+                <label class="clean-form-label" for="reg-confirm-password">Konfirmasi Password</label>
+                <div class="clean-input-box">
+                  <span class="material-symbols-outlined clean-input-icon">lock_reset</span>
+                  <input id="reg-confirm-password" type="password" placeholder="Ulangi password Anda" autocomplete="new-password" onkeydown="if(event.key==='Enter') saveRegistration()" />
+                  <button type="button" class="clean-eye-btn" onclick="togglePassword('reg-confirm-password', this)" tabindex="-1">
+                    <span class="material-symbols-outlined">visibility</span>
+                  </button>
+                </div>
+              </div>
+
               <!-- Tombol Daftar -->
               <button id="reg-submit" type="button" class="clean-primary-btn" onclick="saveRegistration()" style="margin-top: 8px;">
                 <span>Daftar</span>
@@ -7616,6 +7628,7 @@
         const user = document.getElementById('reg-username').value.trim();
         const email = document.getElementById('reg-email').value.trim();
         const password = document.getElementById('reg-password').value.trim();
+        const confirmPassword = document.getElementById('reg-confirm-password') ? document.getElementById('reg-confirm-password').value.trim() : '';
 
         if (!fullname) {
           showNotification('❌ Harap isi nama lengkap Anda!');
@@ -7633,6 +7646,14 @@
           showNotification('❌ Kata sandi minimal 4 karakter!');
           return;
         }
+        if (!confirmPassword) {
+          showNotification('❌ Harap masukkan konfirmasi password!');
+          return;
+        }
+        if (password !== confirmPassword) {
+          showNotification('❌ Konfirmasi password tidak cocok dengan password!');
+          return;
+        }
 
         const btn = document.querySelector('#auth-register-form button');
         if (btn) { btn.disabled = true; btn.innerHTML = '<span>⏳ Memproses Pendaftaran...</span>'; }
@@ -7641,7 +7662,7 @@
           const res = await originalFetch('/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fullname, username: user, phone: user, password, email })
+            body: JSON.stringify({ fullname, username: user, phone: user, password, confirmPassword, email })
           });
           const data = await res.json().catch(() => ({}));
 
@@ -7886,6 +7907,7 @@
           document.getElementById('reg-username').value = '';
           document.getElementById('reg-email').value = '';
           document.getElementById('reg-password').value = '';
+          if (document.getElementById('reg-confirm-password')) document.getElementById('reg-confirm-password').value = '';
 
           // Close Auth Modal
           const setupModal = document.getElementById('setup-modal');

@@ -1394,12 +1394,17 @@ app.post('/register', async (req, res) => {
   try {
     const inputUsername = String(req.body.username || '').trim();
     const inputPassword = String(req.body.password || '').trim();
+    const inputConfirmPassword = req.body.confirmPassword !== undefined ? String(req.body.confirmPassword).trim() : '';
     const inputFullname = String(req.body.fullname || inputUsername).trim();
     const inputEmail = String(req.body.email || '').trim();
     const inputBrand = String(req.body.brand || (inputFullname ? inputFullname.toUpperCase() : inputUsername)).trim();
 
     if (!inputUsername || !inputPassword) {
       return res.status(400).json({ success: false, status: false, error: 'Nomor WhatsApp / Username dan Password wajib diisi.', msg: 'Username dan Password wajib diisi.' });
+    }
+
+    if (inputConfirmPassword && inputPassword !== inputConfirmPassword) {
+      return res.status(400).json({ success: false, status: false, error: 'Konfirmasi password tidak cocok dengan password.', msg: 'Konfirmasi password tidak cocok.' });
     }
 
     // Comprehensive Check across all registration variations
