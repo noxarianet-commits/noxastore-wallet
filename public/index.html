@@ -8864,7 +8864,6 @@
             if (result.success) {
               closeCheckoutModal();
               closeTransferScreen();
-              playSuccessSound();
               showNotification('✅ Berhasil mengirim Rp ' + _pendingTransferData.amount.toLocaleString('id-ID') + ' ke ' + _pendingTransferData.target + '!');
               switchTab('home');
               applyBalanceUpdate(result.mainBalance, result.history, true);
@@ -8897,7 +8896,6 @@
             closeEwalletDanaScreen();
             closeEwalletListScreen();
 
-            playSuccessSound();
             if (result.mainBalance !== undefined) applyBalanceUpdate(result.mainBalance, result.history, true);
             await syncServerState();
 
@@ -9522,7 +9520,6 @@
             transactionHistory = result.history;
             saveHistoryCache();
 
-            playSuccessSound();
             showNotification(`✅ Berhasil mencairkan Rp ${amount.toLocaleString('id-ID')} ke DANA!`);
 
             closeEwalletDanaScreen();
@@ -9634,7 +9631,6 @@
                 saveHistoryCache();
               }
 
-              playSuccessSound();
               showNotification(`✅ Berhasil mencairkan Rp ${amount.toLocaleString('id-ID')} ke Akun Utama!`);
 
               const merchantSaldoEl = document.getElementById('merchant-saldo-text');
@@ -9875,7 +9871,6 @@
             transactionHistory = result.history;
             saveHistoryCache();
 
-            playSuccessSound();
             showNotification(`✅ Berhasil mencairkan Rp ${amount.toLocaleString('id-ID')} ke Akun Utama!`);
 
             document.getElementById('merchant-saldo-text').innerText = formatRupiah(qrisBalance);
@@ -10281,7 +10276,6 @@
             const data = await res.json();
             if (data.success) {
               closeTransferScreen();
-              playSuccessSound();
 
               if (data.mainBalance !== undefined) {
                 applyBalanceUpdate(data.mainBalance, data.history, true);
@@ -10540,7 +10534,6 @@
         }
 
         if (targetUser) {
-          try { playSuccessSound(); } catch(e) {}
           closeQRScannerScreen();
           openTransferScreen(targetUser);
         } else {
@@ -10879,7 +10872,6 @@
             setTopUpStatus('paid', 'Pembayaran diterima dan saldo sedang diperbarui.');
 
             const formattedVal = Number(data.amount).toLocaleString('id-ID');
-            playSuccessSound();
             showNotification('✅ Top Up Rp ' + formattedVal + ' berhasil!');
 
             if (data.mainBalance !== undefined) {
@@ -10966,7 +10958,7 @@
       }
 
       function playSuccessSound() {
-        playAppNotificationSound('success');
+        // Ditiadakan: suara saat transaksi / mengirim produk dinonaktifkan sesuai permintaan pengguna
       }
 
       function openWithdrawModal() {
@@ -11022,7 +11014,6 @@
             saveHistoryCache();
 
             closeWithdrawModal();
-            playSuccessSound(); // Panggil notifikasi bunyi lembut
             showNotification(`✅ Berhasil mencairkan Rp ${amount.toLocaleString('id-ID')} ke Akun Utama!`);
 
             document.getElementById('merchant-saldo-text').innerText = formatRupiah(qrisBalance);
@@ -11964,8 +11955,9 @@
         }
         _lastStatusBarNotifTime = now;
 
-        // 3. Tampilkan in-app toast jika user sedang di dalam aplikasi
-        showNotification(`${title}: ${body}`, 'success');
+        // 3. Tampilkan in-app toast jika user sedang di dalam aplikasi + bunyikan suara notifikasi pemberitahuan
+        playAppNotificationSound('success');
+        showNotification(`${title}: ${body}`, 'success', true);
 
         // 4. JIKA APLIKASI SEDANG DIBUKA / AKTIF DI LAYAR (FOREGROUND):
         // JANGAN KIRIM KE NOTIFICATION BAR HP!
@@ -12163,7 +12155,7 @@
       let lastToastMessage = '';
       let lastToastTime = 0;
 
-      function showNotification(message, type) {
+      function showNotification(message, type, playSound = false) {
         if (!message) return;
         try {
           let strMsg = typeof message === 'string' ? message : (message.message || String(message));
@@ -12258,8 +12250,10 @@
             banner.style.opacity = '1';
             banner.style.transform = 'translateX(0) scale(1)';
 
-            // Play anti-spam synthetic sound
-            playAppNotificationSound(type);
+            // Suara notifikasi HANYA berbunyi saat ada notifikasi/pemberitahuan sistem masuk
+            if (playSound) {
+              playAppNotificationSound(type);
+            }
 
             clearTimeout(banner._hideTimer);
             banner._hideTimer = setTimeout(() => {
@@ -14238,8 +14232,6 @@
         }
 
         try {
-          playAppNotificationSound('success');
-
           const canvas = await captureReceiptCardToCanvas(tx);
           const dataUrl = canvas.toDataURL('image/png');
           const cleanTxId = (tx.id || tx.transactionId || 'TRX').replace(/[^a-zA-Z0-9_-]/g, '');
@@ -14411,7 +14403,6 @@
                   if (typeof onSelectedCallback === 'function') {
                     onSelectedCallback(formatted, contact.name ? contact.name[0] : '');
                   }
-                  playAppNotificationSound('success');
                   showNotification(`👤 Kontak ${contact.name && contact.name[0] ? contact.name[0] + ' (' + formatted + ')' : formatted} dipilih!`);
                   return;
                 }
@@ -14439,7 +14430,6 @@
                     if (typeof onSelectedCallback === 'function') {
                       onSelectedCallback(formatted, name);
                     }
-                    playAppNotificationSound('success');
                     showNotification(`👤 Kontak ${name ? name + ' (' + formatted + ')' : formatted} dipilih!`);
                   };
                   window._onNativeContactPicked = callback;
@@ -14578,7 +14568,6 @@
             inputEl.dispatchEvent(new Event('input', { bubbles: true }));
             inputEl.dispatchEvent(new Event('change', { bubbles: true }));
             if (typeof callback === 'function') callback(number, name);
-            playAppNotificationSound('success');
             showNotification(`👤 Nomor ${number} dipilih!`);
           }
         }
@@ -16482,7 +16471,6 @@
             var res = await resp.json();
             if (res.success) {
               closePinOverlay(); closeCheckoutModal(); closeTransferScreen();
-              if (typeof playSuccessSound === 'function') playSuccessSound();
               showNotification('Berhasil mengirim Rp ' + _pendingTransferData.amount.toLocaleString('id-ID') + ' ke ' + _pendingTransferData.target + '!');
               switchTab('home');
               applyBalanceUpdate(res.mainBalance, res.history, true);
@@ -16502,7 +16490,6 @@
           var res2 = await resp2.json();
           if (res2.success) {
             closePinOverlay(); closeCheckoutModal(); closeEwalletDanaScreen(); closeEwalletListScreen();
-            if (typeof playSuccessSound === 'function') playSuccessSound();
             if (res2.mainBalance !== undefined) applyBalanceUpdate(res2.mainBalance, res2.history, true);
             await syncServerState();
 
